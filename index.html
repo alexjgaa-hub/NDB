@@ -520,13 +520,14 @@
         #chart-ohlc { margin-left: auto; color: var(--muted); font-size: 10px; }
 
         .chart-wrapper { flex: 1; position: relative; overflow: hidden; }
-        #chart-container { width: 100%; height: 100%; }
+        #chart-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
 
         #draw-canvas {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
             pointer-events: none;
+            z-index: 10;
         }
 
         /* ── POSITION PANEL ── */
@@ -1443,19 +1444,24 @@ function clearInProgress() {
 // ── Canvas sizing ──────────────────────────────────────────────────
 
 function resizeCanvas() {
-    const rect = drawCanvas.parentElement.getBoundingClientRect();
+    const rect = container.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
     drawCanvas.width  = rect.width;
     drawCanvas.height = rect.height;
     redrawCanvas();
 }
 
-new ResizeObserver(resizeCanvas).observe(drawCanvas.parentElement);
-setTimeout(resizeCanvas, 100);
+new ResizeObserver(resizeCanvas).observe(container);
+// Retry until layout is ready
+const _resizeRetry = setInterval(() => {
+    const r = container.getBoundingClientRect();
+    if (r.width && r.height) { resizeCanvas(); clearInterval(_resizeRetry); }
+}, 50);
 
 // ── Mouse events ───────────────────────────────────────────────────
 
 drawCanvas.addEventListener('mousemove', e => {
-    const r = drawCanvas.getBoundingClientRect();
+    const r = container.getBoundingClientRect();
     mouseXY = { x: e.clientX - r.left, y: e.clientY - r.top };
     redrawCanvas();
 });
@@ -1463,7 +1469,7 @@ drawCanvas.addEventListener('mousemove', e => {
 drawCanvas.addEventListener('mouseleave', () => { mouseXY = null; redrawCanvas(); });
 
 drawCanvas.addEventListener('click', e => {
-    const r = drawCanvas.getBoundingClientRect();
+    const r = container.getBoundingClientRect();
     const x = e.clientX - r.left;
     const y = e.clientY - r.top;
     const coord = px2chart(x, y);
