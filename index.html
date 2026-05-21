@@ -538,10 +538,10 @@
 
         /* ── POSITION PANEL ── */
         .position-panel {
-            width: 244px;
+            width: 220px;
             flex-shrink: 0;
             background: var(--surface);
-            border-left: 1px solid var(--border);
+            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             overflow-y: auto;
@@ -588,22 +588,32 @@
 
         /* ── BOT PANEL ── */
         .bot-panel {
-            height: 156px; flex-shrink: 0;
+            height: 210px; flex-shrink: 0;
             background: var(--surface); border-top: 1px solid var(--border);
             display: flex; flex-direction: column;
         }
 
         .bot-panel-hdr {
-            padding: 7px 14px; border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+            padding: 6px 14px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 10px; flex-shrink: 0;
         }
 
-        .bot-panel-title { color: var(--muted); font-size: 10px; letter-spacing: 1px; }
+        .bot-panel-title { color: var(--muted); font-size: 10px; letter-spacing: 1px; white-space: nowrap; }
+
+        .bot-strat-tabs { display: flex; gap: 3px; flex: 1; overflow-x: auto; }
+        .bot-strat-tab {
+            padding: 3px 9px; border: 1px solid var(--border); border-radius: 4px;
+            color: var(--muted); font-size: 10px; cursor: pointer; white-space: nowrap;
+            background: transparent; font-family: var(--font); transition: all 0.12s;
+        }
+        .bot-strat-tab.active { border-color: var(--blue); color: var(--blue); background: rgba(217,173,112,0.10); }
+        .bot-strat-tab:hover:not(.active) { border-color: var(--muted); color: var(--text); }
 
         .new-bot-btn {
             padding: 4px 14px; background: var(--blue); color: #1a1000;
             border: none; border-radius: 6px; cursor: pointer;
             font-family: var(--font); font-size: 12px; font-weight: 700;
+            white-space: nowrap; flex-shrink: 0;
         }
 
         .new-bot-btn:hover { opacity: 0.85; }
@@ -943,6 +953,40 @@
         </div>
     </div>
 
+    <!-- ─── POSITION PANEL ─── -->
+    <div class="position-panel">
+        <div class="section">
+            <div class="section-title">POSITION</div>
+            <div class="metric-row"><span class="metric-label">Pair</span><span class="metric-value" id="pos-pair">BTC/USDT PERP</span></div>
+            <div class="metric-row"><span class="metric-label">Side</span><span class="metric-value side-long" id="pos-side">▲ LONG</span></div>
+            <div class="metric-row"><span class="metric-label">Size</span><span class="metric-value" id="pos-size">2.500 BTC</span></div>
+            <div class="metric-row"><span class="metric-label">Entry</span><span class="metric-value" id="pos-entry">$67,230.00</span></div>
+            <div class="metric-row"><span class="metric-label">Mark</span><span class="metric-value" id="pos-mark">$67,234.50</span></div>
+            <div class="liq-box">
+                <div class="liq-box-label">⚠ LIQUIDATION ZONE</div>
+                <div class="liq-box-price" id="liq-price">$63,118.50</div>
+                <div class="liq-box-dist" id="liq-dist">-6.1% from mark</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">P&L</div>
+            <div class="metric-row"><span class="metric-label">Unrealized</span><span class="metric-value pos" id="pnl-unreal">+$11.25</span></div>
+            <div class="metric-row"><span class="metric-label">Realized</span><span class="metric-value pos" id="pnl-real">+$4,230.00</span></div>
+            <div class="metric-row"><span class="metric-label">ROE</span><span class="metric-value pos" id="pnl-roe">+0.017%</span></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">MARKET DATA</div>
+            <div class="metric-row"><span class="metric-label">Open Interest</span><span class="metric-value" id="oi">$2.41B</span></div>
+            <div class="metric-row"><span class="metric-label">24h Volume</span><span class="metric-value">$38.2B</span></div>
+            <div class="metric-row"><span class="metric-label">Funding Rate</span><span class="metric-value pos" id="funding-rate">+0.0102%</span></div>
+            <div class="metric-row"><span class="metric-label">Next Funding</span><span class="metric-value" id="funding-timer">01:24:30</span></div>
+            <div class="metric-row"><span class="metric-label">24h High</span><span class="metric-value">$68,120.00</span></div>
+            <div class="metric-row"><span class="metric-label">24h Low</span><span class="metric-value">$65,890.00</span></div>
+        </div>
+    </div>
+
     <!-- ─── CHART AREA ─── -->
     <div class="chart-area">
 
@@ -991,60 +1035,19 @@
             </div>
         </div>
     </div>
-
-    <!-- ─── POSITION PANEL ─── -->
-    <div class="position-panel">
-        <div class="section">
-            <div class="section-title">POSITION</div>
-            <div class="metric-row"><span class="metric-label">Pair</span><span class="metric-value" id="pos-pair">BTC/USDT PERP</span></div>
-            <div class="metric-row"><span class="metric-label">Side</span><span class="metric-value side-long" id="pos-side">▲ LONG</span></div>
-            <div class="metric-row"><span class="metric-label">Size</span><span class="metric-value" id="pos-size">2.500 BTC</span></div>
-            <div class="metric-row"><span class="metric-label">Entry</span><span class="metric-value" id="pos-entry">$67,230.00</span></div>
-            <div class="metric-row"><span class="metric-label">Mark</span><span class="metric-value" id="pos-mark">$67,234.50</span></div>
-            <div class="liq-box">
-                <div class="liq-box-label">⚠ LIQUIDATION ZONE</div>
-                <div class="liq-box-price" id="liq-price">$63,118.50</div>
-                <div class="liq-box-dist" id="liq-dist">-6.1% from mark</div>
-            </div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">P&L</div>
-            <div class="metric-row"><span class="metric-label">Unrealized</span><span class="metric-value pos" id="pnl-unreal">+$11.25</span></div>
-            <div class="metric-row"><span class="metric-label">Realized</span><span class="metric-value pos" id="pnl-real">+$4,230.00</span></div>
-            <div class="metric-row"><span class="metric-label">ROE</span><span class="metric-value pos" id="pnl-roe">+0.017%</span></div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">MARKET DATA</div>
-            <div class="metric-row"><span class="metric-label">Open Interest</span><span class="metric-value" id="oi">$2.41B</span></div>
-            <div class="metric-row"><span class="metric-label">24h Volume</span><span class="metric-value">$38.2B</span></div>
-            <div class="metric-row"><span class="metric-label">Funding Rate</span><span class="metric-value pos" id="funding-rate">+0.0102%</span></div>
-            <div class="metric-row"><span class="metric-label">Next Funding</span><span class="metric-value" id="funding-timer">01:24:30</span></div>
-            <div class="metric-row"><span class="metric-label">24h High</span><span class="metric-value">$68,120.00</span></div>
-            <div class="metric-row"><span class="metric-label">24h Low</span><span class="metric-value">$65,890.00</span></div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">QUICK ORDER</div>
-            <div class="order-btns">
-                <button class="order-btn buy-btn">▲ BUY</button>
-                <button class="order-btn sell-btn">▼ SELL</button>
-            </div>
-            <input class="order-input" type="number" placeholder="Size">
-            <input class="order-input" type="number" placeholder="Price (empty = Market)">
-            <select style="width:100%;margin-bottom:5px">
-                <option>Market</option><option>Limit</option>
-                <option>Stop-Market</option><option>Stop-Limit</option>
-            </select>
-        </div>
-    </div>
 </div>
 
 <!-- ═══ BOT PANEL ═══ -->
 <div class="bot-panel">
     <div class="bot-panel-hdr">
-        <span class="bot-panel-title">BOT MANAGEMENT</span>
+        <span class="bot-panel-title">ALGORITHMS</span>
+        <div class="bot-strat-tabs" id="bot-strat-tabs">
+            <button class="bot-strat-tab active" onclick="filterBots(this,'all')">All</button>
+            <button class="bot-strat-tab" onclick="filterBots(this,'Market Making')">Market Making</button>
+            <button class="bot-strat-tab" onclick="filterBots(this,'Arbitrage')">Arbitrage</button>
+            <button class="bot-strat-tab" onclick="filterBots(this,'Grid')">Grid</button>
+            <button class="bot-strat-tab" onclick="filterBots(this,'TWAP')">TWAP</button>
+        </div>
         <button class="new-bot-btn" onclick="openNewBotModal()">+ NEW BOT</button>
     </div>
     <div class="bot-list" id="bot-list"></div>
@@ -2129,8 +2132,18 @@ const bots = [
 
 function fmtRuntime(s) { return `${Math.floor(s/3600)}h ${Math.floor(s%3600/60)}m`; }
 
+let activeBotFilter = 'all';
+
+function filterBots(el, strat) {
+    activeBotFilter = strat;
+    document.querySelectorAll('.bot-strat-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderBots();
+}
+
 function renderBots() {
-    document.getElementById('bot-list').innerHTML = bots.map(b => {
+    const filtered = activeBotFilter === 'all' ? bots : bots.filter(b => b.strat === activeBotFilter);
+    document.getElementById('bot-list').innerHTML = filtered.map(b => {
         const bc  = { running:'badge-running', paused:'badge-paused', stopped:'badge-stopped' }[b.status];
         const pnlC = b.pnl >= 0 ? 'pos' : 'neg';
 
