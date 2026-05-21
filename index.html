@@ -238,9 +238,9 @@
         /* ── MAIN ── */
         .main { display: flex; flex: 1; overflow: hidden; }
 
-        /* ── ORDER BOOK (3-panel, light) ── */
+        /* ── ORDER BOOK (2-panel redesign) ── */
         .orderbook {
-            width: 390px; flex-shrink: 0;
+            width: 420px; flex-shrink: 0;
             background: #e8e8e8;
             border-right: 1px solid #b0b0b0;
             display: flex; flex-direction: column;
@@ -259,93 +259,17 @@
             flex-shrink: 0;
         }
         .orderbook .panel-hdr { color: #333; background: #e0e0e0; border-bottom-color: #c0c0c0; }
-
-        .ob-panels { flex: 1; display: flex; overflow: hidden; min-height: 0; }
-
-        /* — Volume Profile — */
-        .ob-vp {
-            width: 86px; flex-shrink: 0;
-            border-right: 1px solid #c0c0c0;
-            display: flex; flex-direction: column; overflow: hidden;
-            background: #e8e8e8;
-        }
-        .ob-vp-rows { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
-        .vp-row { flex: 1; display: flex; align-items: center; padding: 0 2px; position: relative; min-height: 0; overflow: hidden; }
-        .vp-bar { position: absolute; left:0; top:1px; bottom:1px; background: rgba(160,90,0,0.4); pointer-events:none; }
-        .vp-val { position: relative; z-index:1; font-size:9px; color:#333; white-space:nowrap; }
-        .vp-footer { flex-shrink:0; border-top:1px solid #c0c0c0; padding:3px 2px; display:flex; gap:1px; background:#e0e0e0; }
-        .vp-period { flex:1; text-align:center; font-size:8px; color:#555; white-space:nowrap; overflow:hidden; min-width:0; }
-        .vp-delta-neg { color: #cc0000 !important; }
-        .vp-delta-pos { color: #006600 !important; }
-
-        /* — Tape — */
-        .ob-tape {
-            width: 68px; flex-shrink: 0;
-            border-right: 1px solid #c0c0c0;
-            position: relative; overflow: hidden;
-            background: #e8e8e8;
-        }
-        .tape-bubble {
-            position: absolute; left: 3px;
-            border-radius: 9px; padding: 0 5px;
-            font-size: 9px; font-weight: 600;
-            white-space: nowrap; pointer-events: none; line-height: 1.5;
-        }
-        .tape-buy  { background: rgba(0,160,80,0.18);  color: #005530; border: 1px solid rgba(0,160,80,0.45); }
-        .tape-sell { background: rgba(200,0,0,0.18);   color: #880000; border: 1px solid rgba(200,0,0,0.4); }
-
-        /* — Order Book column — */
-        .ob-book { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
-        .ob-asks { flex: 1; overflow-y: auto; display: flex; flex-direction: column; justify-content: flex-end; }
-        .ob-bids { flex: 1; overflow-y: auto; }
-        .ob-asks::-webkit-scrollbar, .ob-bids::-webkit-scrollbar { width: 3px; }
-        .ob-asks::-webkit-scrollbar-thumb, .ob-bids::-webkit-scrollbar-thumb { background: #aaa; border-radius: 2px; }
-
-        .ob-spread {
-            padding: 4px 6px; text-align: center;
-            font-size: 12px; font-weight: 700;
-            border-top: 1px solid #8888cc; border-bottom: 1px solid #8888cc;
-            background: #c8d4f8; flex-shrink: 0; color: #000;
-        }
-
-        .ob-row {
-            display: flex; align-items: center;
-            padding: 1px 5px 1px 3px; cursor: pointer;
-            position: relative; font-size: 10px; line-height: 1.45;
-            transition: filter 0.08s;
-        }
-        .ob-row:hover { filter: brightness(0.88); }
-        .ob-vol   { flex: 1; font-size: 10px; font-weight: 500; z-index: 1; position: relative; }
-        .ob-price { text-align: right; font-size: 10px; z-index: 1; position: relative; min-width: 52px; }
-        .ob-bar   { position: absolute; top:0; right:0; bottom:0; pointer-events:none; }
-
-        .ask-row           { background: #ffc8c8; }
-        .ask-row .ob-vol   { color: #000; }
-        .ask-row .ob-price { color: #000; }
-        .ask-row .ob-bar   { background: #ff8800; }
-        .bid-row           { background: #c8ffc8; }
-        .bid-row .ob-vol   { color: #000; }
-        .bid-row .ob-price { color: #000; }
-        .bid-row .ob-bar   { background: #ff8800; }
-
-        .best-ask { background: #ff8888 !important; }
-        .best-bid { background: #70dd70 !important; }
-        .ob-large-1           { background: #ffd700 !important; }
-        .ob-large-1 .ob-vol   { color: #000 !important; font-weight: 700; }
-        .ob-large-1 .ob-price { color: #000 !important; }
-        .ob-large-2           { background: #d8a0f0 !important; }
-        .ob-large-2 .ob-vol   { color: #000 !important; font-weight: 700; }
-        .ob-large-2 .ob-price { color: #000 !important; }
-
-        /* — Gear / Settings — */
-        .ob-gear-btn {
+        .ob-hdr-btns { display: flex; gap: 2px; }
+        .ob-icon-btn {
             background: none; border: none; color: #555;
-            cursor: pointer; font-size: 13px; padding: 0 3px; line-height: 1; transition: color 0.1s;
+            cursor: pointer; font-size: 14px; padding: 0 4px; line-height: 1; transition: color 0.1s;
         }
-        .ob-gear-btn:hover { color: #000; }
+        .ob-icon-btn:hover { color: #000; }
+
+        /* Settings popup */
         .ob-settings-popup {
-            display: none; position: absolute; top: 34px; left: 8px;
-            width: 215px; background: #f0f0f0; border: 1px solid #b0b0b0;
+            display: none; position: absolute; top: 34px; right: 6px;
+            width: 230px; background: #f0f0f0; border: 1px solid #b0b0b0;
             border-radius: 6px; padding: 10px 12px; z-index: 100;
             box-shadow: 0 4px 24px rgba(0,0,0,0.25);
         }
@@ -364,26 +288,159 @@
             font-family: var(--font); font-size: 11px; font-weight: bold;
         }
 
-        /* — Quick Order — */
-        .ob-quick-order {
-            flex-shrink: 0; border-top: 1px solid #c0c0c0;
-            padding: 5px 7px; background: #d8d8d8;
+        /* Panels container */
+        .ob-panels { flex: 1; display: flex; overflow: hidden; min-height: 0; }
+
+        /* — VP left panel — */
+        .ob-vp-wrap {
+            width: 156px; flex-shrink: 0;
+            border-right: 1px solid #c0c0c0;
+            display: flex; flex-direction: column;
+            overflow: hidden; background: #ebebeb;
         }
-        .ob-qo-row { display: flex; gap: 4px; margin-bottom: 4px; align-items: center; }
-        .ob-qo-type, .ob-qo-currency { padding: 2px 4px; font-size: 10px; flex-shrink: 0; }
-        .ob-qo-input {
-            flex: 1; padding: 3px 5px; background: #fff;
-            border: 1px solid #c0c0c0; color: #000; border-radius: 3px;
-            font-family: var(--font); font-size: 10px; outline: none; min-width: 0;
+        .ob-vp-cols { flex: 1; display: flex; overflow: hidden; min-height: 0; user-select: none; }
+        .vp-col {
+            flex: 1; display: flex; flex-direction: column;
+            border-right: 1px solid #d8d8d8; min-width: 0; overflow: hidden;
         }
-        .ob-qo-input:focus { border-color: #5588ff; }
-        .ob-qo-presets { display: flex; gap: 3px; }
-        .ob-qo-preset {
-            flex: 1; padding: 3px 0; background: #e8e8e8; border: 1px solid #aaa;
-            color: #333; border-radius: 3px; cursor: pointer;
-            font-family: var(--font); font-size: 9px; text-align: center; transition: all 0.1s;
+        .vp-col:last-child { border-right: none; }
+        .vp-cell {
+            flex: 1; display: flex; align-items: center; justify-content: flex-end;
+            padding: 0 2px; position: relative; min-height: 0; overflow: hidden;
+            font-size: 8.5px; color: #111; line-height: 1.2;
         }
-        .ob-qo-preset:hover { border-color: #5588ff; color: #5588ff; }
+        .vp-cell-val { position: relative; z-index: 1; white-space: nowrap; }
+        .vp-cell.is-max { box-shadow: inset 0 0 0 1px #555; }
+
+        .ob-vp-footer { flex-shrink: 0; border-top: 1px solid #c0c0c0; background: #d8d8d8; display: flex; }
+        .vp-col-footer {
+            flex: 1; display: flex; flex-direction: column; align-items: center;
+            padding: 2px 1px; border-right: 1px solid #d0d0d0; overflow: hidden; min-width: 0;
+        }
+        .vp-col-footer:last-child { border-right: none; }
+        .vp-ft-vol   { font-size: 8px; color: #333; font-weight: 600; white-space: nowrap; line-height: 1.5; }
+        .vp-ft-delta { font-size: 8px; font-weight: 700; white-space: nowrap; line-height: 1.5; }
+        .vp-ft-delta.pos { color: #006600; }
+        .vp-ft-delta.neg { color: #cc0000; }
+        .vp-ft-time  { font-size: 7.5px; color: #666; white-space: nowrap; line-height: 1.4; }
+
+        /* VP context menu */
+        .vp-ctx-menu {
+            display: none; position: fixed;
+            background: #f5f5f5; border: 1px solid #aaa;
+            border-radius: 5px; padding: 4px 0; z-index: 300;
+            min-width: 90px; box-shadow: 0 4px 16px rgba(0,0,0,0.22);
+        }
+        .vp-ctx-menu.open { display: block; }
+        .vp-ctx-item {
+            padding: 5px 14px; font-size: 11px; color: #222;
+            cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 5px;
+        }
+        .vp-ctx-item:hover { background: #e0e8ff; }
+        .vp-ctx-item.active::before { content: '✓'; font-size: 10px; color: #3366ff; }
+        .vp-ctx-item:not(.active)::before { content: ''; display: inline-block; width: 10px; }
+
+        /* — OB right panel — */
+        .ob-book { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+        .ob-asks { flex: 1; overflow-y: auto; display: flex; flex-direction: column; justify-content: flex-end; }
+        .ob-bids { flex: 1; overflow-y: auto; }
+        .ob-asks::-webkit-scrollbar, .ob-bids::-webkit-scrollbar { width: 3px; }
+        .ob-asks::-webkit-scrollbar-thumb, .ob-bids::-webkit-scrollbar-thumb { background: #aaa; border-radius: 2px; }
+
+        .ob-spread {
+            padding: 3px 6px; text-align: center; font-size: 12px; font-weight: 700;
+            border-top: 1px solid #8888cc; border-bottom: 1px solid #8888cc;
+            background: #c8d4f8; flex-shrink: 0; color: #000;
+        }
+
+        .ob-row {
+            display: flex; align-items: center; padding: 1px 4px 1px 3px;
+            cursor: pointer; position: relative; font-size: 10px; line-height: 1.45;
+            user-select: none;
+        }
+        .ob-vol   { width: 36px; font-size: 10px; font-weight: 500; z-index: 1; position: relative; flex-shrink: 0; }
+        .ob-pct   { width: 36px; font-size: 9px; font-weight: 600; color: #333; z-index: 1; position: relative; flex-shrink: 0; display: none; }
+        .ob-row:hover .ob-pct { display: block; }
+        .ob-row:hover .ob-vol { display: none; }
+        .ob-order-badge {
+            flex: 1; font-size: 9px; font-weight: 700; z-index: 2; position: relative;
+            display: flex; align-items: center; justify-content: flex-end; gap: 1px;
+            overflow: hidden; min-width: 0;
+        }
+        .ob-order-x {
+            cursor: pointer; color: #c00; padding: 0 2px;
+            font-size: 11px; line-height: 1; font-weight: 400;
+        }
+        .ob-order-x:hover { color: #f00; }
+        .ob-spacer { flex: 1; }
+        .ob-price { text-align: right; font-size: 10px; z-index: 1; position: relative; min-width: 56px; }
+        .ob-bar   { position: absolute; top: 0; right: 0; bottom: 0; pointer-events: none; }
+
+        .ask-row { background: #ffc8c8; }
+        .ask-row .ob-vol, .ask-row .ob-pct, .ask-row .ob-price { color: #000; }
+        .ask-row .ob-bar { background: #ff8800; }
+        .bid-row { background: #c8ffc8; }
+        .bid-row .ob-vol, .bid-row .ob-pct, .bid-row .ob-price { color: #000; }
+        .bid-row .ob-bar { background: #ff8800; }
+
+        .best-ask { background: #e85050 !important; }
+        .best-bid { background: #38bb38 !important; }
+        .ob-large-1 { background: #ffd700 !important; }
+        .ob-large-1 .ob-vol, .ob-large-1 .ob-price { color: #000 !important; font-weight: 700; }
+        .ob-large-2 { background: #d8a0f0 !important; }
+        .ob-large-2 .ob-vol, .ob-large-2 .ob-price { color: #000 !important; font-weight: 700; }
+
+        /* — Order Control Panel — */
+        .ob-control {
+            flex-shrink: 0; border-top: 1px solid #b0b0b0;
+            background: #d0d0d0; padding: 5px 6px;
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .ob-ctrl-top { display: flex; align-items: center; gap: 5px; }
+        .ob-lev-btn {
+            padding: 3px 8px; background: #c0c0c0; border: 1px solid #aaa;
+            color: #000; border-radius: 3px; cursor: pointer; font-size: 10px; font-weight: 700;
+            font-family: var(--font); transition: all 0.1s; white-space: nowrap; flex-shrink: 0;
+        }
+        .ob-lev-btn:hover { border-color: #5588ff; }
+        .ob-pings { flex: 1; display: flex; gap: 3px; justify-content: flex-end; }
+        .ob-ping-val {
+            padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 600;
+            background: #b8e8b8; color: #005500;
+        }
+        .ob-ping-val.med  { background: #ffe8a0; color: #664400; }
+        .ob-ping-val.slow { background: #ffb0b0; color: #880000; }
+        .ob-ping-val.none { background: #d8d8d8; color: #666; }
+        .ob-presets { display: flex; gap: 3px; }
+        .ob-preset-btn {
+            flex: 1; padding: 3px 2px; font-size: 9px; font-weight: 600;
+            background: #d8d8d8; border: 1px solid #b0b0b0; color: #333;
+            border-radius: 3px; cursor: pointer; font-family: var(--font);
+            text-align: center; transition: all 0.1s; white-space: nowrap; overflow: hidden; min-width: 0;
+        }
+        .ob-preset-btn:hover { border-color: #5588ff; }
+        .ob-preset-btn.active { background: #5588ff; border-color: #3366dd; color: #fff; }
+
+        /* Leverage popup */
+        .ob-lev-popup {
+            display: none; position: absolute; bottom: 60px; left: 6px;
+            width: 240px; background: #f0f0f0; border: 1px solid #b0b0b0;
+            border-radius: 6px; padding: 10px 12px; z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+        }
+        .ob-lev-popup.open { display: block; }
+        .ob-lev-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .ob-lev-label { font-size: 10px; color: #555; flex-shrink: 0; min-width: 80px; }
+        .ob-lev-val { font-size: 12px; font-weight: 700; color: #000; min-width: 28px; text-align: right; flex-shrink: 0; }
+        .ob-lev-slider { flex: 1; cursor: pointer; accent-color: #5588ff; }
+        .ob-lev-info { display: flex; gap: 16px; margin-bottom: 8px; }
+        .ob-lev-info-item { font-size: 10px; color: #555; }
+        .ob-lev-info-item span { font-weight: 700; color: #000; }
+        .ob-lev-close {
+            width: 100%; padding: 5px; background: var(--blue); color: #1a1000;
+            border: none; border-radius: 3px; cursor: pointer;
+            font-family: var(--font); font-size: 11px; font-weight: bold;
+        }
 
         /* ── CHART AREA ── */
         .chart-area { flex: 1; display: flex; flex-direction: row; overflow: hidden; min-width: 0; }
@@ -786,75 +843,92 @@
 
     <!-- ─── ORDER BOOK ─── -->
     <div class="orderbook">
+        <!-- Header -->
         <div class="panel-hdr">
             <span>ORDER BOOK</span>
-            <div style="display:flex;align-items:center;gap:6px">
-                <div class="ob-view-btns">
-                    <button class="ob-view-btn active" id="ob-view-classic" onclick="setOBView('classic')">Classic</button>
-                    <button class="ob-view-btn" id="ob-view-bubble" onclick="setOBView('bubble')">Clusters</button>
-                </div>
-                <button class="ob-gear-btn" onclick="toggleOBSettings()" title="Settings">⚙</button>
+            <div class="ob-hdr-btns">
+                <button class="ob-icon-btn" onclick="obRefresh()" title="Обновить">↺</button>
+                <button class="ob-icon-btn" onclick="toggleOBSettings()" title="Настройки">⚙</button>
             </div>
         </div>
-        <div class="cluster-ctrl">
-            <span class="cluster-ctrl-label">TF</span>
-            <button class="ctf-btn" onclick="setClusterTF(60,this)">1m</button>
-            <button class="ctf-btn active" id="ctf-5m" onclick="setClusterTF(300,this)">5m</button>
-            <button class="ctf-btn" onclick="setClusterTF(900,this)">15m</button>
-            <button class="ctf-btn" onclick="setClusterTF(0,this)">∞</button>
-            <button class="ctf-reset" onclick="clearClusters()" title="Reset clusters">↺</button>
-            <button class="alert-toggle" id="alert-toggle" onclick="toggleAlerts()" title="Sound alerts">🔔</button>
-        </div>
+
+        <!-- Settings popup -->
         <div class="ob-settings-popup" id="ob-settings-popup">
             <div class="obs-row">
-                <div class="obs-label">LARGE ORDER 1 (yellow) — min size</div>
-                <input class="obs-input" id="obs-t1" type="number" value="1000" onchange="obSettings.thresh1=+this.value">
+                <div class="obs-label">Заполнение строки при USD (полная заливка)</div>
+                <input class="obs-input" id="obs-fill" type="number" value="10000"
+                    onchange="obSettings.fillUSD=+this.value">
             </div>
             <div class="obs-row">
-                <div class="obs-label">LARGE ORDER 2 (purple) — min size</div>
-                <input class="obs-input" id="obs-t2" type="number" value="5000" onchange="obSettings.thresh2=+this.value">
+                <div class="obs-label">Крупный объем USD 1 → желтый</div>
+                <input class="obs-input" id="obs-t1" type="number" value="2500"
+                    onchange="obSettings.largeUSD1=+this.value">
             </div>
             <div class="obs-row">
-                <div class="obs-label">BAR OPACITY % (5–80)</div>
-                <input class="obs-input" id="obs-opacity" type="number" min="5" max="80" value="22" onchange="obSettings.barOpacity=+this.value/100">
+                <div class="obs-label">Крупный объем USD 2 → фиолетовый</div>
+                <input class="obs-input" id="obs-t2" type="number" value="5000"
+                    onchange="obSettings.largeUSD2=+this.value">
             </div>
-            <div class="obs-row">
-                <div class="obs-label">TAPE FILTER — min trade size (USD)</div>
-                <input class="obs-input" id="obs-tape-min" type="number" value="0" min="0" step="100" onchange="minTapeUSD=+this.value">
-            </div>
-            <div class="obs-row">
-                <div class="obs-label">CLUSTER BUBBLE MAX SIZE (px)</div>
-                <input class="obs-input" id="obs-bubble-max" type="number" value="28" min="8" max="60" onchange="clusterBubbleMax=+this.value">
-            </div>
-            <button class="obs-close" onclick="toggleOBSettings()">Apply & Close</button>
+            <button class="obs-close" onclick="toggleOBSettings()">Применить</button>
         </div>
-        <div class="ob-bubble-wrap" id="ob-bubble-wrap">
-            <canvas id="bubble-ob-canvas"></canvas>
-        </div>
-        <div class="ob-panels" id="ob-panels">
-            <div class="ob-vp">
-                <div class="ob-vp-rows" id="ob-vp"></div>
-                <div class="vp-footer" id="vp-footer"></div>
+
+        <!-- Leverage popup -->
+        <div class="ob-lev-popup" id="ob-lev-popup">
+            <div class="ob-lev-row">
+                <div class="ob-lev-label">Плечо</div>
+                <div class="ob-lev-val" id="ob-lev-val">20</div>
+                <input class="ob-lev-slider" type="range" id="ob-lev-slider"
+                    min="1" max="125" value="20" oninput="obLevChange(this.value)">
             </div>
-            <div class="ob-tape" id="ob-tape"></div>
+            <div class="ob-lev-info">
+                <div class="ob-lev-info-item">Макс. плечо: <span id="ob-max-lev">125</span></div>
+                <div class="ob-lev-info-item">Макс. позиция: <span id="ob-max-pos">100K USD</span></div>
+            </div>
+            <button class="ob-lev-close" onclick="obLevConfirm()">Применить</button>
+        </div>
+
+        <!-- VP period context menu -->
+        <div class="vp-ctx-menu" id="vp-ctx-menu">
+            <div class="vp-ctx-item" data-ms="0"        onclick="setVPPeriod(0)">Maximize</div>
+            <div class="vp-ctx-item" data-ms="30000"    onclick="setVPPeriod(30000)">30s</div>
+            <div class="vp-ctx-item" data-ms="60000"    onclick="setVPPeriod(60000)">1m</div>
+            <div class="vp-ctx-item active" data-ms="300000"  onclick="setVPPeriod(300000)">5m</div>
+            <div class="vp-ctx-item" data-ms="600000"   onclick="setVPPeriod(600000)">10m</div>
+            <div class="vp-ctx-item" data-ms="900000"   onclick="setVPPeriod(900000)">15m</div>
+            <div class="vp-ctx-item" data-ms="1800000"  onclick="setVPPeriod(1800000)">30m</div>
+            <div class="vp-ctx-item" data-ms="3600000"  onclick="setVPPeriod(3600000)">1h</div>
+            <div class="vp-ctx-item" data-ms="86400000" onclick="setVPPeriod(86400000)">1d</div>
+        </div>
+
+        <!-- Main panels -->
+        <div class="ob-panels">
+            <!-- Left: Volume Profile columns -->
+            <div class="ob-vp-wrap" id="ob-vp-wrap"
+                oncontextmenu="showVPCtxMenu(event)"
+                onwheel="vpScroll(event)">
+                <div class="ob-vp-cols" id="ob-vp-cols"></div>
+                <div class="ob-vp-footer" id="ob-vp-footer"></div>
+            </div>
+
+            <!-- Right: Order Book -->
             <div class="ob-book">
                 <div class="ob-asks" id="ob-asks"></div>
-                <div class="ob-spread" id="ob-spread">$67,234.50</div>
+                <div class="ob-spread" id="ob-spread">—</div>
                 <div class="ob-bids" id="ob-bids"></div>
             </div>
         </div>
-        <div class="ob-quick-order">
-            <div class="ob-qo-row">
-                <select class="ob-qo-type" id="ob-qo-type"><option>Fix</option><option>Mkt</option></select>
-                <select class="ob-qo-currency" id="ob-qo-currency"><option>USD</option><option>Coins</option></select>
-                <input type="number" class="ob-qo-input" id="ob-qo-size" value="100" min="0">
+
+        <!-- Bottom: Order control -->
+        <div class="ob-control">
+            <div class="ob-ctrl-top">
+                <button class="ob-lev-btn" id="ob-lev-btn" ondblclick="toggleLevPopup()">20X</button>
+                <div class="ob-pings" id="ob-pings">
+                    <span class="ob-ping-val none">—</span>
+                    <span class="ob-ping-val none">—</span>
+                    <span class="ob-ping-val none">—</span>
+                </div>
             </div>
-            <div class="ob-qo-presets">
-                <button class="ob-qo-preset" onclick="setQOSize(100)">100</button>
-                <button class="ob-qo-preset" onclick="setQOSize(250)">250</button>
-                <button class="ob-qo-preset" onclick="setQOSize(500)">500</button>
-                <button class="ob-qo-preset" onclick="setQOSize(5000)">5 000</button>
-            </div>
+            <div class="ob-presets" id="ob-presets"></div>
         </div>
     </div>
 
@@ -1616,244 +1690,299 @@ function drawFib(d, A, B, W) {
 // ORDER BOOK
 // ══════════════════════════════════════════════════════════════════
 
-const obSettings = { thresh1: 1000, thresh2: 5000, barOpacity: 0.22 };
+const obSettings = { fillUSD: 10000, largeUSD1: 2500, largeUSD2: 5000 };
 
-const vpMap      = new Map();
-const vpPeriods  = [];
-let   vpCurrent  = { buy: 0, sell: 0 };
+// ── VP state ──
+let vpPeriodMs      = 300000;
+let vpPeriodTimer   = null;
+let vpCurrentPeriod = { startTs: Date.now(), priceMap: new Map() };
+let vpHistory       = [];
+let vpScrollOffset  = 0;
+const VP_VISIBLE    = 4;
+const VP_MAX_HIST   = 100;
 
-const tapeEntries = [];
-const MAX_TAPE    = 60;
+// ── Placed orders (simulation) ──
+let placedOrders  = [];
+let nextOrderId   = 1;
 
-function toggleOBSettings() {
-    document.getElementById('ob-settings-popup').classList.toggle('open');
-}
+// ── Order presets ──
+let orderPresets    = [50, 1000, 2000, 5000, 10000];
+let activePresetIdx = 0;
 
-function setQOSize(v) { document.getElementById('ob-qo-size').value = v; }
+// ── Pings ──
+let orderPings = [];
 
+// ── OB leverage ──
+let obLeverage   = 20;
+let obLevPending = 20;
+
+// ── Helpers ──
 function fmtK(v) {
     if (v >= 1000000) return (v / 1000000).toFixed(1) + 'M';
     if (v >= 1000)    return (v / 1000).toFixed(1) + 'K';
     return Math.round(v).toString();
 }
 
-function vpRecord(price, size, isBuy) {
-    const key = +(price.toFixed(3));
-    if (!vpMap.has(key)) vpMap.set(key, { buy: 0, sell: 0 });
-    const e = vpMap.get(key);
-    if (isBuy) { e.buy += size; vpCurrent.buy += size; }
-    else        { e.sell += size; vpCurrent.sell += size; }
+// ── Settings / popups ──
+function toggleOBSettings() {
+    document.getElementById('ob-settings-popup').classList.toggle('open');
+    document.getElementById('ob-lev-popup').classList.remove('open');
 }
 
-function vpRotatePeriod() {
-    vpPeriods.unshift({ ...vpCurrent });
-    if (vpPeriods.length > 8) vpPeriods.pop();
-    vpCurrent = { buy: 0, sell: 0 };
+function toggleLevPopup() {
+    document.getElementById('ob-lev-popup').classList.toggle('open');
+    document.getElementById('ob-settings-popup').classList.remove('open');
+    document.getElementById('ob-lev-slider').value = obLeverage;
+    document.getElementById('ob-lev-val').textContent = obLeverage;
 }
 
-// ══════════════════════════════════════════════════════════════════
-// CLUSTER ENGINE  (executed trades, not resting orders)
-// ══════════════════════════════════════════════════════════════════
-
-const clusterMap   = new Map();
-let   clusterTF    = 300;          // active timeframe (s); 0 = never reset
-let   clusterStart = Date.now();
-let   minTapeUSD   = 0;
-let   clusterBubbleMax = 28;       // max bubble diameter in classic view (px)
-
-// Price → grid key (adaptive step per asset)
-function cKey(p) {
-    if (p >= 10000) return Math.round(p);
-    if (p >= 1000)  return Math.round(p * 2) / 2;
-    if (p >= 100)   return Math.round(p * 10) / 10;
-    if (p >= 10)    return Math.round(p * 100) / 100;
-    if (p >= 1)     return Math.round(p * 1000) / 1000;
-    return Math.round(p * 10000) / 10000;
+function obLevChange(v) {
+    obLevPending = +v;
+    document.getElementById('ob-lev-val').textContent = v;
 }
 
-function clusterAdd(price, qty, isBuy) {
-    if (clusterTF > 0 && Date.now() - clusterStart > clusterTF * 1000) {
-        clusterMap.clear(); clusterStart = Date.now();
+function obLevConfirm() {
+    obLeverage = obLevPending;
+    document.getElementById('ob-lev-btn').textContent = obLeverage + 'X';
+    document.getElementById('ob-lev-popup').classList.remove('open');
+    leverage = obLeverage;
+}
+
+function obRefresh() {
+    if (binanceWS) { binanceWS.close(); binanceWS = null; }
+    loadChart(currentSym, tfInterval);
+}
+
+// ── Presets ──
+function renderPresets() {
+    document.getElementById('ob-presets').innerHTML = orderPresets.map((v, i) => {
+        const lbl = v >= 1000 ? (v / 1000).toFixed(v % 1000 ? 1 : 0) + 'K' : String(v);
+        return `<button class="ob-preset-btn${i === activePresetIdx ? ' active' : ''}"
+            onclick="selectPreset(${i})"
+            ondblclick="editPreset(event,${i})"
+        >${lbl}</button>`;
+    }).join('');
+}
+
+function selectPreset(i) {
+    activePresetIdx = i;
+    renderPresets();
+}
+
+function editPreset(e, i) {
+    e.stopPropagation();
+    const btn = e.currentTarget;
+    const inp = document.createElement('input');
+    inp.type = 'number'; inp.value = orderPresets[i];
+    inp.style.cssText = 'width:100%;font-size:9px;padding:0 2px;border:1px solid #5588ff;outline:none;background:#fff;';
+    btn.innerHTML = '';
+    btn.appendChild(inp);
+    inp.focus(); inp.select();
+    const commit = () => { const nv = +inp.value; if (nv > 0) orderPresets[i] = nv; renderPresets(); };
+    inp.addEventListener('blur', commit);
+    inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') { inp.blur(); } });
+}
+
+// ── Pings ──
+function addPing(ms) {
+    orderPings.unshift(ms);
+    if (orderPings.length > 3) orderPings.pop();
+    const els = document.getElementById('ob-pings').querySelectorAll('.ob-ping-val');
+    els.forEach((el, i) => {
+        const p = orderPings[i];
+        if (p === undefined) { el.textContent = '—'; el.className = 'ob-ping-val none'; return; }
+        el.textContent = p + 'ms';
+        el.className   = 'ob-ping-val' + (p > 500 ? ' slow' : p > 250 ? ' med' : '');
+    });
+}
+
+// ── VP period ──
+function vpStartNewPeriod() {
+    if (vpCurrentPeriod.priceMap.size > 0) {
+        vpHistory.unshift(vpCurrentPeriod);
+        if (vpHistory.length > VP_MAX_HIST) vpHistory.pop();
     }
-    const k = cKey(price);
-    if (!clusterMap.has(k)) clusterMap.set(k, { buy: 0, sell: 0 });
-    const c = clusterMap.get(k);
-    if (isBuy) c.buy += qty; else c.sell += qty;
+    vpCurrentPeriod = { startTs: Date.now(), priceMap: new Map() };
 }
 
-function clusterGet(price) {
-    return clusterMap.get(cKey(price)) || { buy: 0, sell: 0 };
+function vpRestartTimer() {
+    if (vpPeriodTimer) clearInterval(vpPeriodTimer);
+    if (vpPeriodMs === 0) return;
+    vpPeriodTimer = setInterval(vpStartNewPeriod, vpPeriodMs);
 }
 
-function setClusterTF(tf, btn) {
-    clusterTF = tf;
-    clusterMap.clear(); clusterStart = Date.now();
-    document.querySelectorAll('.ctf-btn').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
+function setVPPeriod(ms) {
+    vpPeriodMs = ms;
+    vpHistory = [];
+    vpCurrentPeriod = { startTs: Date.now(), priceMap: new Map() };
+    vpScrollOffset = 0;
+    vpRestartTimer();
+    document.querySelectorAll('.vp-ctx-item').forEach(el => {
+        el.classList.toggle('active', +el.dataset.ms === ms);
+    });
+    hideVPCtxMenu();
 }
 
-function clearClusters() {
-    clusterMap.clear(); clusterStart = Date.now();
+function showVPCtxMenu(e) {
+    e.preventDefault();
+    const menu = document.getElementById('vp-ctx-menu');
+    menu.style.left = e.clientX + 'px';
+    menu.style.top  = e.clientY + 'px';
+    menu.classList.add('open');
 }
 
-// ── Sound alerts ───────────────────────────────────────────────────
-let _audioCtx = null;
-let alertsOn  = true;
-let lastAlert = 0;
-
-function getAudioCtx() {
-    if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    return _audioCtx;
+function hideVPCtxMenu() {
+    document.getElementById('vp-ctx-menu').classList.remove('open');
 }
 
-function playBeep(freq, dur, vol) {
-    if (!alertsOn) return;
-    const now = Date.now();
-    if (now - lastAlert < 300) return;   // debounce 300ms
-    lastAlert = now;
-    try {
-        const ctx  = getAudioCtx();
-        const osc  = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.frequency.value = freq;
-        osc.type = 'sine';
-        gain.gain.setValueAtTime(vol, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + dur);
-    } catch(e) {}
-}
-
-function toggleAlerts() {
-    alertsOn = !alertsOn;
-    const btn = document.getElementById('alert-toggle');
-    if (btn) btn.classList.toggle('on', alertsOn);
-    // Resume AudioContext on first user interaction
-    if (alertsOn && _audioCtx && _audioCtx.state === 'suspended') _audioCtx.resume();
-}
-
-// Initialise AudioContext on first user interaction
 document.addEventListener('click', () => {
-    if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (_audioCtx.state === 'suspended') _audioCtx.resume();
-}, { once: true });
+    hideVPCtxMenu();
+    document.getElementById('ob-settings-popup').classList.remove('open');
+    document.getElementById('ob-lev-popup').classList.remove('open');
+});
+document.querySelector('.orderbook').addEventListener('click', e => e.stopPropagation());
 
-function generateOB(mid, levels = 20) {
-    const asks = [], bids = [];
-    const step = mid * 0.00015;
-    for (let i = 0; i < levels; i++) {
-        const price = mid + step * (i + 0.5 + Math.random() * 0.3);
-        let size = Math.round(Math.random() * 1500 + 50);
-        if (Math.random() < 0.08) size = Math.round(Math.random() * 6000 + 1200);
-        if (Math.random() < 0.02) size = Math.round(Math.random() * 18000 + 6000);
-        asks.push({ price, size });
-    }
-    for (let i = 0; i < levels; i++) {
-        const price = mid - step * (i + 0.5 + Math.random() * 0.3);
-        let size = Math.round(Math.random() * 1500 + 50);
-        if (Math.random() < 0.08) size = Math.round(Math.random() * 6000 + 1200);
-        if (Math.random() < 0.02) size = Math.round(Math.random() * 18000 + 6000);
-        bids.push({ price, size });
-    }
-    return { asks: asks.reverse(), bids };
+function vpScroll(e) {
+    e.preventDefault();
+    const dir = e.deltaY > 0 ? 1 : -1;
+    const maxOffset = Math.max(0, vpHistory.length - VP_VISIBLE + 1);
+    vpScrollOffset = Math.max(0, Math.min(vpScrollOffset + dir, maxOffset));
+    if (realAsks.length || realBids.length)
+        renderRealOB([...realAsks].reverse(), realBids);
 }
 
-function renderOB() {
-    const { asks, bids } = generateOB(currentPrice);
-    const maxSize = Math.max(...asks.map(r => r.size), ...bids.map(r => r.size));
-    const { thresh1: t1, thresh2: t2, barOpacity: op } = obSettings;
+function vpRecord(price, size, isBuy) {
+    const key = price.toString();
+    const map = vpCurrentPeriod.priceMap;
+    if (!map.has(key)) map.set(key, { buy: 0, sell: 0 });
+    const e = map.get(key);
+    if (isBuy) e.buy += size; else e.sell += size;
+}
+
+// ── Placed orders ──
+function placeOrder(price, side) {
+    const size = orderPresets[activePresetIdx];
+    placedOrders.push({ id: nextOrderId++, price: +price, size, side });
+    setTimeout(() => addPing(Math.round(120 + Math.random() * 330)), 40);
+    if (realAsks.length || realBids.length)
+        renderRealOB([...realAsks].reverse(), realBids);
+}
+
+function cancelOrder(id) {
+    placedOrders = placedOrders.filter(o => o.id !== id);
+    if (realAsks.length || realBids.length)
+        renderRealOB([...realAsks].reverse(), realBids);
+}
+
+// ── OB rendering ──
+function renderRealOB(displayAsks, displayBids) {
+    const { fillUSD, largeUSD1, largeUSD2 } = obSettings;
+    const bestAsk = displayAsks.length ? displayAsks[displayAsks.length - 1].price : 0;
+    const bestBid = displayBids.length ? displayBids[0].price : 0;
 
     function rowHtml(r, cls, isBest) {
-        const w  = (r.size / maxSize * 100).toFixed(1);
-        const lc = r.size >= t2 ? ' ob-large-2' : r.size >= t1 ? ' ob-large-1' : '';
+        const usdVal = r.price * r.size;
+        const lc = usdVal >= largeUSD2 ? ' ob-large-2'
+                 : usdVal >= largeUSD1 ? ' ob-large-1' : '';
         const bc = isBest ? (cls === 'ask-row' ? ' best-ask' : ' best-bid') : '';
-        return `<div class="ob-row ${cls}${lc}${bc}">
+        const barW = lc ? 0 : Math.min(100, usdVal / fillUSD * 100).toFixed(1);
+        const refPrice = cls === 'ask-row' ? bestAsk : bestBid;
+        const pctDist = refPrice > 0 ? Math.abs((r.price - refPrice) / refPrice * 100) : 0;
+        const pctStr  = pctDist < 0.001 ? '—' : pctDist.toFixed(2) + '%';
+        const orders  = placedOrders.filter(o => o.price === r.price);
+        const badge   = orders.map(o =>
+            `<span class="ob-order-badge">
+                <span>${fmtK(o.size)}</span>
+                <span class="ob-order-x" onclick="event.stopPropagation();cancelOrder(${o.id})">×</span>
+            </span>`
+        ).join('');
+        return `<div class="ob-row ${cls}${lc}${bc}"
+            onclick="placeOrder(${r.price},'buy')"
+            oncontextmenu="event.preventDefault();placeOrder(${r.price},'sell')">
             <span class="ob-vol">${fmtK(r.size)}</span>
+            <span class="ob-pct">${pctStr}</span>
+            ${badge || '<span class="ob-spacer"></span>'}
             <span class="ob-price">${fmt(r.price)}</span>
-            <div class="ob-bar" style="width:${w}%;opacity:${op}"></div>
+            ${lc ? '' : `<div class="ob-bar" style="width:${barW}%"></div>`}
         </div>`;
     }
 
-    document.getElementById('ob-asks').innerHTML =
-        asks.map((r, i) => rowHtml(r, 'ask-row', i === asks.length - 1)).join('');
-    document.getElementById('ob-bids').innerHTML =
-        bids.map((r, i) => rowHtml(r, 'bid-row', i === 0)).join('');
+    const asksEl = document.getElementById('ob-asks');
+    const bidsEl = document.getElementById('ob-bids');
+    asksEl.innerHTML = displayAsks.map((r, i) => rowHtml(r, 'ask-row', i === displayAsks.length - 1)).join('');
+    bidsEl.innerHTML = displayBids.map((r, i) => rowHtml(r, 'bid-row', i === 0)).join('');
+    asksEl.scrollTop = asksEl.scrollHeight;
     document.getElementById('ob-spread').textContent = '$' + fmt(currentPrice);
 
-    // Simulate 0–2 market orders per tick
-    const n = Math.random() < 0.6 ? 1 : Math.random() < 0.4 ? 2 : 0;
-    const topP = asks[0].price, botP = bids[bids.length - 1].price;
-    for (let k = 0; k < n; k++) {
-        const isBuy = Math.random() > 0.48;
-        const pool  = isBuy ? asks : bids;
-        const row   = pool[Math.floor(Math.random() * Math.min(3, pool.length))];
-        const size  = Math.round(Math.random() * 1200 + 20);
-        const pct   = (topP - botP) > 0 ? (row.price - botP) / (topP - botP) : 0.5;
-        tapeEntries.unshift({ price: row.price, size, isBuy, pct, ts: Date.now() });
-        if (tapeEntries.length > MAX_TAPE) tapeEntries.pop();
-        vpRecord(row.price, size, isBuy);
+    renderVPCols(displayAsks, displayBids);
+}
+
+function renderVPCols(displayAsks, displayBids) {
+    const allRows = [...displayAsks, ...displayBids];
+    if (!allRows.length) return;
+
+    // Build list of period slots to show (left=oldest, right=newest)
+    const slots = [];
+    for (let i = VP_VISIBLE - 1; i >= 0; i--) {
+        const histIdx = vpScrollOffset + i - 1;
+        if (histIdx < 0)                   slots.push({ data: vpCurrentPeriod });
+        else if (histIdx < vpHistory.length) slots.push({ data: vpHistory[histIdx] });
+        else                               slots.push(null);
     }
 
-    renderVP(asks, bids);
-    renderTape(asks, bids);
-}
+    let colsHtml = '', footerHtml = '';
 
-function renderVP(asks, bids) {
-    const allRows = [...asks, ...bids];
+    for (const slot of slots) {
+        if (!slot) {
+            colsHtml   += `<div class="vp-col">${allRows.map(() => '<div class="vp-cell"></div>').join('')}</div>`;
+            footerHtml += `<div class="vp-col-footer"><div class="vp-ft-vol">—</div><div class="vp-ft-delta">—</div><div class="vp-ft-time">—</div></div>`;
+            continue;
+        }
+        const pd = slot.data;
+        let totalBuy = 0, totalSell = 0, maxVol = 0, maxKey = '';
+        pd.priceMap.forEach((e, k) => {
+            const tot = e.buy + e.sell;
+            totalBuy += e.buy; totalSell += e.sell;
+            if (tot > maxVol) { maxVol = tot; maxKey = k; }
+        });
 
-    // Cluster data per row
-    const clusters = allRows.map(r => {
-        const c = clusterGet(r.price);
-        return { buy: c.buy, sell: c.sell, total: c.buy + c.sell };
-    });
+        let cellsHtml = '';
+        for (const r of allRows) {
+            const key = r.price.toString();
+            const e   = pd.priceMap.get(key) || { buy: 0, sell: 0 };
+            const tot = e.buy + e.sell;
+            const isMax = key === maxKey && tot > 0;
+            let bgStyle = '';
+            if (tot > 0) {
+                const diff  = e.buy - e.sell;
+                const ratio = Math.abs(diff) / tot;
+                const alpha = (0.08 + ratio * 0.6).toFixed(2);
+                bgStyle = diff > 0 ? `background:rgba(0,160,60,${alpha})`
+                        : diff < 0 ? `background:rgba(200,30,30,${alpha})`
+                        : `background:rgba(128,128,128,0.18)`;
+            }
+            cellsHtml += `<div class="vp-cell${isMax ? ' is-max' : ''}" style="${bgStyle}">
+                <span class="vp-cell-val">${tot > 0 ? fmtK(tot) : ''}</span>
+            </div>`;
+        }
+        colsHtml += `<div class="vp-col">${cellsHtml}</div>`;
 
-    const maxC = Math.max(...clusters.map(c => c.total), 1);
-    const MAX_D = clusterBubbleMax;
-
-    document.getElementById('ob-vp').innerHTML = clusters.map(c => {
-        if (!c.total) return '<div class="vp-row"></div>';
-
-        const ratio = c.buy / c.total;             // 0=all sells … 1=all buys
-        const d     = Math.sqrt(c.total / maxC) * MAX_D;
-        const dPx   = Math.max(4, Math.round(d));
-
-        // Interpolate red ↔ green by ratio
-        const ri = Math.round(205 * (1 - ratio) + 91  * ratio);
-        const gi = Math.round(65  * (1 - ratio) + 186 * ratio);
-        const bi = Math.round(65  * (1 - ratio) + 137 * ratio);
-        const alpha = (0.35 + Math.abs(ratio - 0.5) * 1.1).toFixed(2);
-
-        const delta   = c.buy - c.sell;
-        const label   = dPx >= 16 ? fmtK(Math.abs(delta)) : '';
-
-        return `<div class="vp-row">
-            <div class="cl-bubble" style="width:${dPx}px;height:${dPx}px;background:rgba(${ri},${gi},${bi},${alpha})">${label}</div>
+        const total  = totalBuy + totalSell;
+        const delta  = totalBuy - totalSell;
+        const dCls   = delta > 0 ? 'pos' : delta < 0 ? 'neg' : '';
+        const dSign  = delta >= 0 ? '+' : '';
+        const timeStr = pd.startTs
+            ? new Date(pd.startTs).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })
+            : '—';
+        footerHtml += `<div class="vp-col-footer">
+            <div class="vp-ft-vol">${total > 0 ? fmtK(total) : '—'}</div>
+            <div class="vp-ft-delta ${dCls}">${total > 0 ? dSign + fmtK(Math.abs(delta)) : '—'}</div>
+            <div class="vp-ft-time">${timeStr}</div>
         </div>`;
-    }).join('');
+    }
 
-    // Delta footer (unchanged)
-    const periods = [...vpPeriods.slice(0, 5), vpCurrent];
-    document.getElementById('vp-footer').innerHTML = periods.map(p => {
-        const d   = p.buy - p.sell;
-        const cls = d < 0 ? 'vp-delta-neg' : d > 0 ? 'vp-delta-pos' : '';
-        const tot = p.buy + p.sell;
-        return `<div class="vp-period ${cls}">${tot > 0 ? fmtK(tot) : '—'}</div>`;
-    }).join('');
-}
-
-function renderTape(asks, bids) {
-    const el = document.getElementById('ob-tape');
-    const h  = el.offsetHeight || 400;
-    if (!tapeEntries.length) return;
-    const now = Date.now();
-    el.innerHTML = tapeEntries.slice(0, 25).map(e => {
-        const age = Math.min((now - e.ts) / 7000, 1);
-        const op  = (1 - age * 0.75).toFixed(2);
-        const y   = Math.max(2, Math.min(h - 16, Math.round((1 - e.pct) * h)));
-        const cls = e.isBuy ? 'tape-buy' : 'tape-sell';
-        return `<div class="tape-bubble ${cls}" style="top:${y}px;opacity:${op}">${fmtK(e.size)}</div>`;
-    }).join('');
+    document.getElementById('ob-vp-cols').innerHTML   = colsHtml;
+    document.getElementById('ob-vp-footer').innerHTML = footerHtml;
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -1873,19 +2002,18 @@ function connectBinanceWS(symLow, tfLabel) {
         const msg    = JSON.parse(e.data);
         const stream = msg.stream || '';
         const data   = msg.data;
-        if (stream.includes('@depth20'))  onDepthMsg(data);
-        else if (stream.includes('@kline_')) onKlineMsg(data);
+        if (stream.includes('@depth20'))       onDepthMsg(data);
+        else if (stream.includes('@kline_'))   onKlineMsg(data);
         else if (stream.includes('@aggTrade')) onAggTradeMsg(data);
     };
 
-    binanceWS.onerror  = (e) => console.error('Binance WS error', e);
-    binanceWS.onclose  = ()  => console.log('Binance WS closed');
+    binanceWS.onerror = (e) => console.error('Binance WS error', e);
+    binanceWS.onclose = ()  => console.log('Binance WS closed');
 }
 
 function onDepthMsg(data) {
     realBids = (data.b || []).map(([p,q]) => ({ price:+p, size:+q })).filter(r=>r.size>0);
     realAsks = (data.a || []).map(([p,q]) => ({ price:+p, size:+q })).filter(r=>r.size>0);
-    // asks from Binance: ascending (best ask first) → reverse for display (highest at top, best at bottom)
     renderRealOB([...realAsks].reverse(), realBids);
 }
 
@@ -1903,49 +2031,7 @@ function onAggTradeMsg(data) {
     const price = +data.p;
     const size  = +data.q;
     currentPrice = price;
-
-    clusterAdd(price, size, isBuy);
     vpRecord(price, size, isBuy);
-
-    // Sound alerts on large trades
-    if (size >= obSettings.thresh2) playBeep(660, 0.14, 0.28);
-    else if (size >= obSettings.thresh1) playBeep(440, 0.08, 0.15);
-
-    // Tape: respect USD filter
-    const usd = price * size;
-    if (usd >= minTapeUSD) {
-        const topP = realAsks.length ? realAsks[realAsks.length-1].price : price * 1.001;
-        const botP = realBids.length ? realBids[realBids.length-1].price : price * 0.999;
-        const pct  = topP > botP ? (price - botP) / (topP - botP) : 0.5;
-        tapeEntries.unshift({ price, size, isBuy, pct, ts: Date.now(), usd });
-        if (tapeEntries.length > MAX_TAPE) tapeEntries.pop();
-    }
-}
-
-function renderRealOB(displayAsks, displayBids) {
-    const maxSize = Math.max(...displayAsks.map(r=>r.size), ...displayBids.map(r=>r.size), 1);
-    const { thresh1:t1, thresh2:t2, barOpacity:op } = obSettings;
-
-    function rowHtml(r, cls, isBest) {
-        const w  = (r.size / maxSize * 100).toFixed(1);
-        const lc = r.size >= t2 ? ' ob-large-2' : r.size >= t1 ? ' ob-large-1' : '';
-        const bc = isBest ? (cls === 'ask-row' ? ' best-ask' : ' best-bid') : '';
-        return `<div class="ob-row ${cls}${lc}${bc}">
-            <span class="ob-vol">${fmtK(r.size)}</span>
-            <span class="ob-price">${fmt(r.price)}</span>
-            <div class="ob-bar" style="width:${w}%;opacity:${op}"></div>
-        </div>`;
-    }
-
-    const asksEl = document.getElementById('ob-asks');
-    const bidsEl = document.getElementById('ob-bids');
-    asksEl.innerHTML = displayAsks.map((r,i) => rowHtml(r,'ask-row', i===displayAsks.length-1)).join('');
-    bidsEl.innerHTML = displayBids.map((r,i) => rowHtml(r,'bid-row', i===0)).join('');
-    asksEl.scrollTop = asksEl.scrollHeight; // best ask always visible at bottom
-    document.getElementById('ob-spread').textContent = '$' + fmt(currentPrice);
-
-    renderVP(displayAsks, displayBids);
-    renderTape(displayAsks, displayBids);
 }
 
 function updatePriceDisplay() {
@@ -2123,7 +2209,7 @@ function closeBotModal(e) {
 // ══════════════════════════════════════════════════════════════════
 
 // ══════════════════════════════════════════════════════════════════
-// BUBBLE ORDER BOOK
+// BUBBLE ORDER BOOK (disabled — canvas element removed)
 // ══════════════════════════════════════════════════════════════════
 
 const BubbleOB = (() => {
@@ -2428,23 +2514,22 @@ const BubbleOB = (() => {
     };
 })();
 
-function setOBView(mode) {
-    const isCl = mode === 'classic';
-    document.getElementById('ob-panels').classList.toggle('hidden', !isCl);
-    document.getElementById('ob-bubble-wrap').classList.toggle('visible', !isCl);
-    document.getElementById('ob-view-classic').classList.toggle('active', isCl);
-    document.getElementById('ob-view-bubble').classList.toggle('active', !isCl);
-    if (isCl) BubbleOB.deactivate(); else BubbleOB.activate();
-}
-
-BubbleOB.init();
+function setOBView() {}
 
 renderBots();
+renderPresets();
+vpRestartTimer();
 updateFunding();
 
-setInterval(tick,            500);
-setInterval(updateFunding,  1000);
-setInterval(vpRotatePeriod, 10000);
+setInterval(tick,           500);
+setInterval(updateFunding, 1000);
+
+// Hotkeys 1-5 for preset selection
+document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+    const n = parseInt(e.key);
+    if (n >= 1 && n <= orderPresets.length) selectPreset(n - 1);
+});
 setInterval(() => {
     bots.filter(b => b.status === 'running').forEach(b => {
         b.runtime += 1;
