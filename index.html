@@ -10,7 +10,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --bg:       #0b0f17;
+            --bg:       #a9a9a9;
             --surface:  #131c2e;
             --surface2: #0f1623;
             --border:   #1f2a3d;
@@ -238,16 +238,13 @@
         /* ── MAIN ── */
         .main { display: flex; flex: 1; overflow: hidden; }
 
-        /* ── ORDER BOOK (3-panel) ── */
+        /* ── ORDER BOOK (3-panel, light) ── */
         .orderbook {
-            width: 390px;
-            flex-shrink: 0;
-            background: var(--surface);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
+            width: 390px; flex-shrink: 0;
+            background: #e8e8e8;
+            border-right: 1px solid #b0b0b0;
+            display: flex; flex-direction: column;
+            overflow: hidden; position: relative;
         }
 
         .panel-hdr {
@@ -261,32 +258,32 @@
             justify-content: space-between;
             flex-shrink: 0;
         }
+        .orderbook .panel-hdr { color: #333; background: #e0e0e0; border-bottom-color: #c0c0c0; }
 
         .ob-panels { flex: 1; display: flex; overflow: hidden; min-height: 0; }
 
         /* — Volume Profile — */
         .ob-vp {
             width: 86px; flex-shrink: 0;
-            border-right: 1px solid var(--border);
+            border-right: 1px solid #c0c0c0;
             display: flex; flex-direction: column; overflow: hidden;
+            background: #e8e8e8;
         }
         .ob-vp-rows { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
-        .vp-row {
-            flex: 1; display: flex; align-items: center;
-            padding: 0 2px; position: relative; min-height: 0; overflow: hidden;
-        }
-        .vp-bar { position: absolute; left:0; top:1px; bottom:1px; background: rgba(217,173,112,0.18); pointer-events:none; }
-        .vp-val { position: relative; z-index:1; font-size:9px; color:var(--muted); white-space:nowrap; }
-        .vp-footer { flex-shrink:0; border-top:1px solid var(--border); padding:3px 2px; display:flex; gap:1px; }
-        .vp-period { flex:1; text-align:center; font-size:8px; color:var(--muted); white-space:nowrap; overflow:hidden; min-width:0; }
-        .vp-delta-neg { color: var(--red) !important; }
-        .vp-delta-pos { color: var(--green) !important; }
+        .vp-row { flex: 1; display: flex; align-items: center; padding: 0 2px; position: relative; min-height: 0; overflow: hidden; }
+        .vp-bar { position: absolute; left:0; top:1px; bottom:1px; background: rgba(160,90,0,0.4); pointer-events:none; }
+        .vp-val { position: relative; z-index:1; font-size:9px; color:#333; white-space:nowrap; }
+        .vp-footer { flex-shrink:0; border-top:1px solid #c0c0c0; padding:3px 2px; display:flex; gap:1px; background:#e0e0e0; }
+        .vp-period { flex:1; text-align:center; font-size:8px; color:#555; white-space:nowrap; overflow:hidden; min-width:0; }
+        .vp-delta-neg { color: #cc0000 !important; }
+        .vp-delta-pos { color: #006600 !important; }
 
         /* — Tape — */
         .ob-tape {
             width: 68px; flex-shrink: 0;
-            border-right: 1px solid var(--border);
+            border-right: 1px solid #c0c0c0;
             position: relative; overflow: hidden;
+            background: #e8e8e8;
         }
         .tape-bubble {
             position: absolute; left: 3px;
@@ -294,19 +291,21 @@
             font-size: 9px; font-weight: 600;
             white-space: nowrap; pointer-events: none; line-height: 1.5;
         }
-        .tape-buy  { background: rgba(91,186,137,0.22);  color: var(--green); border: 1px solid rgba(91,186,137,0.35); }
-        .tape-sell { background: rgba(205,65,65,0.22);   color: var(--red);   border: 1px solid rgba(205,65,65,0.35); }
+        .tape-buy  { background: rgba(0,160,80,0.18);  color: #005530; border: 1px solid rgba(0,160,80,0.45); }
+        .tape-sell { background: rgba(200,0,0,0.18);   color: #880000; border: 1px solid rgba(200,0,0,0.4); }
 
         /* — Order Book column — */
         .ob-book { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
-        .ob-asks { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; }
-        .ob-bids { flex: 1; overflow: hidden; }
+        .ob-asks { flex: 1; overflow-y: auto; display: flex; flex-direction: column; justify-content: flex-end; }
+        .ob-bids { flex: 1; overflow-y: auto; }
+        .ob-asks::-webkit-scrollbar, .ob-bids::-webkit-scrollbar { width: 3px; }
+        .ob-asks::-webkit-scrollbar-thumb, .ob-bids::-webkit-scrollbar-thumb { background: #aaa; border-radius: 2px; }
 
         .ob-spread {
             padding: 4px 6px; text-align: center;
             font-size: 12px; font-weight: 700;
-            border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-            background: var(--surface2); flex-shrink: 0; color: var(--blue);
+            border-top: 1px solid #8888cc; border-bottom: 1px solid #8888cc;
+            background: #c8d4f8; flex-shrink: 0; color: #000;
         }
 
         .ob-row {
@@ -315,48 +314,50 @@
             position: relative; font-size: 10px; line-height: 1.45;
             transition: filter 0.08s;
         }
-        .ob-row:hover { filter: brightness(1.5); }
+        .ob-row:hover { filter: brightness(0.88); }
         .ob-vol   { flex: 1; font-size: 10px; font-weight: 500; z-index: 1; position: relative; }
         .ob-price { text-align: right; font-size: 10px; z-index: 1; position: relative; min-width: 52px; }
         .ob-bar   { position: absolute; top:0; right:0; bottom:0; pointer-events:none; }
 
-        .ask-row           { background: rgba(205,65,65,0.07); }
-        .ask-row .ob-vol   { color: var(--red); }
-        .ask-row .ob-price { color: var(--red); }
-        .ask-row .ob-bar   { background: rgba(205,65,65,1); }
-        .bid-row           { background: rgba(91,186,137,0.07); }
-        .bid-row .ob-vol   { color: var(--green); }
-        .bid-row .ob-price { color: var(--green); }
-        .bid-row .ob-bar   { background: rgba(91,186,137,1); }
+        .ask-row           { background: #ffc8c8; }
+        .ask-row .ob-vol   { color: #000; }
+        .ask-row .ob-price { color: #000; }
+        .ask-row .ob-bar   { background: #ff8800; }
+        .bid-row           { background: #c8ffc8; }
+        .bid-row .ob-vol   { color: #000; }
+        .bid-row .ob-price { color: #000; }
+        .bid-row .ob-bar   { background: #ff8800; }
 
-        .best-ask { background: rgba(205,65,65,0.22) !important; }
-        .best-bid { background: rgba(91,186,137,0.22) !important; }
-        .ob-large-1 .ob-vol   { color: #f0c030 !important; font-weight: 700; }
-        .ob-large-1 .ob-price { color: #f0c030 !important; }
-        .ob-large-2 .ob-vol   { color: #b070e0 !important; font-weight: 700; }
-        .ob-large-2 .ob-price { color: #b070e0 !important; }
+        .best-ask { background: #ff8888 !important; }
+        .best-bid { background: #70dd70 !important; }
+        .ob-large-1           { background: #ffd700 !important; }
+        .ob-large-1 .ob-vol   { color: #000 !important; font-weight: 700; }
+        .ob-large-1 .ob-price { color: #000 !important; }
+        .ob-large-2           { background: #d8a0f0 !important; }
+        .ob-large-2 .ob-vol   { color: #000 !important; font-weight: 700; }
+        .ob-large-2 .ob-price { color: #000 !important; }
 
         /* — Gear / Settings — */
         .ob-gear-btn {
-            background: none; border: none; color: var(--muted);
+            background: none; border: none; color: #555;
             cursor: pointer; font-size: 13px; padding: 0 3px; line-height: 1; transition: color 0.1s;
         }
-        .ob-gear-btn:hover { color: var(--text); }
+        .ob-gear-btn:hover { color: #000; }
         .ob-settings-popup {
             display: none; position: absolute; top: 34px; left: 8px;
-            width: 215px; background: var(--surface); border: 1px solid var(--border);
+            width: 215px; background: #f0f0f0; border: 1px solid #b0b0b0;
             border-radius: 6px; padding: 10px 12px; z-index: 100;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.25);
         }
         .ob-settings-popup.open { display: block; }
         .obs-row { margin-bottom: 8px; }
-        .obs-label { color: var(--muted); font-size: 10px; margin-bottom: 3px; }
+        .obs-label { color: #555; font-size: 10px; margin-bottom: 3px; }
         .obs-input {
-            width: 100%; padding: 4px 7px; background: var(--surface2);
-            border: 1px solid var(--border); color: var(--text); border-radius: 3px;
+            width: 100%; padding: 4px 7px; background: #fff;
+            border: 1px solid #c0c0c0; color: #000; border-radius: 3px;
             font-family: var(--font); font-size: 11px; outline: none;
         }
-        .obs-input:focus { border-color: var(--blue); }
+        .obs-input:focus { border-color: #5588ff; }
         .obs-close {
             width: 100%; padding: 5px; background: var(--blue); color: #1a1000;
             border: none; border-radius: 3px; cursor: pointer;
@@ -365,24 +366,24 @@
 
         /* — Quick Order — */
         .ob-quick-order {
-            flex-shrink: 0; border-top: 1px solid var(--border);
-            padding: 5px 7px; background: var(--surface2);
+            flex-shrink: 0; border-top: 1px solid #c0c0c0;
+            padding: 5px 7px; background: #d8d8d8;
         }
         .ob-qo-row { display: flex; gap: 4px; margin-bottom: 4px; align-items: center; }
         .ob-qo-type, .ob-qo-currency { padding: 2px 4px; font-size: 10px; flex-shrink: 0; }
         .ob-qo-input {
-            flex: 1; padding: 3px 5px; background: var(--bg);
-            border: 1px solid var(--border); color: var(--text); border-radius: 3px;
+            flex: 1; padding: 3px 5px; background: #fff;
+            border: 1px solid #c0c0c0; color: #000; border-radius: 3px;
             font-family: var(--font); font-size: 10px; outline: none; min-width: 0;
         }
-        .ob-qo-input:focus { border-color: var(--blue); }
+        .ob-qo-input:focus { border-color: #5588ff; }
         .ob-qo-presets { display: flex; gap: 3px; }
         .ob-qo-preset {
-            flex: 1; padding: 3px 0; background: var(--bg); border: 1px solid var(--border);
-            color: var(--muted); border-radius: 3px; cursor: pointer;
+            flex: 1; padding: 3px 0; background: #e8e8e8; border: 1px solid #aaa;
+            color: #333; border-radius: 3px; cursor: pointer;
             font-family: var(--font); font-size: 9px; text-align: center; transition: all 0.1s;
         }
-        .ob-qo-preset:hover { border-color: var(--blue); color: var(--blue); }
+        .ob-qo-preset:hover { border-color: #5588ff; color: #5588ff; }
 
         /* ── CHART AREA ── */
         .chart-area { flex: 1; display: flex; flex-direction: row; overflow: hidden; min-width: 0; }
@@ -1741,10 +1742,11 @@ function renderRealOB(displayAsks, displayBids) {
         </div>`;
     }
 
-    document.getElementById('ob-asks').innerHTML =
-        displayAsks.map((r,i) => rowHtml(r,'ask-row', i===displayAsks.length-1)).join('');
-    document.getElementById('ob-bids').innerHTML =
-        displayBids.map((r,i) => rowHtml(r,'bid-row', i===0)).join('');
+    const asksEl = document.getElementById('ob-asks');
+    const bidsEl = document.getElementById('ob-bids');
+    asksEl.innerHTML = displayAsks.map((r,i) => rowHtml(r,'ask-row', i===displayAsks.length-1)).join('');
+    bidsEl.innerHTML = displayBids.map((r,i) => rowHtml(r,'bid-row', i===0)).join('');
+    asksEl.scrollTop = asksEl.scrollHeight; // best ask always visible at bottom
     document.getElementById('ob-spread').textContent = '$' + fmt(currentPrice);
 
     renderVP(displayAsks, displayBids);
