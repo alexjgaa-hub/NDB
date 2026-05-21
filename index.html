@@ -362,11 +362,10 @@
         .ob-vol   { width: 36px; font-size: 10px; font-weight: 500; z-index: 1; position: relative; flex-shrink: 0; }
         .ob-pct   { display: none; }
         .ob-order-badge {
-            flex: 1; font-size: 9px; font-weight: 700; z-index: 2; position: relative;
-            display: flex; align-items: center; justify-content: flex-end; gap: 1px;
-            overflow: hidden; min-width: 0;
+            flex: 0 0 auto; font-size: 9px; font-weight: 700; z-index: 2; position: relative;
+            display: flex; align-items: center; gap: 2px;
             border: 1px solid rgba(255,255,255,0.75);
-            border-radius: 4px; padding: 0 2px; color: #fff;
+            border-radius: 4px; padding: 0 4px; color: #fff;
         }
         .ob-order-badge.ob-order-buy  { background: rgba(30,180,60,0.88); }
         .ob-order-badge.ob-order-sell { background: rgba(220,50,50,0.88); }
@@ -1926,7 +1925,8 @@ function renderRealOB(displayAsks, displayBids) {
             oncontextmenu="event.preventDefault();placeOrder(${r.price},'sell')">
             <span class="ob-pct">${pctStr}</span>
             <span class="ob-vol">${fmtK(usdVal)}</span>
-            ${badge || '<span class="ob-spacer"></span>'}
+            <span class="ob-spacer"></span>
+            ${badge}
             <span class="ob-price">${fmt(r.price)}</span>
             <div class="ob-bar" style="width:${barW}%"></div>
         </div>`;
