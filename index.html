@@ -342,16 +342,11 @@
 
         /* — OB right panel — */
         .ob-book { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
-        .ob-asks { flex: 1; overflow-y: auto; display: flex; flex-direction: column; justify-content: flex-end; }
-        .ob-bids { flex: 1; overflow-y: auto; }
-        .ob-asks::-webkit-scrollbar, .ob-bids::-webkit-scrollbar { width: 3px; }
-        .ob-asks::-webkit-scrollbar-thumb, .ob-bids::-webkit-scrollbar-thumb { background: #aaa; border-radius: 2px; }
-
-        .ob-spread {
-            padding: 3px 6px; text-align: center; font-size: 12px; font-weight: 700;
-            border-top: 1px solid #8888cc; border-bottom: 1px solid #8888cc;
-            background: #c8d4f8; flex-shrink: 0; color: #000;
-        }
+        .ob-scroll { flex: 1; overflow-y: auto; min-height: 0; }
+        .ob-scroll::-webkit-scrollbar { width: 3px; }
+        .ob-scroll::-webkit-scrollbar-thumb { background: #aaa; border-radius: 2px; }
+        .ob-asks { display: flex; flex-direction: column; }
+        .ob-bids { }
 
         .ob-row {
             display: flex; align-items: center; padding: 1px 4px 1px 3px;
@@ -359,13 +354,14 @@
             user-select: none;
         }
         .ob-vol   { width: 36px; font-size: 10px; font-weight: 500; z-index: 1; position: relative; flex-shrink: 0; }
-        .ob-pct   { width: 36px; font-size: 9px; font-weight: 600; color: #333; z-index: 1; position: relative; flex-shrink: 0; display: none; }
-        .ob-row:hover .ob-pct { display: block; }
-        .ob-row:hover .ob-vol { display: none; }
+        .ob-pct   { width: 36px; font-size: 9px; font-weight: 600; color: #333; z-index: 1; position: relative; flex-shrink: 0; visibility: hidden; }
+        .ob-row:hover .ob-pct { visibility: visible; }
         .ob-order-badge {
             flex: 1; font-size: 9px; font-weight: 700; z-index: 2; position: relative;
             display: flex; align-items: center; justify-content: flex-end; gap: 1px;
             overflow: hidden; min-width: 0;
+            background: rgba(50,100,255,0.82); border: 1.5px solid rgba(255,255,255,0.75);
+            border-radius: 4px; padding: 0 2px; color: #fff;
         }
         .ob-order-x {
             cursor: pointer; color: #c00; padding: 0 2px;
@@ -374,20 +370,22 @@
         .ob-order-x:hover { color: #f00; }
         .ob-spacer { flex: 1; }
         .ob-price { text-align: right; font-size: 10px; z-index: 1; position: relative; min-width: 56px; }
-        .ob-bar   { position: absolute; top: 0; right: 0; bottom: 0; pointer-events: none; }
+        .ob-bar   { position: absolute; top: 0; left: 0; bottom: 0; pointer-events: none; }
 
         .ask-row { background: #ffc8c8; }
         .ask-row .ob-vol, .ask-row .ob-pct, .ask-row .ob-price { color: #000; }
         .ask-row .ob-bar { background: #ff8800; }
+        .ask-row:hover { background: rgba(160,100,220,0.45) !important; }
         .bid-row { background: #c8ffc8; }
         .bid-row .ob-vol, .bid-row .ob-pct, .bid-row .ob-price { color: #000; }
         .bid-row .ob-bar { background: #ff8800; }
+        .bid-row:hover { background: rgba(160,100,220,0.45) !important; }
 
         .best-ask { background: #e85050 !important; }
         .best-bid { background: #38bb38 !important; }
-        .ob-large-1 { background: #ffd700 !important; }
+        .ob-large-1 .ob-bar { background: #ffd700 !important; }
         .ob-large-1 .ob-vol, .ob-large-1 .ob-price { color: #000 !important; font-weight: 700; }
-        .ob-large-2 { background: #d8a0f0 !important; }
+        .ob-large-2 .ob-bar { background: #d8a0f0 !important; }
         .ob-large-2 .ob-vol, .ob-large-2 .ob-price { color: #000 !important; font-weight: 700; }
 
         /* — Order Control Panel — */
@@ -913,9 +911,10 @@
 
             <!-- Right: Order Book -->
             <div class="ob-book">
-                <div class="ob-asks" id="ob-asks"></div>
-                <div class="ob-spread" id="ob-spread">—</div>
-                <div class="ob-bids" id="ob-bids"></div>
+                <div class="ob-scroll" id="ob-scroll">
+                    <div class="ob-asks" id="ob-asks"></div>
+                    <div class="ob-bids" id="ob-bids"></div>
+                </div>
             </div>
         </div>
 
@@ -1341,6 +1340,7 @@ async function loadChart(sym, interval) {
     const tfLabel = TF_LABEL_MAP[tfInterval] || '15m';
 
     if (binanceWS) { binanceWS.close(); binanceWS = null; }
+    obNeedCenter = true;
 
     try {
         const res = await fetch(
@@ -1721,6 +1721,7 @@ let orderPings = [];
 // ── OB leverage ──
 let obLeverage   = 20;
 let obLevPending = 20;
+let obNeedCenter = true;
 
 // ── Helpers ──
 function fmtK(v) {
@@ -1756,6 +1757,7 @@ function obLevConfirm() {
 
 function obRefresh() {
     if (binanceWS) { binanceWS.close(); binanceWS = null; }
+    obNeedCenter = true;
     loadChart(currentSym, tfInterval);
 }
 
@@ -1879,6 +1881,11 @@ function cancelOrder(id) {
     if (realAsks.length || realBids.length)
         renderRealOB([...realAsks].reverse(), realBids);
 }
+function cancelOrdersAtPrice(price) {
+    placedOrders = placedOrders.filter(o => o.price !== price);
+    if (realAsks.length || realBids.length)
+        renderRealOB([...realAsks].reverse(), realBids);
+}
 
 // ── OB rendering ──
 function renderRealOB(displayAsks, displayBids) {
@@ -1891,34 +1898,42 @@ function renderRealOB(displayAsks, displayBids) {
         const lc = usdVal >= largeUSD2 ? ' ob-large-2'
                  : usdVal >= largeUSD1 ? ' ob-large-1' : '';
         const bc = isBest ? (cls === 'ask-row' ? ' best-ask' : ' best-bid') : '';
-        const barW = lc ? 0 : Math.min(100, usdVal / fillUSD * 100).toFixed(1);
+        const barW = Math.min(100, usdVal / fillUSD * 100).toFixed(1);
         const refPrice = cls === 'ask-row' ? bestAsk : bestBid;
         const pctDist = refPrice > 0 ? Math.abs((r.price - refPrice) / refPrice * 100) : 0;
         const pctStr  = pctDist < 0.001 ? '—' : pctDist.toFixed(2) + '%';
-        const orders  = placedOrders.filter(o => o.price === r.price);
-        const badge   = orders.map(o =>
-            `<span class="ob-order-badge">
-                <span>${fmtK(o.size)}</span>
-                <span class="ob-order-x" onclick="event.stopPropagation();cancelOrder(${o.id})">×</span>
-            </span>`
-        ).join('');
+        const ordersAtPrice = placedOrders.filter(o => o.price === r.price);
+        let badge = '';
+        if (ordersAtPrice.length > 0) {
+            const totalSize = ordersAtPrice.reduce((sum, o) => sum + o.size, 0);
+            badge = `<span class="ob-order-badge">
+                <span>${fmtK(totalSize)}</span>
+                <span class="ob-order-x" onclick="event.stopPropagation();cancelOrdersAtPrice(${r.price})">×</span>
+            </span>`;
+        }
         return `<div class="ob-row ${cls}${lc}${bc}"
             onclick="placeOrder(${r.price},'buy')"
             oncontextmenu="event.preventDefault();placeOrder(${r.price},'sell')">
-            <span class="ob-vol">${fmtK(r.size)}</span>
             <span class="ob-pct">${pctStr}</span>
+            <span class="ob-vol">${fmtK(r.size)}</span>
             ${badge || '<span class="ob-spacer"></span>'}
             <span class="ob-price">${fmt(r.price)}</span>
-            ${lc ? '' : `<div class="ob-bar" style="width:${barW}%"></div>`}
+            <div class="ob-bar" style="width:${barW}%"></div>
         </div>`;
     }
 
     const asksEl = document.getElementById('ob-asks');
     const bidsEl = document.getElementById('ob-bids');
+    const scrollEl = document.getElementById('ob-scroll');
     asksEl.innerHTML = displayAsks.map((r, i) => rowHtml(r, 'ask-row', i === displayAsks.length - 1)).join('');
     bidsEl.innerHTML = displayBids.map((r, i) => rowHtml(r, 'bid-row', i === 0)).join('');
-    asksEl.scrollTop = asksEl.scrollHeight;
-    document.getElementById('ob-spread').textContent = '$' + fmt(currentPrice);
+
+    if (obNeedCenter) {
+        requestAnimationFrame(() => {
+            scrollEl.scrollTop = asksEl.offsetHeight - scrollEl.clientHeight / 2;
+        });
+        obNeedCenter = false;
+    }
 
     renderVPCols(displayAsks, displayBids);
 }
