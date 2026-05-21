@@ -365,14 +365,16 @@
             flex: 1; font-size: 9px; font-weight: 700; z-index: 2; position: relative;
             display: flex; align-items: center; justify-content: flex-end; gap: 1px;
             overflow: hidden; min-width: 0;
-            background: rgba(50,100,255,0.82); border: 1.5px solid rgba(255,255,255,0.75);
+            border: 0.5px solid rgba(255,255,255,0.75);
             border-radius: 4px; padding: 0 2px; color: #fff;
         }
+        .ob-order-badge.ob-order-buy  { background: rgba(30,180,60,0.88); }
+        .ob-order-badge.ob-order-sell { background: rgba(220,50,50,0.88); }
         .ob-order-x {
-            cursor: pointer; color: #c00; padding: 0 2px;
-            font-size: 11px; line-height: 1; font-weight: 400;
+            cursor: pointer; color: rgba(255,255,255,0.85); padding: 0 2px;
+            font-size: 16px; line-height: 1; font-weight: 400;
         }
-        .ob-order-x:hover { color: #f00; }
+        .ob-order-x:hover { color: #fff; }
         .ob-spacer { flex: 1; }
         .ob-price { text-align: right; font-size: 10px; z-index: 1; position: relative; min-width: 56px; }
         .ob-bar   { position: absolute; top: 0; left: 0; bottom: 0; pointer-events: none; }
@@ -386,11 +388,11 @@
         .bid-row .ob-bar { background: #ff8800; }
         .bid-row:hover { background: rgba(160,100,220,0.45) !important; }
 
-        .best-ask { background: #e85050 !important; }
-        .best-bid { background: #38bb38 !important; }
+        .best-ask { background: #ff4444 !important; }
+        .best-bid { background: #22cc44 !important; }
         .ob-large-1 .ob-bar { background: #ffd700 !important; }
         .ob-large-1 .ob-vol, .ob-large-1 .ob-price { color: #000 !important; font-weight: 700; }
-        .ob-large-2 .ob-bar { background: #d8a0f0 !important; }
+        .ob-large-2 .ob-bar { background: #ff82b4 !important; }
         .ob-large-2 .ob-vol, .ob-large-2 .ob-price { color: #000 !important; font-weight: 700; }
 
         /* — Order Control Panel — */
@@ -1911,8 +1913,10 @@ function renderRealOB(displayAsks, displayBids) {
         const ordersAtPrice = placedOrders.filter(o => o.price === r.price);
         let badge = '';
         if (ordersAtPrice.length > 0) {
-            const totalSize = ordersAtPrice.reduce((sum, o) => sum + o.size, 0);
-            badge = `<span class="ob-order-badge">
+            const totalSize  = ordersAtPrice.reduce((sum, o) => sum + o.size, 0);
+            const badgeSide  = ordersAtPrice[0].side;
+            const badgeCls   = badgeSide === 'buy' ? ' ob-order-buy' : ' ob-order-sell';
+            badge = `<span class="ob-order-badge${badgeCls}">
                 <span>${fmtK(totalSize)}</span>
                 <span class="ob-order-x" onclick="event.stopPropagation();cancelOrdersAtPrice(${r.price})">×</span>
             </span>`;
@@ -1921,7 +1925,7 @@ function renderRealOB(displayAsks, displayBids) {
             onclick="placeOrder(${r.price},'buy')"
             oncontextmenu="event.preventDefault();placeOrder(${r.price},'sell')">
             <span class="ob-pct">${pctStr}</span>
-            <span class="ob-vol">${fmtK(r.size)}</span>
+            <span class="ob-vol">${fmtK(usdVal)}</span>
             ${badge || '<span class="ob-spacer"></span>'}
             <span class="ob-price">${fmt(r.price)}</span>
             <div class="ob-bar" style="width:${barW}%"></div>
