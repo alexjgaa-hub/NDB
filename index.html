@@ -2011,7 +2011,7 @@ function renderVPCols(displayAsks, displayBids) {
             : '—';
         footerHtml += `<div class="vp-col-footer">
             <div class="vp-ft-vol">${total > 0 ? fmtK(total) : '—'}</div>
-            <div class="vp-ft-delta ${dCls}">${total > 0 ? dSign + fmtK(Math.abs(delta)) : '—'}</div>
+            <div class="vp-ft-delta ${dCls}">${total > 0 ? dSign + fmtK(Math.abs(delta)) : 'n:'+pd.priceMap.size}</div>
             <div class="vp-ft-time">${timeStr}</div>
         </div>`;
     }
