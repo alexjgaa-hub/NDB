@@ -655,6 +655,45 @@
         ::-webkit-scrollbar-track { background:transparent; }
         ::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
 
+        /* ── CLUSTER CONTROLS BAR ── */
+        .cluster-ctrl {
+            padding: 4px 10px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+            background: var(--surface2);
+        }
+        .cluster-ctrl-label { color: var(--muted); font-size: 9px; letter-spacing: 0.5px; margin-right: 2px; }
+        .ctf-btn {
+            padding: 1px 6px; border: 1px solid var(--border); border-radius: 3px;
+            background: transparent; color: var(--muted); cursor: pointer;
+            font-size: 9px; font-family: var(--font); transition: all 0.12s; line-height: 1.9;
+        }
+        .ctf-btn.active { border-color: var(--yellow); color: var(--yellow); background: rgba(217,173,112,0.1); }
+        .ctf-reset {
+            margin-left: auto; padding: 1px 8px; border: 1px solid var(--border); border-radius: 3px;
+            background: transparent; color: var(--muted); cursor: pointer;
+            font-size: 11px; font-family: var(--font); line-height: 1.7; transition: all 0.12s;
+        }
+        .ctf-reset:hover { border-color: var(--text); color: var(--text); }
+        .alert-toggle {
+            padding: 1px 6px; border: 1px solid var(--border); border-radius: 3px;
+            background: transparent; color: var(--muted); cursor: pointer;
+            font-size: 10px; font-family: var(--font); line-height: 1.9; transition: all 0.12s;
+        }
+        .alert-toggle.on { border-color: var(--yellow); color: var(--yellow); }
+        .orderbook .cluster-ctrl { background: #e4e8ef; border-bottom-color: #c0c0c0; }
+
+        /* ── CLUSTER VP ROWS ── */
+        .vp-row {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            position: relative; min-height: 0; overflow: hidden;
+        }
+        .cl-bubble {
+            border-radius: 50%; flex-shrink: 0; display: flex;
+            align-items: center; justify-content: center;
+            font-size: 7px; font-weight: bold; color: rgba(255,255,255,0.85);
+            transition: width 0.18s, height 0.18s, background 0.3s;
+        }
+
         /* ── BUBBLE ORDER BOOK ── */
         .ob-view-btns { display:flex; gap:2px; }
         .ob-view-btn {
@@ -752,10 +791,19 @@
             <div style="display:flex;align-items:center;gap:6px">
                 <div class="ob-view-btns">
                     <button class="ob-view-btn active" id="ob-view-classic" onclick="setOBView('classic')">Classic</button>
-                    <button class="ob-view-btn" id="ob-view-bubble" onclick="setOBView('bubble')">Bubble</button>
+                    <button class="ob-view-btn" id="ob-view-bubble" onclick="setOBView('bubble')">Clusters</button>
                 </div>
                 <button class="ob-gear-btn" onclick="toggleOBSettings()" title="Settings">⚙</button>
             </div>
+        </div>
+        <div class="cluster-ctrl">
+            <span class="cluster-ctrl-label">TF</span>
+            <button class="ctf-btn" onclick="setClusterTF(60,this)">1m</button>
+            <button class="ctf-btn active" id="ctf-5m" onclick="setClusterTF(300,this)">5m</button>
+            <button class="ctf-btn" onclick="setClusterTF(900,this)">15m</button>
+            <button class="ctf-btn" onclick="setClusterTF(0,this)">∞</button>
+            <button class="ctf-reset" onclick="clearClusters()" title="Reset clusters">↺</button>
+            <button class="alert-toggle" id="alert-toggle" onclick="toggleAlerts()" title="Sound alerts">🔔</button>
         </div>
         <div class="ob-settings-popup" id="ob-settings-popup">
             <div class="obs-row">
@@ -769,6 +817,14 @@
             <div class="obs-row">
                 <div class="obs-label">BAR OPACITY % (5–80)</div>
                 <input class="obs-input" id="obs-opacity" type="number" min="5" max="80" value="22" onchange="obSettings.barOpacity=+this.value/100">
+            </div>
+            <div class="obs-row">
+                <div class="obs-label">TAPE FILTER — min trade size (USD)</div>
+                <input class="obs-input" id="obs-tape-min" type="number" value="0" min="0" step="100" onchange="minTapeUSD=+this.value">
+            </div>
+            <div class="obs-row">
+                <div class="obs-label">CLUSTER BUBBLE MAX SIZE (px)</div>
+                <input class="obs-input" id="obs-bubble-max" type="number" value="28" min="8" max="60" onchange="clusterBubbleMax=+this.value">
             </div>
             <button class="obs-close" onclick="toggleOBSettings()">Apply & Close</button>
         </div>
@@ -1595,6 +1651,94 @@ function vpRotatePeriod() {
     vpCurrent = { buy: 0, sell: 0 };
 }
 
+// ══════════════════════════════════════════════════════════════════
+// CLUSTER ENGINE  (executed trades, not resting orders)
+// ══════════════════════════════════════════════════════════════════
+
+const clusterMap   = new Map();
+let   clusterTF    = 300;          // active timeframe (s); 0 = never reset
+let   clusterStart = Date.now();
+let   minTapeUSD   = 0;
+let   clusterBubbleMax = 28;       // max bubble diameter in classic view (px)
+
+// Price → grid key (adaptive step per asset)
+function cKey(p) {
+    if (p >= 10000) return Math.round(p);
+    if (p >= 1000)  return Math.round(p * 2) / 2;
+    if (p >= 100)   return Math.round(p * 10) / 10;
+    if (p >= 10)    return Math.round(p * 100) / 100;
+    if (p >= 1)     return Math.round(p * 1000) / 1000;
+    return Math.round(p * 10000) / 10000;
+}
+
+function clusterAdd(price, qty, isBuy) {
+    if (clusterTF > 0 && Date.now() - clusterStart > clusterTF * 1000) {
+        clusterMap.clear(); clusterStart = Date.now();
+    }
+    const k = cKey(price);
+    if (!clusterMap.has(k)) clusterMap.set(k, { buy: 0, sell: 0 });
+    const c = clusterMap.get(k);
+    if (isBuy) c.buy += qty; else c.sell += qty;
+}
+
+function clusterGet(price) {
+    return clusterMap.get(cKey(price)) || { buy: 0, sell: 0 };
+}
+
+function setClusterTF(tf, btn) {
+    clusterTF = tf;
+    clusterMap.clear(); clusterStart = Date.now();
+    document.querySelectorAll('.ctf-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+}
+
+function clearClusters() {
+    clusterMap.clear(); clusterStart = Date.now();
+}
+
+// ── Sound alerts ───────────────────────────────────────────────────
+let _audioCtx = null;
+let alertsOn  = true;
+let lastAlert = 0;
+
+function getAudioCtx() {
+    if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return _audioCtx;
+}
+
+function playBeep(freq, dur, vol) {
+    if (!alertsOn) return;
+    const now = Date.now();
+    if (now - lastAlert < 300) return;   // debounce 300ms
+    lastAlert = now;
+    try {
+        const ctx  = getAudioCtx();
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = freq;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(vol, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + dur);
+    } catch(e) {}
+}
+
+function toggleAlerts() {
+    alertsOn = !alertsOn;
+    const btn = document.getElementById('alert-toggle');
+    if (btn) btn.classList.toggle('on', alertsOn);
+    // Resume AudioContext on first user interaction
+    if (alertsOn && _audioCtx && _audioCtx.state === 'suspended') _audioCtx.resume();
+}
+
+// Initialise AudioContext on first user interaction
+document.addEventListener('click', () => {
+    if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (_audioCtx.state === 'suspended') _audioCtx.resume();
+}, { once: true });
+
 function generateOB(mid, levels = 20) {
     const asks = [], bids = [];
     const step = mid * 0.00015;
@@ -1657,26 +1801,38 @@ function renderOB() {
 
 function renderVP(asks, bids) {
     const allRows = [...asks, ...bids];
-    const step    = currentPrice * 0.00015;
-    let maxV = 1;
 
-    const vals = allRows.map(r => {
-        let v = r.size * 0.3;
-        vpMap.forEach((e, key) => {
-            if (Math.abs(key - r.price) < step * 2) v += e.buy + e.sell;
-        });
-        if (v > maxV) maxV = v;
-        return v;
+    // Cluster data per row
+    const clusters = allRows.map(r => {
+        const c = clusterGet(r.price);
+        return { buy: c.buy, sell: c.sell, total: c.buy + c.sell };
     });
 
-    document.getElementById('ob-vp').innerHTML = allRows.map((r, i) => {
-        const w = (vals[i] / maxV * 100).toFixed(1);
+    const maxC = Math.max(...clusters.map(c => c.total), 1);
+    const MAX_D = clusterBubbleMax;
+
+    document.getElementById('ob-vp').innerHTML = clusters.map(c => {
+        if (!c.total) return '<div class="vp-row"></div>';
+
+        const ratio = c.buy / c.total;             // 0=all sells … 1=all buys
+        const d     = Math.sqrt(c.total / maxC) * MAX_D;
+        const dPx   = Math.max(4, Math.round(d));
+
+        // Interpolate red ↔ green by ratio
+        const ri = Math.round(205 * (1 - ratio) + 91  * ratio);
+        const gi = Math.round(65  * (1 - ratio) + 186 * ratio);
+        const bi = Math.round(65  * (1 - ratio) + 137 * ratio);
+        const alpha = (0.35 + Math.abs(ratio - 0.5) * 1.1).toFixed(2);
+
+        const delta   = c.buy - c.sell;
+        const label   = dPx >= 16 ? fmtK(Math.abs(delta)) : '';
+
         return `<div class="vp-row">
-            <div class="vp-bar" style="width:${w}%"></div>
-            <span class="vp-val">${fmtK(vals[i])}</span>
+            <div class="cl-bubble" style="width:${dPx}px;height:${dPx}px;background:rgba(${ri},${gi},${bi},${alpha})">${label}</div>
         </div>`;
     }).join('');
 
+    // Delta footer (unchanged)
     const periods = [...vpPeriods.slice(0, 5), vpCurrent];
     document.getElementById('vp-footer').innerHTML = periods.map(p => {
         const d   = p.buy - p.sell;
@@ -1743,16 +1899,27 @@ function onKlineMsg(data) {
 }
 
 function onAggTradeMsg(data) {
-    const isBuy = !data.m;   // m=true: buyer is maker → aggressor = seller
+    const isBuy = !data.m;
     const price = +data.p;
     const size  = +data.q;
     currentPrice = price;
-    const topP = realAsks.length ? realAsks[realAsks.length-1].price : price * 1.001;
-    const botP = realBids.length ? realBids[realBids.length-1].price : price * 0.999;
-    const pct  = topP > botP ? (price - botP) / (topP - botP) : 0.5;
-    tapeEntries.unshift({ price, size, isBuy, pct, ts: Date.now() });
-    if (tapeEntries.length > MAX_TAPE) tapeEntries.pop();
+
+    clusterAdd(price, size, isBuy);
     vpRecord(price, size, isBuy);
+
+    // Sound alerts on large trades
+    if (size >= obSettings.thresh2) playBeep(660, 0.14, 0.28);
+    else if (size >= obSettings.thresh1) playBeep(440, 0.08, 0.15);
+
+    // Tape: respect USD filter
+    const usd = price * size;
+    if (usd >= minTapeUSD) {
+        const topP = realAsks.length ? realAsks[realAsks.length-1].price : price * 1.001;
+        const botP = realBids.length ? realBids[realBids.length-1].price : price * 0.999;
+        const pct  = topP > botP ? (price - botP) / (topP - botP) : 0.5;
+        tapeEntries.unshift({ price, size, isBuy, pct, ts: Date.now(), usd });
+        if (tapeEntries.length > MAX_TAPE) tapeEntries.pop();
+    }
 }
 
 function renderRealOB(displayAsks, displayBids) {
@@ -2027,156 +2194,193 @@ const BubbleOB = (() => {
         ctx.fillStyle = col.bg;
         ctx.fillRect(0, 0, W, H);
 
-        const asks = realAsks.slice(0, CFG.LEVELS);
-        const bids = realBids.slice(0, CFG.LEVELS);
-
-        if (!asks.length && !bids.length) {
+        // ── Data: use executed trade clusters, not resting orders ──
+        if (!currentPrice || !clusterMap.size) {
             ctx.fillStyle = col.muted;
             ctx.font = '11px Figtree, sans-serif';
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText('Waiting for data…', W / 2, H / 2);
+            ctx.fillText('Waiting for trade data…', W / 2, H / 2);
+            ctx.font = '9px Figtree, sans-serif';
+            ctx.fillText('(starts filling on first trades)', W / 2, H / 2 + 16);
             return;
         }
 
-        const topPrice    = asks.length ? asks[asks.length - 1].price : currentPrice * 1.015;
-        const bottomPrice = bids.length ? bids[bids.length - 1].price : currentPrice * 0.985;
-        const priceRange  = (topPrice - bottomPrice) || currentPrice * 0.02;
+        const RANGE = 0.022;  // ±2.2% of current price
+        const entries = [...clusterMap.entries()]
+            .filter(([p]) => Math.abs(p - currentPrice) / currentPrice <= RANGE)
+            .map(([p, c]) => ({ price: p, buy: c.buy, sell: c.sell, total: c.buy + c.sell }))
+            .filter(e => e.total > 0)
+            .sort((a, b) => a.price - b.price);
+
+        if (!entries.length) {
+            ctx.fillStyle = col.muted;
+            ctx.font = '10px Figtree, sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('No clusters in visible range', W / 2, H / 2);
+            return;
+        }
+
+        const topPrice    = Math.max(entries[entries.length - 1].price, currentPrice * (1 + RANGE * 0.3));
+        const bottomPrice = Math.min(entries[0].price,                  currentPrice * (1 - RANGE * 0.3));
+        const priceRange  = (topPrice - bottomPrice) || currentPrice * 0.01;
         const toY = p => CFG.PAD + (1 - (p - bottomPrice) / priceRange) * (H - CFG.PAD * 2);
 
         let maxVol = 1;
-        for (const r of asks) if (r.size > maxVol) maxVol = r.size;
-        for (const r of bids) if (r.size > maxVol) maxVol = r.size;
+        for (const e of entries) if (e.total > maxVol) maxVol = e.total;
 
+        // Update animated states
         const activeKeys = new Set();
-
-        for (const r of asks) {
-            const key = 'a' + r.price;
+        for (const e of entries) {
+            const key = String(e.price);
             activeKeys.add(key);
-            const tR = volToR(r.size, maxVol);
-            const tY = toY(r.price);
+            const tR  = volToR(e.total, maxVol);
+            const tY  = toY(e.price);
+            const ratio = e.buy / e.total;
             if (!states.has(key)) {
-                states.set(key, { r: 0, tR, y: tY, tY, alpha: 0, tA: 1, side: 'ask', price: r.price, vol: r.size });
+                states.set(key, { r: 0, tR, y: tY, tY, alpha: 0, tA: 1, price: e.price, total: e.total, buy: e.buy, sell: e.sell, ratio });
             } else {
-                const s = states.get(key); s.tR = tR; s.tY = tY; s.tA = 1; s.price = r.price; s.vol = r.size;
+                const s = states.get(key);
+                s.tR = tR; s.tY = tY; s.tA = 1;
+                s.total = e.total; s.buy = e.buy; s.sell = e.sell; s.ratio = ratio;
             }
         }
-
-        for (const r of bids) {
-            const key = 'b' + r.price;
-            activeKeys.add(key);
-            const tR = volToR(r.size, maxVol);
-            const tY = toY(r.price);
-            if (!states.has(key)) {
-                states.set(key, { r: 0, tR, y: tY, tY, alpha: 0, tA: 1, side: 'bid', price: r.price, vol: r.size });
-            } else {
-                const s = states.get(key); s.tR = tR; s.tY = tY; s.tA = 1; s.price = r.price; s.vol = r.size;
-            }
-        }
-
         for (const [key, s] of states) {
             if (!activeKeys.has(key)) { s.tA = 0; s.tR = 0; }
         }
-
         const sp = CFG.SPRING;
         for (const [key, s] of states) {
             s.r     += (s.tR - s.r)     * sp;
             s.y     += (s.tY - s.y)     * sp;
             s.alpha += (s.tA - s.alpha) * sp;
-            if (s.tA === 0 && s.alpha < 0.015) { states.delete(key); }
+            if (s.tA === 0 && s.alpha < 0.015) states.delete(key);
         }
 
         const CX = CFG.PRICE_W + (W - CFG.PRICE_W) / 2;
 
-        // Cumulative depth bars
-        let cumA = 0;
-        for (const r of [...asks].reverse()) {
-            cumA += r.size;
+        // ── Resting order book bars (faint background context) ──
+        const bestAsk = realAsks.length ? realAsks[0].price : 0;
+        const bestBid = realBids.length ? realBids[0].price : 0;
+        const maxOB   = Math.max(...realAsks.map(r=>r.size), ...realBids.map(r=>r.size), 1);
+
+        for (const r of realAsks.slice(0, 20)) {
             const y = toY(r.price);
-            const bw = Math.sqrt(cumA / (maxVol * CFG.LEVELS)) * (W - CFG.PRICE_W - 4);
-            ctx.fillStyle = 'rgba(205,65,65,0.05)';
-            ctx.fillRect(CFG.PRICE_W, y - 1.5, bw, 3);
+            if (y < 0 || y > H) continue;
+            const bw = (r.size / maxOB) * (W - CFG.PRICE_W - 6);
+            ctx.fillStyle = 'rgba(205,65,65,0.07)';
+            ctx.fillRect(CFG.PRICE_W + 1, y - 1, bw, 2.5);
         }
-        let cumB = 0;
-        for (const r of bids) {
-            cumB += r.size;
+        for (const r of realBids.slice(0, 20)) {
             const y = toY(r.price);
-            const bw = Math.sqrt(cumB / (maxVol * CFG.LEVELS)) * (W - CFG.PRICE_W - 4);
-            ctx.fillStyle = 'rgba(91,186,137,0.05)';
-            ctx.fillRect(CFG.PRICE_W, y - 1.5, bw, 3);
+            if (y < 0 || y > H) continue;
+            const bw = (r.size / maxOB) * (W - CFG.PRICE_W - 6);
+            ctx.fillStyle = 'rgba(91,186,137,0.07)';
+            ctx.fillRect(CFG.PRICE_W + 1, y - 1, bw, 2.5);
         }
 
-        // Price axis divider
+        // ── Price axis divider ──
         ctx.strokeStyle = col.border;
         ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(CFG.PRICE_W, 0); ctx.lineTo(CFG.PRICE_W, H); ctx.stroke();
 
-        // Spread dashed line
+        // ── Best bid / ask lines ──
+        if (bestAsk) {
+            const y = toY(bestAsk);
+            if (y > 0 && y < H) {
+                ctx.strokeStyle = 'rgba(205,65,65,0.4)'; ctx.lineWidth = 0.75; ctx.setLineDash([2,4]);
+                ctx.beginPath(); ctx.moveTo(CFG.PRICE_W, y); ctx.lineTo(W, y); ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+        if (bestBid) {
+            const y = toY(bestBid);
+            if (y > 0 && y < H) {
+                ctx.strokeStyle = 'rgba(91,186,137,0.4)'; ctx.lineWidth = 0.75; ctx.setLineDash([2,4]);
+                ctx.beginPath(); ctx.moveTo(CFG.PRICE_W, y); ctx.lineTo(W, y); ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+
+        // ── Current price line ──
         if (currentPrice) {
             const midY = toY(currentPrice);
             if (midY > 0 && midY < H) {
                 ctx.save();
-                ctx.strokeStyle = 'rgba(217,173,112,0.2)';
-                ctx.lineWidth = 1; ctx.setLineDash([3, 6]);
+                ctx.strokeStyle = 'rgba(217,173,112,0.35)';
+                ctx.lineWidth = 1; ctx.setLineDash([3, 5]);
                 ctx.beginPath(); ctx.moveTo(CFG.PRICE_W, midY); ctx.lineTo(W, midY); ctx.stroke();
                 ctx.restore();
             }
         }
 
-        // Bubbles — small first so large appear on top
+        // ── Cluster bubbles: small first, large on top ──
         const sorted = [...states.values()].sort((a, b) => a.r - b.r);
 
         for (const s of sorted) {
             if (s.r < 0.4 || s.alpha < 0.01) continue;
 
-            const isAsk = s.side === 'ask';
-            const isLg1 = s.vol >= obSettings.thresh1;
-            const isLg2 = s.vol >= obSettings.thresh2;
-            const rgb   = isAsk ? '205,65,65' : '91,186,137';
-            const aFill = isLg2 ? 0.72 * s.alpha : isLg1 ? 0.50 * s.alpha : 0.25 * s.alpha;
+            const ratio = s.ratio ?? 0.5;
+            // Delta-based color: red=sells, green=buys, smooth gradient
+            const ri = Math.round(205 * (1 - ratio) + 91  * ratio);
+            const gi = Math.round(65  * (1 - ratio) + 186 * ratio);
+            const bi = Math.round(65  * (1 - ratio) + 137 * ratio);
+            const strength = Math.abs(ratio - 0.5) * 2;  // 0 = balanced, 1 = pure side
+            const aFill = (0.25 + strength * 0.55) * s.alpha;
+            const isLg1 = s.total >= obSettings.thresh1;
+            const isLg2 = s.total >= obSettings.thresh2;
 
-            if (isLg1 && s.r > 6) {
+            // Glow for significant clusters
+            if (isLg1 && s.r > 5) {
                 ctx.save();
-                ctx.shadowColor = isAsk ? '#cd4141' : '#5bba89';
-                ctx.shadowBlur  = isLg2 ? 22 : 12;
+                ctx.shadowColor = ratio > 0.5 ? '#5bba89' : '#cd4141';
+                ctx.shadowBlur  = isLg2 ? 20 : 10;
                 ctx.beginPath(); ctx.arc(CX, s.y, s.r, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(${rgb},${aFill * 0.22})`; ctx.fill();
+                ctx.fillStyle = `rgba(${ri},${gi},${bi},${aFill * 0.2})`; ctx.fill();
                 ctx.restore();
             }
 
+            // Fill
             ctx.beginPath(); ctx.arc(CX, s.y, s.r, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(${rgb},${aFill})`; ctx.fill();
-            ctx.strokeStyle = `rgba(${rgb},${Math.min(s.alpha * 0.8, 0.8)})`;
-            ctx.lineWidth   = isLg2 ? 1.5 : 0.7; ctx.stroke();
+            ctx.fillStyle = `rgba(${ri},${gi},${bi},${aFill})`;
+            ctx.fill();
 
-            if (s.r >= 16 && s.alpha > 0.45) {
+            // Border
+            ctx.strokeStyle = `rgba(${ri},${gi},${bi},${Math.min(s.alpha * 0.7, 0.7)})`;
+            ctx.lineWidth = isLg2 ? 1.5 : 0.7;
+            ctx.stroke();
+
+            // Volume label inside big bubbles
+            if (s.r >= 14 && s.alpha > 0.4) {
                 ctx.save(); ctx.shadowBlur = 0;
-                ctx.fillStyle    = `rgba(255,255,255,${Math.min(s.alpha * 0.9, 0.9)})`;
-                ctx.font         = `bold ${s.r >= 28 ? 10 : 9}px Figtree, sans-serif`;
+                ctx.fillStyle    = `rgba(255,255,255,${Math.min(s.alpha * 0.88, 0.88)})`;
+                ctx.font         = `bold ${s.r >= 24 ? 10 : 9}px Figtree, sans-serif`;
                 ctx.textAlign    = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillText(fmtVol(s.vol), CX, s.y); ctx.restore();
+                ctx.fillText(fmtVol(s.total), CX, s.y);
+                ctx.restore();
             }
         }
 
-        // Price labels — most important first, no overlap
+        // ── Price labels: most volume first, no overlap ──
         ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-        const usedBuckets = new Set();
-        const labelCandidates = [...states.values()]
-            .filter(s => s.alpha > 0.18 && s.r > 0.8)
-            .sort((a, b) => b.vol - a.vol);
+        const used = new Set();
+        const byVol = [...states.values()]
+            .filter(s => s.alpha > 0.15 && s.r > 0.5)
+            .sort((a, b) => b.total - a.total);
 
-        for (const s of labelCandidates) {
+        for (const s of byVol) {
             const bk = Math.round(s.y / 9);
-            if (usedBuckets.has(bk) || usedBuckets.has(bk - 1) || usedBuckets.has(bk + 1)) continue;
-            usedBuckets.add(bk);
-            const isAsk = s.side === 'ask';
-            const isLg1 = s.vol >= obSettings.thresh1;
-            const rgb   = isAsk ? '205,65,65' : '91,186,137';
-            ctx.fillStyle = `rgba(${rgb},${Math.min(s.alpha * (isLg1 ? 0.95 : 0.6), 0.92)})`;
-            ctx.font = `${isLg1 ? 'bold ' : ''}${isLg1 ? 10 : 9}px Figtree, sans-serif`;
+            if (used.has(bk) || used.has(bk-1) || used.has(bk+1)) continue;
+            used.add(bk);
+            const ratio  = s.ratio ?? 0.5;
+            const ri = Math.round(205 * (1-ratio) + 91  * ratio);
+            const gi = Math.round(65  * (1-ratio) + 186 * ratio);
+            const bi = Math.round(65  * (1-ratio) + 137 * ratio);
+            const isLg = s.total >= obSettings.thresh1;
+            ctx.fillStyle = `rgba(${ri},${gi},${bi},${Math.min(s.alpha * (isLg ? 0.9 : 0.55), 0.9)})`;
+            ctx.font = `${isLg ? 'bold ' : ''}${isLg ? 10 : 9}px Figtree, sans-serif`;
             ctx.fillText(fmtP(s.price), CFG.PRICE_W - 5, s.y);
         }
 
-        // Current price pill
+        // ── Current price pill ──
         if (currentPrice) {
             const midY = toY(currentPrice);
             if (midY > 8 && midY < H - 8) {
@@ -2184,11 +2388,19 @@ const BubbleOB = (() => {
                 ctx.font = 'bold 9.5px Figtree, sans-serif';
                 const pw = CFG.PRICE_W - 8, ph = 14;
                 drawRoundRect(3, midY - ph / 2, pw, ph, 3);
-                ctx.fillStyle = 'rgba(217,173,112,0.14)'; ctx.fill();
-                ctx.strokeStyle = 'rgba(217,173,112,0.5)'; ctx.lineWidth = 0.75; ctx.stroke();
+                ctx.fillStyle = 'rgba(217,173,112,0.16)'; ctx.fill();
+                ctx.strokeStyle = 'rgba(217,173,112,0.55)'; ctx.lineWidth = 0.75; ctx.stroke();
                 ctx.fillStyle = '#d9ad70'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.fillText(txt, 3 + pw / 2, midY);
             }
+        }
+
+        // ── Delta legend (bottom) ──
+        if (H > 80) {
+            const lx = CFG.PRICE_W + 6, ly = H - 14;
+            ctx.font = '8px Figtree, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = 'rgba(91,186,137,0.7)';  ctx.fillText('● Buy', lx, ly);
+            ctx.fillStyle = 'rgba(205,65,65,0.7)';   ctx.fillText('● Sell', lx + 36, ly);
         }
     }
 
