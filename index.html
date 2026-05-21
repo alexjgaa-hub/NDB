@@ -236,13 +236,13 @@
         .stat-value { font-size: 13px; font-weight: bold; }
 
         /* ── MAIN ── */
-        .main { display: flex; flex: 1; overflow: hidden; }
+        .main { display: flex; flex: 1; overflow: hidden; min-height: 0; }
 
         /* ── ORDER BOOK (2-panel redesign) ── */
         .orderbook {
             width: 420px; flex-shrink: 0;
             background: #e8e8e8;
-            border-right: 1px solid #b0b0b0;
+            border-left: 1px solid #b0b0b0;
             display: flex; flex-direction: column;
             overflow: hidden; position: relative;
         }
@@ -786,6 +786,180 @@
         .ob-bubble-wrap.visible { display: block; }
         .ob-panels.hidden { display: none; }
         #bubble-ob-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+        /* ── APP BODY ── */
+        .app-body { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: 200px; flex-shrink: 0;
+            background: var(--surface2);
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            overflow-y: auto; overflow-x: hidden;
+        }
+        .sb-logo {
+            padding: 14px 16px 10px;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .sb-logo-icon {
+            width: 28px; height: 28px; background: var(--blue);
+            border-radius: 6px; display: flex; align-items: center;
+            justify-content: center; font-size: 13px; font-weight: 700; color: #1a1000; flex-shrink: 0;
+        }
+        .sb-logo-text { font-size: 12px; font-weight: 700; color: var(--text); line-height: 1.2; }
+        .sb-logo-text span { display: block; font-size: 9px; font-weight: 400; color: var(--muted); letter-spacing: 1px; }
+        .sb-nav { padding: 8px 0; }
+        .sb-item {
+            display: flex; align-items: center; gap: 9px;
+            padding: 7px 16px; color: var(--muted); font-size: 12px;
+            cursor: pointer; transition: all 0.12s; user-select: none;
+        }
+        .sb-item:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+        .sb-item.active { color: var(--text); background: rgba(217,173,112,0.10); }
+        .sb-item-icon { font-size: 13px; width: 16px; text-align: center; flex-shrink: 0; }
+        .sb-divider { height: 1px; background: var(--border); margin: 4px 0; }
+        .sb-section { padding: 4px 0; }
+        .sb-section-hdr {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 6px 16px; color: var(--muted); font-size: 10px;
+            letter-spacing: 1px; cursor: pointer; user-select: none;
+        }
+        .sb-section-hdr:hover { color: var(--text); }
+        .sb-sub { padding-left: 12px; }
+        .sb-sub .sb-item { font-size: 11px; padding: 5px 16px 5px 12px; }
+
+        /* ── MAIN CONTENT ── */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+        /* ── EXCHANGE STATS ── */
+        .exchange-stats {
+            height: 72px; flex-shrink: 0;
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; padding: 0 14px; gap: 0;
+            overflow-x: auto;
+        }
+        .exch-card {
+            display: flex; align-items: center; gap: 12px;
+            padding: 0 20px; height: 100%;
+            border-right: 1px solid var(--border); cursor: pointer;
+            transition: background 0.12s; flex-shrink: 0; min-width: 190px;
+        }
+        .exch-card:first-child { padding-left: 0; }
+        .exch-card:hover { background: rgba(255,255,255,0.03); }
+        .exch-icon {
+            width: 36px; height: 36px; border-radius: 50%;
+            border: 2px solid var(--border); display: flex; align-items: center;
+            justify-content: center; flex-shrink: 0; position: relative;
+        }
+        .exch-icon svg { width: 20px; height: 20px; }
+        .exch-ring {
+            width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+            background: conic-gradient(var(--blue) 0% 35%, var(--border) 35% 100%);
+        }
+        .exch-info { flex: 1; min-width: 0; }
+        .exch-name { font-size: 12px; font-weight: 600; color: var(--text); }
+        .exch-pairs { display: flex; flex-direction: column; gap: 1px; margin-top: 3px; }
+        .exch-pair { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+        .exch-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .exch-sym { color: var(--muted); }
+        .exch-val { font-weight: 600; color: var(--text); }
+        .exch-arrow { color: var(--muted); font-size: 11px; margin-left: auto; }
+
+        /* ── TASKS PANEL ── */
+        .tasks-panel {
+            height: 280px; flex-shrink: 0;
+            background: var(--surface); border-top: 1px solid var(--border);
+            display: flex; flex-direction: column;
+        }
+        .tasks-hdr-top {
+            display: flex; align-items: center; gap: 3px;
+            padding: 6px 14px; border-bottom: 1px solid var(--border);
+            flex-shrink: 0; overflow-x: auto;
+        }
+        .task-strat-tab {
+            padding: 3px 10px; border: 1px solid var(--border); border-radius: 4px;
+            color: var(--muted); font-size: 11px; cursor: pointer; white-space: nowrap;
+            background: transparent; font-family: var(--font); transition: all 0.12s;
+        }
+        .task-strat-tab.active { border-color: var(--blue); color: var(--blue); background: rgba(217,173,112,0.10); }
+        .task-strat-tab:hover:not(.active) { border-color: var(--muted); color: var(--text); }
+        .task-strat-dropdown {
+            padding: 3px 10px; border: 1px solid var(--border); border-radius: 4px;
+            color: var(--muted); font-size: 11px; cursor: pointer; white-space: nowrap;
+            background: var(--surface2); font-family: var(--font);
+        }
+        .tasks-hdr-bot {
+            display: flex; align-items: center; gap: 8px;
+            padding: 5px 14px; border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .tasks-view-tab {
+            padding: 3px 10px; color: var(--muted); font-size: 11px;
+            cursor: pointer; border-radius: 4px; transition: all 0.12s;
+        }
+        .tasks-view-tab.active { color: var(--text); background: rgba(255,255,255,0.06); }
+        .tasks-view-tab:hover:not(.active) { color: var(--text); }
+        .tasks-hdr-sep { width: 1px; height: 14px; background: var(--border); }
+        .tasks-toggle {
+            display: flex; align-items: center; gap: 5px;
+            color: var(--muted); font-size: 11px; cursor: pointer;
+        }
+        .tasks-toggle input[type=checkbox] { accent-color: var(--blue); cursor: pointer; }
+        .tasks-create-btn {
+            margin-left: auto; padding: 4px 12px;
+            background: var(--blue); color: #1a1000;
+            border: none; border-radius: 5px; cursor: pointer;
+            font-family: var(--font); font-size: 11px; font-weight: 700;
+            white-space: nowrap;
+        }
+        .tasks-create-btn:hover { opacity: 0.85; }
+        .tasks-table-wrap { flex: 1; overflow-y: auto; overflow-x: auto; }
+        .tasks-table {
+            width: 100%; border-collapse: collapse;
+            font-size: 11px; white-space: nowrap;
+        }
+        .tasks-table thead th {
+            position: sticky; top: 0; z-index: 1;
+            background: var(--surface2); color: var(--muted);
+            font-weight: 500; font-size: 10px; letter-spacing: 0.5px;
+            padding: 5px 10px; text-align: left;
+            border-bottom: 1px solid var(--border); user-select: none; cursor: pointer;
+        }
+        .tasks-table thead th:hover { color: var(--text); }
+        .tasks-table td { padding: 5px 10px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+        .tasks-table tbody tr:hover td { background: rgba(255,255,255,0.03); }
+        .task-group-row td {
+            background: var(--surface2); color: var(--text);
+            font-size: 11px; font-weight: 600; padding: 5px 10px;
+            border-bottom: 1px solid var(--border); border-top: 1px solid var(--border);
+        }
+        .task-group-label { display: flex; align-items: center; gap: 6px; }
+        .task-group-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue); }
+        .task-group-dot.finished { background: var(--muted); }
+        .task-group-dot.inwork { background: var(--green); }
+        .task-num { color: var(--muted); }
+        .task-num .task-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 4px; vertical-align: middle; }
+        .task-dot.finished { background: var(--muted); }
+        .task-dot.inwork { background: var(--green); }
+        .task-dot.canceled { background: var(--red); }
+        .task-status { font-size: 10px; color: var(--muted); }
+        .task-status.finished { color: var(--muted); }
+        .task-status.inwork { color: var(--green); }
+        .task-status.canceled { color: var(--red); }
+        .task-side-buy { color: var(--green); font-size: 10px; }
+        .task-side-sell { color: var(--red); font-size: 10px; }
+        .task-ts { color: var(--muted); font-size: 10px; line-height: 1.4; }
+        .task-owner { color: var(--muted); font-size: 10px; }
+        .task-actions { display: flex; gap: 2px; align-items: center; }
+        .task-act-btn {
+            background: none; border: 1px solid transparent; border-radius: 3px;
+            color: var(--muted); cursor: pointer; font-size: 12px; padding: 1px 4px;
+            font-family: var(--font); transition: all 0.1s; line-height: 1;
+        }
+        .task-act-btn:hover { border-color: var(--border); color: var(--text); }
+        .tasks-title { font-size: 11px; font-weight: 600; color: var(--text); padding: 0 6px 0 2px; white-space: nowrap; }
     </style>
 </head>
 <body>
@@ -855,203 +1029,277 @@
     </div>
 </div>
 
-<!-- ═══ MAIN ═══ -->
-<div class="main">
+<div class="app-body">
 
-    <!-- ─── ORDER BOOK ─── -->
-    <div class="orderbook">
-        <!-- Header -->
-        <div class="panel-hdr">
-            <span>ORDER BOOK</span>
-            <div class="ob-hdr-btns">
-                <button class="ob-icon-btn" onclick="obRefresh()" title="Обновить">↺</button>
-                <button class="ob-icon-btn" onclick="toggleOBSettings()" title="Настройки">⚙</button>
-            </div>
+    <!-- ─── SIDEBAR ─── -->
+    <div class="sidebar">
+        <div class="sb-logo">
+            <div class="sb-logo-icon">F</div>
+            <div class="sb-logo-text">Fibonacci<span>MARKET MAKER</span></div>
         </div>
-
-        <!-- Settings popup -->
-        <div class="ob-settings-popup" id="ob-settings-popup">
-            <div class="obs-row">
-                <div class="obs-label">Заполнение строки при USD (полная заливка)</div>
-                <input class="obs-input" id="obs-fill" type="number" value="10000"
-                    onchange="obSettings.fillUSD=+this.value">
-            </div>
-            <div class="obs-row">
-                <div class="obs-label">Крупный объем USD 1 → желтый</div>
-                <input class="obs-input" id="obs-t1" type="number" value="2500"
-                    onchange="obSettings.largeUSD1=+this.value">
-            </div>
-            <div class="obs-row">
-                <div class="obs-label">Крупный объем USD 2 → фиолетовый</div>
-                <input class="obs-input" id="obs-t2" type="number" value="5000"
-                    onchange="obSettings.largeUSD2=+this.value">
-            </div>
-            <button class="obs-close" onclick="toggleOBSettings()">Применить</button>
-        </div>
-
-        <!-- Leverage popup -->
-        <div class="ob-lev-popup" id="ob-lev-popup">
-            <div class="ob-lev-row">
-                <div class="ob-lev-label">Плечо</div>
-                <div class="ob-lev-val" id="ob-lev-val">20</div>
-                <input class="ob-lev-slider" type="range" id="ob-lev-slider"
-                    min="1" max="125" value="20" oninput="obLevChange(this.value)">
-            </div>
-            <div class="ob-lev-info">
-                <div class="ob-lev-info-item">Макс. плечо: <span id="ob-max-lev">125</span></div>
-                <div class="ob-lev-info-item">Макс. позиция: <span id="ob-max-pos">100K USD</span></div>
-            </div>
-            <button class="ob-lev-close" onclick="obLevConfirm()">Применить</button>
-        </div>
-
-        <!-- VP period context menu -->
-        <div class="vp-ctx-menu" id="vp-ctx-menu">
-            <div class="vp-ctx-item" data-ms="0"        onclick="setVPPeriod(0)">Maximize</div>
-            <div class="vp-ctx-item" data-ms="30000"    onclick="setVPPeriod(30000)">30s</div>
-            <div class="vp-ctx-item" data-ms="60000"    onclick="setVPPeriod(60000)">1m</div>
-            <div class="vp-ctx-item active" data-ms="300000"  onclick="setVPPeriod(300000)">5m</div>
-            <div class="vp-ctx-item" data-ms="600000"   onclick="setVPPeriod(600000)">10m</div>
-            <div class="vp-ctx-item" data-ms="900000"   onclick="setVPPeriod(900000)">15m</div>
-            <div class="vp-ctx-item" data-ms="1800000"  onclick="setVPPeriod(1800000)">30m</div>
-            <div class="vp-ctx-item" data-ms="3600000"  onclick="setVPPeriod(3600000)">1h</div>
-            <div class="vp-ctx-item" data-ms="86400000" onclick="setVPPeriod(86400000)">1d</div>
-        </div>
-
-        <!-- Main panels -->
-        <div class="ob-panels">
-            <div id="ob-pct-float" class="ob-pct-float"></div>
-            <!-- Left: Volume Profile columns -->
-            <div class="ob-vp-wrap" id="ob-vp-wrap"
-                oncontextmenu="showVPCtxMenu(event)"
-                onwheel="vpScroll(event)">
-                <div class="ob-vp-scroll">
-                    <div class="ob-vp-cols" id="ob-vp-cols"></div>
-                </div>
-                <div class="ob-vp-footer" id="ob-vp-footer"></div>
-            </div>
-
-            <!-- Right: Order Book -->
-            <div class="ob-book">
-                <div class="ob-scroll" id="ob-scroll">
-                    <div class="ob-asks" id="ob-asks"></div>
-                    <div class="ob-bids" id="ob-bids"></div>
+        <div class="sb-nav">
+            <div class="sb-item"><span class="sb-item-icon">◈</span>Projects</div>
+            <div class="sb-item"><span class="sb-item-icon">◎</span>Performance</div>
+            <div class="sb-item"><span class="sb-item-icon">◉</span>Users</div>
+            <div class="sb-item"><span class="sb-item-icon">◈</span>Users subscriptions</div>
+            <div class="sb-item"><span class="sb-item-icon">◎</span>Telegram logins</div>
+            <div class="sb-divider"></div>
+            <div class="sb-section">
+                <div class="sb-section-hdr">SOIL <span>▾</span></div>
+                <div class="sb-sub">
+                    <div class="sb-item"><span class="sb-item-icon">◎</span>Summary</div>
+                    <div class="sb-item active"><span class="sb-item-icon">◈</span>Trading Panel</div>
+                    <div class="sb-item"><span class="sb-item-icon">◎</span>Tasks</div>
+                    <div class="sb-item"><span class="sb-item-icon">◎</span>Arbitrage tasks</div>
+                    <div class="sb-item"><span class="sb-item-icon">◎</span>Statistics</div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Bottom: Order control -->
-        <div class="ob-control">
-            <div class="ob-ctrl-top">
-                <button class="ob-lev-btn" id="ob-lev-btn" ondblclick="toggleLevPopup()">20X</button>
-                <div class="ob-pings" id="ob-pings">
-                    <span class="ob-ping-val none">—</span>
-                    <span class="ob-ping-val none">—</span>
-                    <span class="ob-ping-val none">—</span>
+    <!-- ─── MAIN CONTENT ─── -->
+    <div class="main-content">
+
+        <!-- Exchange stats -->
+        <div class="exchange-stats">
+            <div class="exch-card">
+                <div class="exch-ring" style="background:conic-gradient(#d9ad70 0% 30%, #1f2a3d 30% 100%)"></div>
+                <div class="exch-info">
+                    <div class="exch-name">Binance</div>
+                    <div class="exch-pairs">
+                        <div class="exch-pair"><span class="exch-dot" style="background:#d9ad70"></span><span class="exch-sym">FOLKS</span><span class="exch-val" style="margin-left:6px">0</span></div>
+                        <div class="exch-pair"><span class="exch-dot" style="background:#5bba89"></span><span class="exch-sym">USDT</span><span class="exch-val" style="margin-left:6px">29 713</span></div>
+                    </div>
+                </div>
+                <span class="exch-arrow">›</span>
+            </div>
+            <div class="exch-card">
+                <div class="exch-ring" style="background:conic-gradient(#d9ad70 0% 55%, #1f2a3d 55% 100%)"></div>
+                <div class="exch-info">
+                    <div class="exch-name">BitMart</div>
+                    <div class="exch-pairs">
+                        <div class="exch-pair"><span class="exch-dot" style="background:#d9ad70"></span><span class="exch-sym">SOIL</span><span class="exch-val" style="margin-left:6px">54 694</span></div>
+                        <div class="exch-pair"><span class="exch-dot" style="background:#5bba89"></span><span class="exch-sym">USDT</span><span class="exch-val" style="margin-left:6px">4 297.3</span></div>
+                    </div>
+                </div>
+                <span class="exch-arrow">›</span>
+            </div>
+            <div class="exch-card">
+                <div class="exch-ring" style="background:conic-gradient(#d9ad70 0% 70%, #1f2a3d 70% 100%)"></div>
+                <div class="exch-info">
+                    <div class="exch-name">Gate.io</div>
+                    <div class="exch-pairs">
+                        <div class="exch-pair"><span class="exch-dot" style="background:#d9ad70"></span><span class="exch-sym">SOIL</span><span class="exch-val" style="margin-left:6px">122 635</span></div>
+                        <div class="exch-pair"><span class="exch-dot" style="background:#5bba89"></span><span class="exch-sym">USDT</span><span class="exch-val" style="margin-left:6px">4 787</span></div>
+                    </div>
+                </div>
+                <span class="exch-arrow">›</span>
+            </div>
+        </div>
+
+        <!-- ═══ MAIN ═══ -->
+        <div class="main">
+
+            <!-- ─── POSITION PANEL ─── -->
+            <div class="position-panel">
+                <div class="section">
+                    <div class="section-title">POSITION</div>
+                    <div class="metric-row"><span class="metric-label">Pair</span><span class="metric-value" id="pos-pair">BTC/USDT PERP</span></div>
+                    <div class="metric-row"><span class="metric-label">Side</span><span class="metric-value side-long" id="pos-side">▲ LONG</span></div>
+                    <div class="metric-row"><span class="metric-label">Size</span><span class="metric-value" id="pos-size">2.500 BTC</span></div>
+                    <div class="metric-row"><span class="metric-label">Entry</span><span class="metric-value" id="pos-entry">$67,230.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Mark</span><span class="metric-value" id="pos-mark">$67,234.50</span></div>
+                    <div class="liq-box">
+                        <div class="liq-box-label">⚠ LIQUIDATION ZONE</div>
+                        <div class="liq-box-price" id="liq-price">$63,118.50</div>
+                        <div class="liq-box-dist" id="liq-dist">-6.1% from mark</div>
+                    </div>
+                </div>
+                <div class="section">
+                    <div class="section-title">P&L</div>
+                    <div class="metric-row"><span class="metric-label">Unrealized</span><span class="metric-value pos" id="pnl-unreal">+$11.25</span></div>
+                    <div class="metric-row"><span class="metric-label">Realized</span><span class="metric-value pos" id="pnl-real">+$4,230.00</span></div>
+                    <div class="metric-row"><span class="metric-label">ROE</span><span class="metric-value pos" id="pnl-roe">+0.017%</span></div>
+                </div>
+                <div class="section">
+                    <div class="section-title">MARKET DATA</div>
+                    <div class="metric-row"><span class="metric-label">Open Interest</span><span class="metric-value" id="oi">$2.41B</span></div>
+                    <div class="metric-row"><span class="metric-label">24h Volume</span><span class="metric-value">$38.2B</span></div>
+                    <div class="metric-row"><span class="metric-label">Funding Rate</span><span class="metric-value pos" id="funding-rate">+0.0102%</span></div>
+                    <div class="metric-row"><span class="metric-label">Next Funding</span><span class="metric-value" id="funding-timer">01:24:30</span></div>
+                    <div class="metric-row"><span class="metric-label">24h High</span><span class="metric-value">$68,120.00</span></div>
+                    <div class="metric-row"><span class="metric-label">24h Low</span><span class="metric-value">$65,890.00</span></div>
                 </div>
             </div>
-            <div class="ob-presets" id="ob-presets"></div>
-        </div>
-    </div>
 
-    <!-- ─── POSITION PANEL ─── -->
-    <div class="position-panel">
-        <div class="section">
-            <div class="section-title">POSITION</div>
-            <div class="metric-row"><span class="metric-label">Pair</span><span class="metric-value" id="pos-pair">BTC/USDT PERP</span></div>
-            <div class="metric-row"><span class="metric-label">Side</span><span class="metric-value side-long" id="pos-side">▲ LONG</span></div>
-            <div class="metric-row"><span class="metric-label">Size</span><span class="metric-value" id="pos-size">2.500 BTC</span></div>
-            <div class="metric-row"><span class="metric-label">Entry</span><span class="metric-value" id="pos-entry">$67,230.00</span></div>
-            <div class="metric-row"><span class="metric-label">Mark</span><span class="metric-value" id="pos-mark">$67,234.50</span></div>
-            <div class="liq-box">
-                <div class="liq-box-label">⚠ LIQUIDATION ZONE</div>
-                <div class="liq-box-price" id="liq-price">$63,118.50</div>
-                <div class="liq-box-dist" id="liq-dist">-6.1% from mark</div>
+            <!-- ─── CHART AREA ─── -->
+            <div class="chart-area">
+                <div class="draw-sidebar">
+                    <button class="dt-btn active" id="dt-cursor" data-tip="Cursor (Esc)" onclick="selectTool('cursor')">↖</button>
+                    <div class="dt-sep"></div>
+                    <button class="dt-btn" id="dt-line"    data-tip="Trend Line"      onclick="selectTool('line')">╱</button>
+                    <button class="dt-btn" id="dt-extline" data-tip="Extended Line"   onclick="selectTool('extline')">↔</button>
+                    <button class="dt-btn" id="dt-ray"     data-tip="Ray"             onclick="selectTool('ray')">→</button>
+                    <button class="dt-btn" id="dt-hline"   data-tip="Horizontal Line" onclick="selectTool('hline')">─</button>
+                    <button class="dt-btn" id="dt-vline"   data-tip="Vertical Line"   onclick="selectTool('vline')">│</button>
+                    <div class="dt-sep"></div>
+                    <button class="dt-btn" id="dt-rect"    data-tip="Rectangle"       onclick="selectTool('rect')">▭</button>
+                    <button class="dt-btn" id="dt-fib"     data-tip="Fibonacci"       onclick="selectTool('fib')">ℱ</button>
+                    <div class="dt-sep"></div>
+                    <button class="dt-btn" id="dt-text"    data-tip="Text Label"      onclick="selectTool('text')">T</button>
+                    <div class="dt-sep"></div>
+                    <button class="dt-btn" data-tip="Line Color" onclick="document.getElementById('draw-color-input').click()" style="padding:0">
+                        <span class="color-swatch" id="color-swatch" style="background:#d9ad70"></span>
+                    </button>
+                    <input type="color" id="draw-color-input" value="#d9ad70" oninput="setDrawColor(this.value)" style="display:none">
+                    <button class="dt-btn" id="dt-dash" data-tip="Dashed Line" onclick="toggleDash()">- -</button>
+                    <div class="dt-sep"></div>
+                    <button class="dt-btn" id="dt-erase" data-tip="Eraser"     onclick="selectTool('erase')" style="font-size:11px">✕</button>
+                    <button class="dt-btn" data-tip="Clear All"                 onclick="clearAllDrawings()" style="color:var(--red);font-size:11px">🗑</button>
+                </div>
+                <div class="chart-main">
+                    <div class="chart-toolbar">
+                        <button class="tf-btn" onclick="setTF(this,'1m')">1m</button>
+                        <button class="tf-btn" onclick="setTF(this,'5m')">5m</button>
+                        <button class="tf-btn active" onclick="setTF(this,'15m')">15m</button>
+                        <button class="tf-btn" onclick="setTF(this,'1h')">1h</button>
+                        <button class="tf-btn" onclick="setTF(this,'4h')">4h</button>
+                        <button class="tf-btn" onclick="setTF(this,'1d')">1D</button>
+                        <div class="tb-sep"></div>
+                        <div id="chart-ohlc"></div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <div id="chart-container"></div>
+                        <canvas id="draw-canvas"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── ORDER BOOK ─── -->
+            <div class="orderbook">
+                <div class="panel-hdr">
+                    <span>ORDER BOOK</span>
+                    <div class="ob-hdr-btns">
+                        <button class="ob-icon-btn" onclick="obRefresh()" title="Обновить">↺</button>
+                        <button class="ob-icon-btn" onclick="toggleOBSettings()" title="Настройки">⚙</button>
+                    </div>
+                </div>
+                <div class="ob-settings-popup" id="ob-settings-popup">
+                    <div class="obs-row">
+                        <div class="obs-label">Заполнение строки при USD (полная заливка)</div>
+                        <input class="obs-input" id="obs-fill" type="number" value="10000" onchange="obSettings.fillUSD=+this.value">
+                    </div>
+                    <div class="obs-row">
+                        <div class="obs-label">Крупный объем USD 1 → желтый</div>
+                        <input class="obs-input" id="obs-t1" type="number" value="2500" onchange="obSettings.largeUSD1=+this.value">
+                    </div>
+                    <div class="obs-row">
+                        <div class="obs-label">Крупный объем USD 2 → фиолетовый</div>
+                        <input class="obs-input" id="obs-t2" type="number" value="5000" onchange="obSettings.largeUSD2=+this.value">
+                    </div>
+                    <button class="obs-close" onclick="toggleOBSettings()">Применить</button>
+                </div>
+                <div class="ob-lev-popup" id="ob-lev-popup">
+                    <div class="ob-lev-row">
+                        <div class="ob-lev-label">Плечо</div>
+                        <div class="ob-lev-val" id="ob-lev-val">20</div>
+                        <input class="ob-lev-slider" type="range" id="ob-lev-slider" min="1" max="125" value="20" oninput="obLevChange(this.value)">
+                    </div>
+                    <div class="ob-lev-info">
+                        <div class="ob-lev-info-item">Макс. плечо: <span id="ob-max-lev">125</span></div>
+                        <div class="ob-lev-info-item">Макс. позиция: <span id="ob-max-pos">100K USD</span></div>
+                    </div>
+                    <button class="ob-lev-close" onclick="obLevConfirm()">Применить</button>
+                </div>
+                <div class="vp-ctx-menu" id="vp-ctx-menu">
+                    <div class="vp-ctx-item" data-ms="0"        onclick="setVPPeriod(0)">Maximize</div>
+                    <div class="vp-ctx-item" data-ms="30000"    onclick="setVPPeriod(30000)">30s</div>
+                    <div class="vp-ctx-item" data-ms="60000"    onclick="setVPPeriod(60000)">1m</div>
+                    <div class="vp-ctx-item active" data-ms="300000" onclick="setVPPeriod(300000)">5m</div>
+                    <div class="vp-ctx-item" data-ms="600000"   onclick="setVPPeriod(600000)">10m</div>
+                    <div class="vp-ctx-item" data-ms="900000"   onclick="setVPPeriod(900000)">15m</div>
+                    <div class="vp-ctx-item" data-ms="1800000"  onclick="setVPPeriod(1800000)">30m</div>
+                    <div class="vp-ctx-item" data-ms="3600000"  onclick="setVPPeriod(3600000)">1h</div>
+                    <div class="vp-ctx-item" data-ms="86400000" onclick="setVPPeriod(86400000)">1d</div>
+                </div>
+                <div class="ob-panels">
+                    <div id="ob-pct-float" class="ob-pct-float"></div>
+                    <div class="ob-vp-wrap" id="ob-vp-wrap" oncontextmenu="showVPCtxMenu(event)" onwheel="vpScroll(event)">
+                        <div class="ob-vp-scroll">
+                            <div class="ob-vp-cols" id="ob-vp-cols"></div>
+                        </div>
+                        <div class="ob-vp-footer" id="ob-vp-footer"></div>
+                    </div>
+                    <div class="ob-book">
+                        <div class="ob-scroll" id="ob-scroll">
+                            <div class="ob-asks" id="ob-asks"></div>
+                            <div class="ob-bids" id="ob-bids"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ob-control">
+                    <div class="ob-ctrl-top">
+                        <button class="ob-lev-btn" id="ob-lev-btn" ondblclick="toggleLevPopup()">20X</button>
+                        <div class="ob-pings" id="ob-pings">
+                            <span class="ob-ping-val none">—</span>
+                            <span class="ob-ping-val none">—</span>
+                            <span class="ob-ping-val none">—</span>
+                        </div>
+                    </div>
+                    <div class="ob-presets" id="ob-presets"></div>
+                </div>
+            </div>
+
+        </div><!-- /.main -->
+
+        <!-- ═══ TASKS PANEL ═══ -->
+        <div class="tasks-panel">
+            <div class="tasks-hdr-top">
+                <span class="tasks-title">Tasks</span>
+                <button class="task-strat-tab active" onclick="filterTasks(this,'all')">All</button>
+                <button class="task-strat-tab" onclick="filterTasks(this,'Adaptive')">Adaptive</button>
+                <button class="task-strat-tab" onclick="filterTasks(this,'Arbitrage V2')">Arbitrage V2</button>
+                <button class="task-strat-tab" onclick="filterTasks(this,'HFT')">HFT</button>
+                <button class="task-strat-tab" onclick="filterTasks(this,'Adaptive V2')">Adaptive V2</button>
+                <button class="task-strat-tab" onclick="filterTasks(this,'Depth Repeat')">Depth Repeat</button>
+                <select class="task-strat-dropdown">
+                    <option>Funding Arbitrage</option>
+                </select>
+            </div>
+            <div class="tasks-hdr-bot">
+                <span class="tasks-view-tab active" onclick="switchTasksView(this,'statistic')">Statistic</span>
+                <span class="tasks-view-tab" onclick="switchTasksView(this,'open')">Open Orders</span>
+                <span class="tasks-view-tab" onclick="switchTasksView(this,'history')">Order history</span>
+                <div class="tasks-hdr-sep"></div>
+                <label class="tasks-toggle"><input type="checkbox" id="tasks-group-cb" onchange="renderTasksTable()"> Group by status</label>
+                <label class="tasks-toggle"><input type="checkbox" id="tasks-deleted-cb" onchange="renderTasksTable()"> Show deleted</label>
+                <button class="tasks-create-btn">+ Create Task</button>
+            </div>
+            <div class="tasks-table-wrap">
+                <table class="tasks-table" id="tasks-table">
+                    <thead>
+                        <tr>
+                            <th style="width:28px"><input type="checkbox"></th>
+                            <th>#</th>
+                            <th>PAIR ↕</th>
+                            <th>EXCHANGES ↕</th>
+                            <th>REGION</th>
+                            <th>STATUS ↕</th>
+                            <th>SIDE ↕</th>
+                            <th>CREATED AT ↕</th>
+                            <th>STARTED AT ↕</th>
+                            <th>OWNER</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tasks-tbody"></tbody>
+                </table>
             </div>
         </div>
 
-        <div class="section">
-            <div class="section-title">P&L</div>
-            <div class="metric-row"><span class="metric-label">Unrealized</span><span class="metric-value pos" id="pnl-unreal">+$11.25</span></div>
-            <div class="metric-row"><span class="metric-label">Realized</span><span class="metric-value pos" id="pnl-real">+$4,230.00</span></div>
-            <div class="metric-row"><span class="metric-label">ROE</span><span class="metric-value pos" id="pnl-roe">+0.017%</span></div>
-        </div>
+    </div><!-- /.main-content -->
 
-        <div class="section">
-            <div class="section-title">MARKET DATA</div>
-            <div class="metric-row"><span class="metric-label">Open Interest</span><span class="metric-value" id="oi">$2.41B</span></div>
-            <div class="metric-row"><span class="metric-label">24h Volume</span><span class="metric-value">$38.2B</span></div>
-            <div class="metric-row"><span class="metric-label">Funding Rate</span><span class="metric-value pos" id="funding-rate">+0.0102%</span></div>
-            <div class="metric-row"><span class="metric-label">Next Funding</span><span class="metric-value" id="funding-timer">01:24:30</span></div>
-            <div class="metric-row"><span class="metric-label">24h High</span><span class="metric-value">$68,120.00</span></div>
-            <div class="metric-row"><span class="metric-label">24h Low</span><span class="metric-value">$65,890.00</span></div>
-        </div>
-    </div>
-
-    <!-- ─── CHART AREA ─── -->
-    <div class="chart-area">
-
-        <!-- Drawing toolbar -->
-        <div class="draw-sidebar">
-            <button class="dt-btn active" id="dt-cursor" data-tip="Cursor (Esc)" onclick="selectTool('cursor')">↖</button>
-            <div class="dt-sep"></div>
-            <button class="dt-btn" id="dt-line"    data-tip="Trend Line"      onclick="selectTool('line')">╱</button>
-            <button class="dt-btn" id="dt-extline" data-tip="Extended Line"   onclick="selectTool('extline')">↔</button>
-            <button class="dt-btn" id="dt-ray"     data-tip="Ray"             onclick="selectTool('ray')">→</button>
-            <button class="dt-btn" id="dt-hline"   data-tip="Horizontal Line" onclick="selectTool('hline')">─</button>
-            <button class="dt-btn" id="dt-vline"   data-tip="Vertical Line"   onclick="selectTool('vline')">│</button>
-            <div class="dt-sep"></div>
-            <button class="dt-btn" id="dt-rect"    data-tip="Rectangle"       onclick="selectTool('rect')">▭</button>
-            <button class="dt-btn" id="dt-fib"     data-tip="Fibonacci"       onclick="selectTool('fib')">ℱ</button>
-            <div class="dt-sep"></div>
-            <button class="dt-btn" id="dt-text"    data-tip="Text Label"      onclick="selectTool('text')">T</button>
-            <div class="dt-sep"></div>
-            <!-- Color picker -->
-            <button class="dt-btn" data-tip="Line Color" onclick="document.getElementById('draw-color-input').click()" style="padding:0">
-                <span class="color-swatch" id="color-swatch" style="background:#d9ad70"></span>
-            </button>
-            <input type="color" id="draw-color-input" value="#d9ad70" oninput="setDrawColor(this.value)" style="display:none">
-            <!-- Dash toggle -->
-            <button class="dt-btn" id="dt-dash" data-tip="Dashed Line" onclick="toggleDash()">- -</button>
-            <div class="dt-sep"></div>
-            <button class="dt-btn" id="dt-erase" data-tip="Eraser"     onclick="selectTool('erase')" style="font-size:11px">✕</button>
-            <button class="dt-btn" data-tip="Clear All"                 onclick="clearAllDrawings()" style="color:var(--red);font-size:11px">🗑</button>
-        </div>
-
-        <!-- Chart -->
-        <div class="chart-main">
-            <div class="chart-toolbar">
-                <button class="tf-btn" onclick="setTF(this,'1m')">1m</button>
-                <button class="tf-btn" onclick="setTF(this,'5m')">5m</button>
-                <button class="tf-btn active" onclick="setTF(this,'15m')">15m</button>
-                <button class="tf-btn" onclick="setTF(this,'1h')">1h</button>
-                <button class="tf-btn" onclick="setTF(this,'4h')">4h</button>
-                <button class="tf-btn" onclick="setTF(this,'1d')">1D</button>
-                <div class="tb-sep"></div>
-                <div id="chart-ohlc"></div>
-            </div>
-            <div class="chart-wrapper">
-                <div id="chart-container"></div>
-                <canvas id="draw-canvas"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ═══ BOT PANEL ═══ -->
-<div class="bot-panel">
-    <div class="bot-panel-hdr">
-        <span class="bot-panel-title">ALGORITHMS</span>
-        <div class="bot-strat-tabs" id="bot-strat-tabs">
-            <button class="bot-strat-tab active" onclick="filterBots(this,'all')">All</button>
-            <button class="bot-strat-tab" onclick="filterBots(this,'Market Making')">Market Making</button>
-            <button class="bot-strat-tab" onclick="filterBots(this,'Arbitrage')">Arbitrage</button>
-            <button class="bot-strat-tab" onclick="filterBots(this,'Grid')">Grid</button>
-            <button class="bot-strat-tab" onclick="filterBots(this,'TWAP')">TWAP</button>
-        </div>
-        <button class="new-bot-btn" onclick="openNewBotModal()">+ NEW BOT</button>
-    </div>
-    <div class="bot-list" id="bot-list"></div>
-</div>
+</div><!-- /.app-body -->
 
 <!-- ═══ LEVERAGE MODAL ═══ -->
 <div class="overlay" id="lev-overlay" onclick="closeLevModal(event)">
@@ -2142,8 +2390,10 @@ function filterBots(el, strat) {
 }
 
 function renderBots() {
+    const el = document.getElementById('bot-list');
+    if (!el) return;
     const filtered = activeBotFilter === 'all' ? bots : bots.filter(b => b.strat === activeBotFilter);
-    document.getElementById('bot-list').innerHTML = filtered.map(b => {
+    el.innerHTML = filtered.map(b => {
         const bc  = { running:'badge-running', paused:'badge-paused', stopped:'badge-stopped' }[b.status];
         const pnlC = b.pnl >= 0 ? 'pos' : 'neg';
 
@@ -2594,11 +2844,87 @@ function setupOBHover() {
     });
 }
 
+// ══ TASKS TABLE ══
+const tasksData = [
+    { id:58075, strat:'Iceberg',    pair:'AXYZ/USDT', exch:'Weex', region:'hq', status:'Finished', side:'Buy',  created:'19-05-2026 03:37', started:'19-05-2026 03:38', owner:'Eugene owner' },
+    { id:58074, strat:'Iceberg',    pair:'AXYZ/USDT', exch:'Weex', region:'hq', status:'Finished', side:'Buy',  created:'19-05-2026 03:37', started:'19-05-2026 03:38', owner:'Eugene owner' },
+    { id:58046, strat:'Iceberg',    pair:'AXYZ/USDT', exch:'Weex', region:'hq', status:'Finished', side:'Buy',  created:'19-05-2026 11:56', started:'19-05-2026 11:57', owner:'Eugene owner' },
+    { id:58045, strat:'Iceberg',    pair:'AXYZ/USDT', exch:'Weex', region:'hq', status:'Finished', side:'Sell', created:'19-05-2026 11:47', started:'19-05-2026 11:48', owner:'Eugene owner' },
+    { id:58044, strat:'Iceberg',    pair:'AXYZ/USDT', exch:'Weex', region:'hq', status:'Finished', side:'Buy',  created:'19-05-2026 11:46', started:'19-05-2026 11:47', owner:'Eugene owner' },
+    { id:56901, strat:'Tiered',     pair:'AXYZ/USDT', exch:'Weex', region:'hq', status:'InWork',   side:'Buy',  created:'08-05-2026 01:01', started:'08-05-2026 01:02', owner:'Eugene owner' },
+    { id:56900, strat:'Tiered',     pair:'AXYZ/USDT', exch:'Weex', region:'hq', status:'InWork',   side:'Sell', created:'08-05-2026 12:59', started:'08-05-2026 01:00', owner:'Eugene owner' },
+    { id:58063, strat:'Ping Pong V2', pair:'AXYZ/USDT', exch:'Weex', region:'hq', status:'InWork', side:'—',   created:'19-05-2026 01:43', started:'19-05-2026 01:44', owner:'Eugene owner' },
+    { id:57784, strat:'Ping Pong V2', pair:'AXYZ/USDT', exch:'Weex', region:'hq', status:'Canceled',side:'—',  created:'16-05-2026 08:45', started:'16-05-2026 08:46', owner:'Eugene owner' },
+];
+
+let activeTaskFilter = 'all';
+
+function filterTasks(el, strat) {
+    activeTaskFilter = strat;
+    document.querySelectorAll('.task-strat-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderTasksTable();
+}
+
+function switchTasksView(el, view) {
+    document.querySelectorAll('.tasks-view-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+}
+
+function renderTasksTable() {
+    const tbody = document.getElementById('tasks-tbody');
+    if (!tbody) return;
+    const filtered = activeTaskFilter === 'all' ? tasksData : tasksData.filter(t => t.strat === activeTaskFilter);
+    const groups = {};
+    filtered.forEach(t => {
+        if (!groups[t.strat]) groups[t.strat] = [];
+        groups[t.strat].push(t);
+    });
+    let html = '';
+    for (const [strat, rows] of Object.entries(groups)) {
+        const hasInWork   = rows.some(r => r.status === 'InWork');
+        const hasFinished = rows.some(r => r.status === 'Finished');
+        const dotCls = hasInWork ? 'inwork' : hasFinished ? 'finished' : 'canceled';
+        const label  = hasInWork ? 'inWork' : hasFinished ? 'finished' : 'canceled';
+        html += `<tr class="task-group-row"><td colspan="11">
+            <span class="task-group-label">
+                <span class="task-group-dot ${dotCls}"></span>
+                ${strat} <span style="color:var(--muted);font-weight:400">(${label} • ${rows.length})</span>
+            </span></td></tr>`;
+        rows.forEach(t => {
+            const sc = t.status === 'InWork' ? 'inwork' : t.status === 'Finished' ? 'finished' : 'canceled';
+            const sideHtml = t.side === 'Buy' ? `<span class="task-side-buy">Buy</span>` :
+                             t.side === 'Sell' ? `<span class="task-side-sell">Sell</span>` : `<span style="color:var(--muted)">—</span>`;
+            html += `<tr>
+                <td><input type="checkbox"></td>
+                <td class="task-num"><span class="task-dot ${sc}"></span>${t.id}</td>
+                <td>${t.pair}</td>
+                <td>${t.exch}</td>
+                <td style="color:var(--muted)">${t.region}</td>
+                <td><span class="task-status ${sc}">${t.status}</span></td>
+                <td>${sideHtml}</td>
+                <td class="task-ts">${t.created}<br><span style="color:var(--border)">created at</span></td>
+                <td class="task-ts">${t.started}<br><span style="color:var(--border)">started at</span></td>
+                <td class="task-owner">${t.owner}</td>
+                <td><div class="task-actions">
+                    <button class="task-act-btn" title="Edit">✎</button>
+                    <button class="task-act-btn" title="Copy">⧉</button>
+                    <button class="task-act-btn" title="History">⏱</button>
+                    <button class="task-act-btn" title="Cancel">⊗</button>
+                    <button class="task-act-btn" title="Expand">∨</button>
+                </div></td>
+            </tr>`;
+        });
+    }
+    tbody.innerHTML = html;
+}
+
 renderBots();
 renderPresets();
 vpRestartTimer();
 setupOBHover();
 updateFunding();
+renderTasksTable();
 
 setInterval(tick,           500);
 setInterval(updateFunding, 1000);
