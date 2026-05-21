@@ -3,42 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fibo Trade — Fibonacci Trading Platform</title>
+    <title>Fibonacci MM — Trading Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --bg:       #0d1117;
-            --surface:  #161b22;
-            --surface2: #1c2128;
-            --border:   #30363d;
-            --green:    #26c281;
-            --red:      #f85149;
-            --blue:     #58a6ff;
-            --yellow:   #e3b341;
-            --text:     #e6edf3;
-            --muted:    #8b949e;
-            --font:     'SF Mono', 'Fira Code', 'Consolas', monospace;
+            --bg:       #0b0f17;
+            --surface:  #131c2e;
+            --surface2: #0f1623;
+            --border:   #1f2a3d;
+            --green:    #5bba89;
+            --red:      #cd4141;
+            --blue:     #d9ad70;
+            --yellow:   #d9ad70;
+            --text:     #e5edf6;
+            --muted:    #8594a8;
+            --font:     'Figtree', ui-sans-serif, system-ui, sans-serif;
         }
 
         :root.light {
-            --bg:       #f0f2f5;
+            --bg:       #f0f3f8;
             --surface:  #ffffff;
-            --surface2: #f5f7fa;
-            --border:   #d0d7de;
-            --green:    #1a9e6a;
-            --red:      #d93025;
-            --blue:     #0969da;
-            --yellow:   #bf8700;
-            --text:     #1f2328;
-            --muted:    #656d76;
+            --surface2: #f1f4f8;
+            --border:   #dbe3ee;
+            --green:    #0e9f6e;
+            --red:      #d64545;
+            --blue:     #b8862a;
+            --yellow:   #b8862a;
+            --text:     #181d30;
+            --muted:    #515151;
         }
 
         body {
             background: var(--bg);
             color: var(--text);
             font-family: var(--font);
-            font-size: 12px;
+            font-size: 13px;
             height: 100vh;
             display: flex;
             flex-direction: column;
@@ -61,11 +63,15 @@
 
         .logo {
             color: var(--blue);
-            font-weight: bold;
+            font-weight: 700;
             font-size: 14px;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             white-space: nowrap;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
         }
+        .logo span { font-size: 10px; font-weight: 500; opacity: 0.75; letter-spacing: 1.5px; }
 
         .v-div { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
 
@@ -184,28 +190,30 @@
         .exchange-tabs { display: flex; gap: 4px; }
 
         .exchange-tab {
-            padding: 4px 10px;
+            padding: 4px 12px;
             border: 1px solid var(--border);
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
             color: var(--muted);
-            font-size: 11px;
+            font-size: 12px;
+            font-weight: 500;
             transition: all 0.15s;
             user-select: none;
         }
 
-        .exchange-tab.active { border-color: var(--blue); color: var(--blue); background: rgba(88,166,255,0.1); }
+        .exchange-tab.active { border-color: var(--blue); color: var(--blue); background: rgba(217,173,112,0.12); }
         .exchange-tab:hover:not(.active) { border-color: var(--muted); color: var(--text); }
 
         .leverage-btn {
             padding: 4px 12px;
             border: 1px solid var(--yellow);
-            border-radius: 4px;
+            border-radius: 6px;
             color: var(--yellow);
-            background: rgba(227,179,65,0.1);
+            background: rgba(217,173,112,0.12);
             cursor: pointer;
             font-size: 12px;
             font-family: var(--font);
+            font-weight: 600;
         }
 
         .theme-btn {
@@ -232,7 +240,7 @@
 
         /* ── ORDER BOOK ── */
         .orderbook {
-            width: 220px;
+            width: 230px;
             flex-shrink: 0;
             background: var(--surface);
             border-right: 1px solid var(--border);
@@ -268,14 +276,15 @@
         .ob-bids { flex: 1; overflow: hidden; }
 
         .ob-spread {
-            padding: 5px 12px;
+            padding: 6px 12px;
             text-align: center;
-            font-size: 13px;
-            font-weight: bold;
+            font-size: 14px;
+            font-weight: 700;
             border-top: 1px solid var(--border);
             border-bottom: 1px solid var(--border);
             background: var(--surface2);
             flex-shrink: 0;
+            color: var(--blue);
         }
 
         .ob-row {
@@ -289,9 +298,9 @@
 
         .ob-row:hover { background: rgba(255,255,255,0.04); }
 
-        .ob-bar { position: absolute; top:0; right:0; bottom:0; opacity:.12; pointer-events:none; }
-        .ask-row { color: var(--red); }
-        .bid-row { color: var(--green); }
+        .ob-bar { position: absolute; top:0; right:0; bottom:0; opacity:.22; pointer-events:none; }
+        .ask-row { color: var(--red); background: rgba(205,65,65,0.07); }
+        .bid-row { color: var(--green); background: rgba(91,186,137,0.07); }
         .ask-row .ob-bar { background: var(--red); }
         .bid-row .ob-bar { background: var(--green); }
         .ob-row span:nth-child(2) { text-align: right; color: var(--text); }
@@ -418,11 +427,11 @@
         .liq-box-dist  { color: var(--muted); font-size: 10px; margin-top: 1px; }
 
         .order-btns { display: flex; gap: 6px; margin-bottom: 7px; }
-        .order-btn { flex:1; padding:8px; border-radius:4px; border:none; cursor:pointer; font-family:var(--font); font-size:12px; font-weight:bold; }
-        .buy-btn  { background:rgba(38,194,129,0.15); border:1px solid var(--green); color:var(--green); }
-        .sell-btn { background:rgba(248,81,73,0.15);  border:1px solid var(--red);   color:var(--red);   }
-        .buy-btn:hover  { background:rgba(38,194,129,0.25); }
-        .sell-btn:hover { background:rgba(248,81,73,0.25); }
+        .order-btn { flex:1; padding:9px; border-radius:6px; border:none; cursor:pointer; font-family:var(--font); font-size:13px; font-weight:600; }
+        .buy-btn  { background: #1a6b4a; border:1px solid var(--green); color:#fff; }
+        .sell-btn { background: #7a2020; border:1px solid var(--red);   color:#fff; }
+        .buy-btn:hover  { background: #1f8259; }
+        .sell-btn:hover { background: #952828; }
 
         .order-input {
             width: 100%; padding: 6px 8px;
@@ -449,9 +458,9 @@
         .bot-panel-title { color: var(--muted); font-size: 10px; letter-spacing: 1px; }
 
         .new-bot-btn {
-            padding: 4px 12px; background: var(--blue); color: #000;
-            border: none; border-radius: 4px; cursor: pointer;
-            font-family: var(--font); font-size: 11px; font-weight: bold;
+            padding: 4px 14px; background: var(--blue); color: #1a1000;
+            border: none; border-radius: 6px; cursor: pointer;
+            font-family: var(--font); font-size: 12px; font-weight: 700;
         }
 
         .new-bot-btn:hover { opacity: 0.85; }
@@ -572,7 +581,7 @@
 
 <!-- ═══ HEADER ═══ -->
 <div class="header">
-    <div class="logo">FIBO TRADE</div>
+    <div class="logo">FIBONACCI<span>MARKET MAKER</span></div>
     <div class="v-div"></div>
 
     <!-- Pair dropdown -->
@@ -676,9 +685,9 @@
             <div class="dt-sep"></div>
             <!-- Color picker -->
             <button class="dt-btn" data-tip="Line Color" onclick="document.getElementById('draw-color-input').click()" style="padding:0">
-                <span class="color-swatch" id="color-swatch" style="background:#e3b341"></span>
+                <span class="color-swatch" id="color-swatch" style="background:#d9ad70"></span>
             </button>
-            <input type="color" id="draw-color-input" value="#e3b341" oninput="setDrawColor(this.value)" style="display:none">
+            <input type="color" id="draw-color-input" value="#d9ad70" oninput="setDrawColor(this.value)" style="display:none">
             <!-- Dash toggle -->
             <button class="dt-btn" id="dt-dash" data-tip="Dashed Line" onclick="toggleDash()">- -</button>
             <div class="dt-sep"></div>
@@ -975,6 +984,21 @@ let lastOpen     = currentPrice;
 let tfInterval   = 900;
 
 // ══════════════════════════════════════════════════════════════════
+// DRAWING — declared early to avoid TDZ when loadChart fires
+// ══════════════════════════════════════════════════════════════════
+
+const drawCanvas = document.getElementById('draw-canvas');
+const dctx       = drawCanvas.getContext('2d');
+
+let activeTool  = 'cursor';
+let drawings    = [];
+let nextId      = 1;
+let drawColor   = '#d9ad70';
+let drawDash    = false;
+let inProgress  = null;
+let mouseXY     = null;
+
+// ══════════════════════════════════════════════════════════════════
 // CHART
 // ══════════════════════════════════════════════════════════════════
 
@@ -990,9 +1014,9 @@ const chart = LightweightCharts.createChart(container, {
 });
 
 const candles = chart.addCandlestickSeries({
-    upColor:'#26c281', downColor:'#f85149',
-    borderUpColor:'#26c281', borderDownColor:'#f85149',
-    wickUpColor:'#26c281', wickDownColor:'#f85149',
+    upColor:'#5bba89', downColor:'#cd4141',
+    borderUpColor:'#5bba89', borderDownColor:'#cd4141',
+    wickUpColor:'#5bba89', wickDownColor:'#cd4141',
 });
 
 const volSeries = chart.addHistogramSeries({
@@ -1025,7 +1049,7 @@ function generateCandles(basePrice, count, intervalSec) {
         const low   = Math.min(open, close) - Math.random() * basePrice * 0.0012;
         const vol   = Math.random() * 80 + 10;
         cData.push({ time: t, open, high, low, close });
-        vData.push({ time: t, value: vol, color: close >= open ? '#26c28130' : '#f8514930' });
+        vData.push({ time: t, value: vol, color: close >= open ? '#5bba8930' : '#cd414130' });
         p = close;
         t += intervalSec;
     }
@@ -1076,17 +1100,6 @@ function pad(n)  { return String(n).padStart(2,'0'); }
 // ══════════════════════════════════════════════════════════════════
 // DRAWING SYSTEM
 // ══════════════════════════════════════════════════════════════════
-
-const drawCanvas = document.getElementById('draw-canvas');
-const dctx       = drawCanvas.getContext('2d');
-
-let activeTool  = 'cursor';
-let drawings    = [];
-let nextId      = 1;
-let drawColor   = '#e3b341';
-let drawDash    = false;
-let inProgress  = null;   // { type, p1:{price,time} }
-let mouseXY     = null;   // current mouse in canvas px coords
 
 function px2chart(x, y) {
     return {
