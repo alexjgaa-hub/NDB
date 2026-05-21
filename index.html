@@ -238,15 +238,16 @@
         /* ── MAIN ── */
         .main { display: flex; flex: 1; overflow: hidden; }
 
-        /* ── ORDER BOOK ── */
+        /* ── ORDER BOOK (3-panel) ── */
         .orderbook {
-            width: 230px;
+            width: 390px;
             flex-shrink: 0;
             background: var(--surface);
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            position: relative;
         }
 
         .panel-hdr {
@@ -261,50 +262,127 @@
             flex-shrink: 0;
         }
 
-        .ob-col-hdr {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            padding: 3px 12px;
-            color: var(--muted);
-            font-size: 10px;
-            border-bottom: 1px solid var(--border);
-            flex-shrink: 0;
-        }
+        .ob-panels { flex: 1; display: flex; overflow: hidden; min-height: 0; }
 
-        .ob-col-hdr span:nth-child(2), .ob-col-hdr span:last-child { text-align: right; }
+        /* — Volume Profile — */
+        .ob-vp {
+            width: 86px; flex-shrink: 0;
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        .ob-vp-rows { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+        .vp-row {
+            flex: 1; display: flex; align-items: center;
+            padding: 0 2px; position: relative; min-height: 0; overflow: hidden;
+        }
+        .vp-bar { position: absolute; left:0; top:1px; bottom:1px; background: rgba(217,173,112,0.18); pointer-events:none; }
+        .vp-val { position: relative; z-index:1; font-size:9px; color:var(--muted); white-space:nowrap; }
+        .vp-footer { flex-shrink:0; border-top:1px solid var(--border); padding:3px 2px; display:flex; gap:1px; }
+        .vp-period { flex:1; text-align:center; font-size:8px; color:var(--muted); white-space:nowrap; overflow:hidden; min-width:0; }
+        .vp-delta-neg { color: var(--red) !important; }
+        .vp-delta-pos { color: var(--green) !important; }
+
+        /* — Tape — */
+        .ob-tape {
+            width: 68px; flex-shrink: 0;
+            border-right: 1px solid var(--border);
+            position: relative; overflow: hidden;
+        }
+        .tape-bubble {
+            position: absolute; left: 3px;
+            border-radius: 9px; padding: 0 5px;
+            font-size: 9px; font-weight: 600;
+            white-space: nowrap; pointer-events: none; line-height: 1.5;
+        }
+        .tape-buy  { background: rgba(91,186,137,0.22);  color: var(--green); border: 1px solid rgba(91,186,137,0.35); }
+        .tape-sell { background: rgba(205,65,65,0.22);   color: var(--red);   border: 1px solid rgba(205,65,65,0.35); }
+
+        /* — Order Book column — */
+        .ob-book { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
         .ob-asks { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; }
         .ob-bids { flex: 1; overflow: hidden; }
 
         .ob-spread {
-            padding: 6px 12px;
-            text-align: center;
-            font-size: 14px;
-            font-weight: 700;
-            border-top: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-            background: var(--surface2);
-            flex-shrink: 0;
-            color: var(--blue);
+            padding: 4px 6px; text-align: center;
+            font-size: 12px; font-weight: 700;
+            border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+            background: var(--surface2); flex-shrink: 0; color: var(--blue);
         }
 
         .ob-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            padding: 2px 12px;
-            cursor: pointer;
-            position: relative;
-            transition: background 0.1s;
+            display: flex; align-items: center;
+            padding: 1px 5px 1px 3px; cursor: pointer;
+            position: relative; font-size: 10px; line-height: 1.45;
+            transition: filter 0.08s;
+        }
+        .ob-row:hover { filter: brightness(1.5); }
+        .ob-vol   { flex: 1; font-size: 10px; font-weight: 500; z-index: 1; position: relative; }
+        .ob-price { text-align: right; font-size: 10px; z-index: 1; position: relative; min-width: 52px; }
+        .ob-bar   { position: absolute; top:0; right:0; bottom:0; pointer-events:none; }
+
+        .ask-row           { background: rgba(205,65,65,0.07); }
+        .ask-row .ob-vol   { color: var(--red); }
+        .ask-row .ob-price { color: var(--red); }
+        .ask-row .ob-bar   { background: rgba(205,65,65,1); }
+        .bid-row           { background: rgba(91,186,137,0.07); }
+        .bid-row .ob-vol   { color: var(--green); }
+        .bid-row .ob-price { color: var(--green); }
+        .bid-row .ob-bar   { background: rgba(91,186,137,1); }
+
+        .best-ask { background: rgba(205,65,65,0.22) !important; }
+        .best-bid { background: rgba(91,186,137,0.22) !important; }
+        .ob-large-1 .ob-vol   { color: #f0c030 !important; font-weight: 700; }
+        .ob-large-1 .ob-price { color: #f0c030 !important; }
+        .ob-large-2 .ob-vol   { color: #b070e0 !important; font-weight: 700; }
+        .ob-large-2 .ob-price { color: #b070e0 !important; }
+
+        /* — Gear / Settings — */
+        .ob-gear-btn {
+            background: none; border: none; color: var(--muted);
+            cursor: pointer; font-size: 13px; padding: 0 3px; line-height: 1; transition: color 0.1s;
+        }
+        .ob-gear-btn:hover { color: var(--text); }
+        .ob-settings-popup {
+            display: none; position: absolute; top: 34px; left: 8px;
+            width: 215px; background: var(--surface); border: 1px solid var(--border);
+            border-radius: 6px; padding: 10px 12px; z-index: 100;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+        }
+        .ob-settings-popup.open { display: block; }
+        .obs-row { margin-bottom: 8px; }
+        .obs-label { color: var(--muted); font-size: 10px; margin-bottom: 3px; }
+        .obs-input {
+            width: 100%; padding: 4px 7px; background: var(--surface2);
+            border: 1px solid var(--border); color: var(--text); border-radius: 3px;
+            font-family: var(--font); font-size: 11px; outline: none;
+        }
+        .obs-input:focus { border-color: var(--blue); }
+        .obs-close {
+            width: 100%; padding: 5px; background: var(--blue); color: #1a1000;
+            border: none; border-radius: 3px; cursor: pointer;
+            font-family: var(--font); font-size: 11px; font-weight: bold;
         }
 
-        .ob-row:hover { background: rgba(255,255,255,0.04); }
-
-        .ob-bar { position: absolute; top:0; right:0; bottom:0; opacity:.22; pointer-events:none; }
-        .ask-row { color: var(--red); background: rgba(205,65,65,0.07); }
-        .bid-row { color: var(--green); background: rgba(91,186,137,0.07); }
-        .ask-row .ob-bar { background: var(--red); }
-        .bid-row .ob-bar { background: var(--green); }
-        .ob-row span:nth-child(2) { text-align: right; color: var(--text); }
-        .ob-row span:last-child   { text-align: right; color: var(--muted); }
+        /* — Quick Order — */
+        .ob-quick-order {
+            flex-shrink: 0; border-top: 1px solid var(--border);
+            padding: 5px 7px; background: var(--surface2);
+        }
+        .ob-qo-row { display: flex; gap: 4px; margin-bottom: 4px; align-items: center; }
+        .ob-qo-type, .ob-qo-currency { padding: 2px 4px; font-size: 10px; flex-shrink: 0; }
+        .ob-qo-input {
+            flex: 1; padding: 3px 5px; background: var(--bg);
+            border: 1px solid var(--border); color: var(--text); border-radius: 3px;
+            font-family: var(--font); font-size: 10px; outline: none; min-width: 0;
+        }
+        .ob-qo-input:focus { border-color: var(--blue); }
+        .ob-qo-presets { display: flex; gap: 3px; }
+        .ob-qo-preset {
+            flex: 1; padding: 3px 0; background: var(--bg); border: 1px solid var(--border);
+            color: var(--muted); border-radius: 3px; cursor: pointer;
+            font-family: var(--font); font-size: 9px; text-align: center; transition: all 0.1s;
+        }
+        .ob-qo-preset:hover { border-color: var(--blue); color: var(--blue); }
 
         /* ── CHART AREA ── */
         .chart-area { flex: 1; display: flex; flex-direction: row; overflow: hidden; min-width: 0; }
@@ -651,17 +729,47 @@
     <div class="orderbook">
         <div class="panel-hdr">
             <span>ORDER BOOK</span>
-            <select style="font-size:10px;padding:2px 4px" onchange="renderOB()">
-                <option>0.1</option><option>1</option><option>10</option>
-            </select>
+            <button class="ob-gear-btn" onclick="toggleOBSettings()" title="Settings">⚙</button>
         </div>
-        <div class="ob-col-hdr">
-            <span>Price</span><span>Size</span><span>Total</span>
+        <div class="ob-settings-popup" id="ob-settings-popup">
+            <div class="obs-row">
+                <div class="obs-label">LARGE ORDER 1 (yellow) — min size</div>
+                <input class="obs-input" id="obs-t1" type="number" value="1000" onchange="obSettings.thresh1=+this.value">
+            </div>
+            <div class="obs-row">
+                <div class="obs-label">LARGE ORDER 2 (purple) — min size</div>
+                <input class="obs-input" id="obs-t2" type="number" value="5000" onchange="obSettings.thresh2=+this.value">
+            </div>
+            <div class="obs-row">
+                <div class="obs-label">BAR OPACITY % (5–80)</div>
+                <input class="obs-input" id="obs-opacity" type="number" min="5" max="80" value="22" onchange="obSettings.barOpacity=+this.value/100">
+            </div>
+            <button class="obs-close" onclick="toggleOBSettings()">Apply & Close</button>
         </div>
-        <div style="display:flex;flex-direction:column;flex:1;overflow:hidden">
-            <div class="ob-asks" id="ob-asks"></div>
-            <div class="ob-spread" id="ob-spread">$67,234.50</div>
-            <div class="ob-bids" id="ob-bids"></div>
+        <div class="ob-panels">
+            <div class="ob-vp">
+                <div class="ob-vp-rows" id="ob-vp"></div>
+                <div class="vp-footer" id="vp-footer"></div>
+            </div>
+            <div class="ob-tape" id="ob-tape"></div>
+            <div class="ob-book">
+                <div class="ob-asks" id="ob-asks"></div>
+                <div class="ob-spread" id="ob-spread">$67,234.50</div>
+                <div class="ob-bids" id="ob-bids"></div>
+            </div>
+        </div>
+        <div class="ob-quick-order">
+            <div class="ob-qo-row">
+                <select class="ob-qo-type" id="ob-qo-type"><option>Fix</option><option>Mkt</option></select>
+                <select class="ob-qo-currency" id="ob-qo-currency"><option>USD</option><option>Coins</option></select>
+                <input type="number" class="ob-qo-input" id="ob-qo-size" value="100" min="0">
+            </div>
+            <div class="ob-qo-presets">
+                <button class="ob-qo-preset" onclick="setQOSize(100)">100</button>
+                <button class="ob-qo-preset" onclick="setQOSize(250)">250</button>
+                <button class="ob-qo-preset" onclick="setQOSize(500)">500</button>
+                <button class="ob-qo-preset" onclick="setQOSize(5000)">5 000</button>
+            </div>
         </div>
     </div>
 
@@ -1398,43 +1506,144 @@ function drawFib(d, A, B, W) {
 // ORDER BOOK
 // ══════════════════════════════════════════════════════════════════
 
-function generateOB(mid, levels = 13) {
-    const asks = [], bids = [];
-    const step = mid * 0.00018;
-    let aT = 0, bT = 0;
+const obSettings = { thresh1: 1000, thresh2: 5000, barOpacity: 0.22 };
 
+const vpMap      = new Map();
+const vpPeriods  = [];
+let   vpCurrent  = { buy: 0, sell: 0 };
+
+const tapeEntries = [];
+const MAX_TAPE    = 60;
+
+function toggleOBSettings() {
+    document.getElementById('ob-settings-popup').classList.toggle('open');
+}
+
+function setQOSize(v) { document.getElementById('ob-qo-size').value = v; }
+
+function fmtK(v) {
+    if (v >= 1000000) return (v / 1000000).toFixed(1) + 'M';
+    if (v >= 1000)    return (v / 1000).toFixed(1) + 'K';
+    return Math.round(v).toString();
+}
+
+function vpRecord(price, size, isBuy) {
+    const key = +(price.toFixed(3));
+    if (!vpMap.has(key)) vpMap.set(key, { buy: 0, sell: 0 });
+    const e = vpMap.get(key);
+    if (isBuy) { e.buy += size; vpCurrent.buy += size; }
+    else        { e.sell += size; vpCurrent.sell += size; }
+}
+
+function vpRotatePeriod() {
+    vpPeriods.unshift({ ...vpCurrent });
+    if (vpPeriods.length > 8) vpPeriods.pop();
+    vpCurrent = { buy: 0, sell: 0 };
+}
+
+function generateOB(mid, levels = 20) {
+    const asks = [], bids = [];
+    const step = mid * 0.00015;
     for (let i = 0; i < levels; i++) {
-        const price = mid + step * (i + 0.5 + Math.random() * 0.4);
-        const size  = +(Math.random() * 4 + 0.05).toFixed(3);
-        aT += size;
-        asks.push({ price, size, total: +aT.toFixed(3) });
+        const price = mid + step * (i + 0.5 + Math.random() * 0.3);
+        let size = Math.round(Math.random() * 1500 + 50);
+        if (Math.random() < 0.08) size = Math.round(Math.random() * 6000 + 1200);
+        if (Math.random() < 0.02) size = Math.round(Math.random() * 18000 + 6000);
+        asks.push({ price, size });
     }
     for (let i = 0; i < levels; i++) {
-        const price = mid - step * (i + 0.5 + Math.random() * 0.4);
-        const size  = +(Math.random() * 4 + 0.05).toFixed(3);
-        bT += size;
-        bids.push({ price, size, total: +bT.toFixed(3) });
+        const price = mid - step * (i + 0.5 + Math.random() * 0.3);
+        let size = Math.round(Math.random() * 1500 + 50);
+        if (Math.random() < 0.08) size = Math.round(Math.random() * 6000 + 1200);
+        if (Math.random() < 0.02) size = Math.round(Math.random() * 18000 + 6000);
+        bids.push({ price, size });
     }
     return { asks: asks.reverse(), bids };
 }
 
 function renderOB() {
     const { asks, bids } = generateOB(currentPrice);
-    const max = Math.max(...asks.map(r => r.total), ...bids.map(r => r.total));
+    const maxSize = Math.max(...asks.map(r => r.size), ...bids.map(r => r.size));
+    const { thresh1: t1, thresh2: t2, barOpacity: op } = obSettings;
 
-    function rows(data, cls) {
-        return data.map(r => {
-            const w = (r.total / max * 100).toFixed(1);
-            return `<div class="ob-row ${cls}">
-                <span>${fmt(r.price)}</span><span>${r.size}</span><span>${r.total}</span>
-                <div class="ob-bar" style="width:${w}%"></div>
-            </div>`;
-        }).join('');
+    function rowHtml(r, cls, isBest) {
+        const w  = (r.size / maxSize * 100).toFixed(1);
+        const lc = r.size >= t2 ? ' ob-large-2' : r.size >= t1 ? ' ob-large-1' : '';
+        const bc = isBest ? (cls === 'ask-row' ? ' best-ask' : ' best-bid') : '';
+        return `<div class="ob-row ${cls}${lc}${bc}">
+            <span class="ob-vol">${fmtK(r.size)}</span>
+            <span class="ob-price">${fmt(r.price)}</span>
+            <div class="ob-bar" style="width:${w}%;opacity:${op}"></div>
+        </div>`;
     }
 
-    document.getElementById('ob-asks').innerHTML  = rows(asks, 'ask-row');
-    document.getElementById('ob-bids').innerHTML  = rows(bids, 'bid-row');
+    document.getElementById('ob-asks').innerHTML =
+        asks.map((r, i) => rowHtml(r, 'ask-row', i === asks.length - 1)).join('');
+    document.getElementById('ob-bids').innerHTML =
+        bids.map((r, i) => rowHtml(r, 'bid-row', i === 0)).join('');
     document.getElementById('ob-spread').textContent = '$' + fmt(currentPrice);
+
+    // Simulate 0–2 market orders per tick
+    const n = Math.random() < 0.6 ? 1 : Math.random() < 0.4 ? 2 : 0;
+    const topP = asks[0].price, botP = bids[bids.length - 1].price;
+    for (let k = 0; k < n; k++) {
+        const isBuy = Math.random() > 0.48;
+        const pool  = isBuy ? asks : bids;
+        const row   = pool[Math.floor(Math.random() * Math.min(3, pool.length))];
+        const size  = Math.round(Math.random() * 1200 + 20);
+        const pct   = (topP - botP) > 0 ? (row.price - botP) / (topP - botP) : 0.5;
+        tapeEntries.unshift({ price: row.price, size, isBuy, pct, ts: Date.now() });
+        if (tapeEntries.length > MAX_TAPE) tapeEntries.pop();
+        vpRecord(row.price, size, isBuy);
+    }
+
+    renderVP(asks, bids);
+    renderTape(asks, bids);
+}
+
+function renderVP(asks, bids) {
+    const allRows = [...asks, ...bids];
+    const step    = currentPrice * 0.00015;
+    let maxV = 1;
+
+    const vals = allRows.map(r => {
+        let v = r.size * 0.3;
+        vpMap.forEach((e, key) => {
+            if (Math.abs(key - r.price) < step * 2) v += e.buy + e.sell;
+        });
+        if (v > maxV) maxV = v;
+        return v;
+    });
+
+    document.getElementById('ob-vp').innerHTML = allRows.map((r, i) => {
+        const w = (vals[i] / maxV * 100).toFixed(1);
+        return `<div class="vp-row">
+            <div class="vp-bar" style="width:${w}%"></div>
+            <span class="vp-val">${fmtK(vals[i])}</span>
+        </div>`;
+    }).join('');
+
+    const periods = [...vpPeriods.slice(0, 5), vpCurrent];
+    document.getElementById('vp-footer').innerHTML = periods.map(p => {
+        const d   = p.buy - p.sell;
+        const cls = d < 0 ? 'vp-delta-neg' : d > 0 ? 'vp-delta-pos' : '';
+        const tot = p.buy + p.sell;
+        return `<div class="vp-period ${cls}">${tot > 0 ? fmtK(tot) : '—'}</div>`;
+    }).join('');
+}
+
+function renderTape(asks, bids) {
+    const el = document.getElementById('ob-tape');
+    const h  = el.offsetHeight || 400;
+    if (!tapeEntries.length) return;
+    const now = Date.now();
+    el.innerHTML = tapeEntries.slice(0, 25).map(e => {
+        const age = Math.min((now - e.ts) / 7000, 1);
+        const op  = (1 - age * 0.75).toFixed(2);
+        const y   = Math.max(2, Math.min(h - 16, Math.round((1 - e.pct) * h)));
+        const cls = e.isBuy ? 'tape-buy' : 'tape-sell';
+        return `<div class="tape-bubble ${cls}" style="top:${y}px;opacity:${op}">${fmtK(e.size)}</div>`;
+    }).join('');
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -1629,8 +1838,9 @@ renderBots();
 renderOB();
 updateFunding();
 
-setInterval(tick,          500);
-setInterval(updateFunding, 1000);
+setInterval(tick,            500);
+setInterval(updateFunding,  1000);
+setInterval(vpRotatePeriod, 10000);
 setInterval(() => {
     bots.filter(b => b.status === 'running').forEach(b => {
         b.runtime += 1;
