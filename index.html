@@ -853,7 +853,6 @@
         <!-- Header -->
         <div class="panel-hdr">
             <span>ORDER BOOK</span>
-            <span id="vp-dbg" style="font-size:9px;color:#e00;font-weight:700;flex:1;text-align:center;"></span>
             <div class="ob-hdr-btns">
                 <button class="ob-icon-btn" onclick="obRefresh()" title="Обновить">↺</button>
                 <button class="ob-icon-btn" onclick="toggleOBSettings()" title="Настройки">⚙</button>
@@ -1259,8 +1258,9 @@ function toggleTheme() {
 let currentPrice = 67234.50;
 let leverage     = 20;
 let pendingLev   = 20;
-let binanceWS    = null;
-let aggTradeWS   = null;
+let binanceWS      = null;
+let prevDepthAsks  = new Map();
+let prevDepthBids  = new Map();
 let realAsks     = [];
 let realBids     = [];
 let lastBarTime  = 0;
@@ -1352,8 +1352,7 @@ async function loadChart(sym, interval) {
     const bnSym   = sym.toUpperCase() + 'USDT';
     const tfLabel = TF_LABEL_MAP[tfInterval] || '15m';
 
-    if (binanceWS)  { binanceWS.close();  binanceWS  = null; }
-    if (aggTradeWS) { aggTradeWS.close(); aggTradeWS = null; }
+    if (binanceWS) { binanceWS.close(); binanceWS = null; }
     obNeedCenter = true;
 
     try {
@@ -1713,7 +1712,6 @@ function drawFib(d, A, B, W) {
 const obSettings = { fillUSD: 10000, largeUSD1: 2500, largeUSD2: 5000 };
 
 // ── VP state ──
-let vpDbgTrades     = 0;
 let vpPeriodMs      = 300000;
 let vpPeriodTimer   = null;
 let vpCurrentPeriod = { startTs: Date.now(), priceMap: new Map() };
@@ -2047,23 +2045,6 @@ function connectBinanceWS(symLow, tfLabel) {
 
     binanceWS.onerror = (e) => console.error('Binance WS error', e);
     binanceWS.onclose = ()  => console.log('Binance WS closed');
-
-    if (aggTradeWS) { aggTradeWS.close(); aggTradeWS = null; }
-    aggTradeWS = new WebSocket(`wss://fstream.binance.com/ws/${symLow}@aggTrade`);
-    aggTradeWS.onopen    = ()  => { const el = document.getElementById('vp-dbg'); if (el) el.textContent = 'WS OK'; };
-    aggTradeWS.onmessage = (e) => {
-        vpDbgTrades++;
-        const el = document.getElementById('vp-dbg');
-        if (el) el.textContent = 'MSG:' + vpDbgTrades;
-        try {
-            const data = JSON.parse(e.data);
-            onAggTradeMsg(data);
-        } catch(err) {
-            if (el) el.textContent = 'ERR:' + err.message;
-        }
-    };
-    aggTradeWS.onerror = (e) => { const el = document.getElementById('vp-dbg'); if (el) el.textContent = 'WS ERR'; };
-    aggTradeWS.onclose = (e) => { const el = document.getElementById('vp-dbg'); if (el && el.textContent === 'WS OK') el.textContent = 'CLOSED:' + e.code; };
 }
 
 function onDepthMsg(data) {
@@ -2082,16 +2063,8 @@ function onKlineMsg(data) {
 }
 
 function onAggTradeMsg(data) {
-    const isBuy = !data.m;
-    const price = +data.p;
-    const size  = +data.q;
-    currentPrice = price;
-    vpRecord(price, size, isBuy);
-    vpDbgTrades++;
-    if (vpDbgTrades % 50 === 0) {
-        const el = document.getElementById('vp-dbg');
-        if (el) el.textContent = 'T:' + vpDbgTrades + ' M:' + vpCurrentPeriod.priceMap.size;
-    }
+    currentPrice = +data.p;
+    vpRecord(+data.p, +data.q, !data.m);
 }
 
 function updatePriceDisplay() {
