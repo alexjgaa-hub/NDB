@@ -289,7 +289,13 @@
         }
 
         /* Panels container */
-        .ob-panels { flex: 1; display: flex; overflow: hidden; min-height: 0; }
+        .ob-panels { flex: 1; display: flex; overflow: hidden; min-height: 0; position: relative; }
+        .ob-pct-float {
+            position: absolute; pointer-events: none; visibility: hidden; z-index: 50;
+            background: rgba(40,60,160,0.88); color: #fff; font-size: 9px; font-weight: 700;
+            padding: 1px 5px; border-radius: 3px; white-space: nowrap;
+            transform: translateX(-100%);
+        }
 
         /* — VP left panel — */
         .ob-vp-wrap {
@@ -354,8 +360,7 @@
             user-select: none;
         }
         .ob-vol   { width: 36px; font-size: 10px; font-weight: 500; z-index: 1; position: relative; flex-shrink: 0; }
-        .ob-pct   { width: 36px; font-size: 9px; font-weight: 600; color: #333; z-index: 1; position: relative; flex-shrink: 0; visibility: hidden; }
-        .ob-row:hover .ob-pct { visibility: visible; }
+        .ob-pct   { display: none; }
         .ob-order-badge {
             flex: 1; font-size: 9px; font-weight: 700; z-index: 2; position: relative;
             display: flex; align-items: center; justify-content: flex-end; gap: 1px;
@@ -373,11 +378,11 @@
         .ob-bar   { position: absolute; top: 0; left: 0; bottom: 0; pointer-events: none; }
 
         .ask-row { background: #ffc8c8; }
-        .ask-row .ob-vol, .ask-row .ob-pct, .ask-row .ob-price { color: #000; }
+        .ask-row .ob-vol, .ask-row .ob-price { color: #000; }
         .ask-row .ob-bar { background: #ff8800; }
         .ask-row:hover { background: rgba(160,100,220,0.45) !important; }
         .bid-row { background: #c8ffc8; }
-        .bid-row .ob-vol, .bid-row .ob-pct, .bid-row .ob-price { color: #000; }
+        .bid-row .ob-vol, .bid-row .ob-price { color: #000; }
         .bid-row .ob-bar { background: #ff8800; }
         .bid-row:hover { background: rgba(160,100,220,0.45) !important; }
 
@@ -901,6 +906,7 @@
 
         <!-- Main panels -->
         <div class="ob-panels">
+            <div id="ob-pct-float" class="ob-pct-float"></div>
             <!-- Left: Volume Profile columns -->
             <div class="ob-vp-wrap" id="ob-vp-wrap"
                 oncontextmenu="showVPCtxMenu(event)"
@@ -2537,9 +2543,35 @@ const BubbleOB = (() => {
 
 function setOBView() {}
 
+function setupOBHover() {
+    const scrollEl = document.getElementById('ob-scroll');
+    const float    = document.getElementById('ob-pct-float');
+    const obBook   = document.querySelector('.ob-book');
+    if (!scrollEl || !float || !obBook) return;
+    scrollEl.addEventListener('mouseover', function(e) {
+        const row = e.target.closest('.ob-row');
+        if (!row) return;
+        const pctEl = row.querySelector('.ob-pct');
+        if (!pctEl) return;
+        const panels    = document.querySelector('.ob-panels');
+        const panelsRect = panels.getBoundingClientRect();
+        const rowRect    = row.getBoundingClientRect();
+        float.textContent = pctEl.textContent;
+        float.style.top        = (rowRect.top - panelsRect.top) + 'px';
+        float.style.height     = rowRect.height + 'px';
+        float.style.lineHeight = rowRect.height + 'px';
+        float.style.left       = obBook.offsetLeft + 'px';
+        float.style.visibility = 'visible';
+    });
+    scrollEl.addEventListener('mouseleave', function() {
+        float.style.visibility = 'hidden';
+    });
+}
+
 renderBots();
 renderPresets();
 vpRestartTimer();
+setupOBHover();
 updateFunding();
 
 setInterval(tick,           500);
