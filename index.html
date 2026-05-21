@@ -304,15 +304,16 @@
             display: flex; flex-direction: column;
             overflow: hidden; background: #ebebeb;
         }
-        .ob-vp-cols { flex: 1; display: flex; overflow: hidden; min-height: 0; user-select: none; }
+        .ob-vp-scroll { flex: 1; overflow: hidden; position: relative; min-height: 0; }
+        .ob-vp-cols { display: flex; position: absolute; top: 0; left: 0; right: 0; will-change: transform; user-select: none; }
         .vp-col {
             flex: 1; display: flex; flex-direction: column;
-            border-right: 1px solid #d8d8d8; min-width: 0; overflow: hidden;
+            border-right: 1px solid #d8d8d8; min-width: 0; overflow: visible;
         }
         .vp-col:last-child { border-right: none; }
         .vp-cell {
-            flex: 1; display: flex; align-items: center; justify-content: flex-end;
-            padding: 0 2px; position: relative; min-height: 0; overflow: hidden;
+            height: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;
+            padding: 0 2px; position: relative; overflow: hidden;
             font-size: 8.5px; color: #111; line-height: 1.2;
         }
         .vp-cell-val { position: relative; z-index: 1; white-space: nowrap; }
@@ -355,8 +356,9 @@
         .ob-bids { }
 
         .ob-row {
-            display: flex; align-items: center; padding: 1px 4px 1px 3px;
-            cursor: pointer; position: relative; font-size: 10px; line-height: 1.45;
+            height: 16px; flex-shrink: 0;
+            display: flex; align-items: center; padding: 0 4px 0 3px;
+            cursor: pointer; position: relative; font-size: 10px; line-height: 1;
             user-select: none;
         }
         .ob-vol   { width: 36px; font-size: 10px; font-weight: 500; z-index: 1; position: relative; flex-shrink: 0; }
@@ -912,7 +914,9 @@
             <div class="ob-vp-wrap" id="ob-vp-wrap"
                 oncontextmenu="showVPCtxMenu(event)"
                 onwheel="vpScroll(event)">
-                <div class="ob-vp-cols" id="ob-vp-cols"></div>
+                <div class="ob-vp-scroll">
+                    <div class="ob-vp-cols" id="ob-vp-cols"></div>
+                </div>
                 <div class="ob-vp-footer" id="ob-vp-footer"></div>
             </div>
 
@@ -2014,6 +2018,7 @@ function renderVPCols(displayAsks, displayBids) {
 
     document.getElementById('ob-vp-cols').innerHTML   = colsHtml;
     document.getElementById('ob-vp-footer').innerHTML = footerHtml;
+    syncVPScroll();
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -2547,11 +2552,18 @@ const BubbleOB = (() => {
 
 function setOBView() {}
 
+function syncVPScroll() {
+    const scrollEl = document.getElementById('ob-scroll');
+    const cols     = document.getElementById('ob-vp-cols');
+    if (scrollEl && cols) cols.style.transform = `translateY(-${scrollEl.scrollTop}px)`;
+}
+
 function setupOBHover() {
     const scrollEl = document.getElementById('ob-scroll');
     const float    = document.getElementById('ob-pct-float');
     const obBook   = document.querySelector('.ob-book');
     if (!scrollEl || !float || !obBook) return;
+    scrollEl.addEventListener('scroll', syncVPScroll);
     scrollEl.addEventListener('mouseover', function(e) {
         const row = e.target.closest('.ob-row');
         if (!row) return;
