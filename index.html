@@ -1259,6 +1259,7 @@ let currentPrice = 67234.50;
 let leverage     = 20;
 let pendingLev   = 20;
 let binanceWS    = null;
+let aggTradeWS   = null;
 let realAsks     = [];
 let realBids     = [];
 let lastBarTime  = 0;
@@ -1350,7 +1351,8 @@ async function loadChart(sym, interval) {
     const bnSym   = sym.toUpperCase() + 'USDT';
     const tfLabel = TF_LABEL_MAP[tfInterval] || '15m';
 
-    if (binanceWS) { binanceWS.close(); binanceWS = null; }
+    if (binanceWS)  { binanceWS.close();  binanceWS  = null; }
+    if (aggTradeWS) { aggTradeWS.close(); aggTradeWS = null; }
     obNeedCenter = true;
 
     try {
@@ -2011,7 +2013,7 @@ function renderVPCols(displayAsks, displayBids) {
             : '—';
         footerHtml += `<div class="vp-col-footer">
             <div class="vp-ft-vol">${total > 0 ? fmtK(total) : '—'}</div>
-            <div class="vp-ft-delta ${dCls}">${total > 0 ? dSign + fmtK(Math.abs(delta)) : 'n:'+pd.priceMap.size}</div>
+            <div class="vp-ft-delta ${dCls}">${total > 0 ? dSign + fmtK(Math.abs(delta)) : '—'}</div>
             <div class="vp-ft-time">${timeStr}</div>
         </div>`;
     }
@@ -2028,8 +2030,7 @@ function renderVPCols(displayAsks, displayBids) {
 function connectBinanceWS(symLow, tfLabel) {
     const streams = [
         `${symLow}@depth20@100ms`,
-        `${symLow}@kline_${tfLabel}`,
-        `${symLow}@aggTrade`
+        `${symLow}@kline_${tfLabel}`
     ].join('/');
 
     binanceWS = new WebSocket(`wss://fstream.binance.com/stream?streams=${streams}`);
@@ -2038,13 +2039,20 @@ function connectBinanceWS(symLow, tfLabel) {
         const msg    = JSON.parse(e.data);
         const stream = msg.stream || '';
         const data   = msg.data;
-        if (stream.includes('@depth20'))       onDepthMsg(data);
-        else if (stream.includes('@kline_'))   onKlineMsg(data);
-        else if (stream.includes('@aggTrade')) onAggTradeMsg(data);
+        if (stream.includes('@depth20'))     onDepthMsg(data);
+        else if (stream.includes('@kline_')) onKlineMsg(data);
     };
 
     binanceWS.onerror = (e) => console.error('Binance WS error', e);
     binanceWS.onclose = ()  => console.log('Binance WS closed');
+
+    if (aggTradeWS) { aggTradeWS.close(); aggTradeWS = null; }
+    aggTradeWS = new WebSocket(`wss://fstream.binance.com/ws/${symLow}@aggTrade`);
+    aggTradeWS.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        if (data.p) onAggTradeMsg(data);
+    };
+    aggTradeWS.onerror = (e) => console.error('AggTrade WS error', e);
 }
 
 function onDepthMsg(data) {
