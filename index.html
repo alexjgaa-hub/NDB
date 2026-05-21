@@ -985,9 +985,10 @@ const PAIR_DB = [
     { sym:'WLD',    name:'Worldcoin',        cat:'AI',   base:2.840,    liq:0,     entry:0,      side:'LONG',  posSize:0,      size:'—'            },
     { sym:'TAO',    name:'Bittensor',        cat:'AI',   base:420.50,   liq:0,     entry:0,      side:'LONG',  posSize:0,      size:'—'            },
     { sym:'ARKM',   name:'Arkham',           cat:'AI',   base:1.920,    liq:0,     entry:0,      side:'LONG',  posSize:0,      size:'—'            },
+    { sym:'FOLKS',  name:'Folks Finance',    cat:'DeFi', base:1.35,     liq:0,     entry:0,      side:'LONG',  posSize:0,      size:'—'            },
 ];
 
-let currentSym = 'BTC';
+let currentSym = 'FOLKS';
 let pairCatFilter = 'ALL';
 
 function getPair(sym) { return PAIR_DB.find(p => p.sym === sym) || PAIR_DB[0]; }
@@ -1168,18 +1169,39 @@ function generateCandles(basePrice, count, intervalSec) {
     return { cData, vData };
 }
 
-function loadChart(sym, interval) {
+const TF_MAP       = { '1m':60,'5m':300,'15m':900,'1h':3600,'4h':14400,'1d':86400 };
+const TF_LABEL_MAP = { 60:'1m',300:'5m',900:'15m',3600:'1h',14400:'4h',86400:'1d' };
+
+async function loadChart(sym, interval) {
     tfInterval = interval || 900;
-    const p = getPair(sym);
-    const { cData, vData } = generateCandles(p.base, 220, tfInterval);
-    candles.setData(cData);
-    volSeries.setData(vData);
-    chart.timeScale().fitContent();
+    const bnSym   = sym.toUpperCase() + 'USDT';
+    const tfLabel = TF_LABEL_MAP[tfInterval] || '15m';
+
+    if (binanceWS) { binanceWS.close(); binanceWS = null; }
+
+    try {
+        const res = await fetch(
+            `https://fapi.binance.com/fapi/v1/klines?symbol=${bnSym}&interval=${tfLabel}&limit=500`
+        );
+        const raw = await res.json();
+        if (!Array.isArray(raw)) throw new Error('Bad response: ' + JSON.stringify(raw).slice(0,120));
+        const cData = raw.map(k => ({ time:k[0]/1000, open:+k[1], high:+k[2], low:+k[3], close:+k[4] }));
+        const vData = raw.map(k => ({ time:k[0]/1000, value:+k[5],
+            color: +k[4] >= +k[1] ? '#5bba8930' : '#cd414130' }));
+        candles.setData(cData);
+        volSeries.setData(vData);
+        currentPrice = cData[cData.length - 1].close;
+        lastBarTime  = cData[cData.length - 1].time;
+        lastOpen     = cData[cData.length - 1].open;
+        chart.timeScale().fitContent();
+    } catch(e) {
+        console.error('Binance REST error:', e);
+    }
+
     clearInProgress();
     redrawCanvas();
+    connectBinanceWS(bnSym.toLowerCase(), tfLabel);
 }
-
-const TF_MAP = { '1m':60,'5m':300,'15m':900,'1h':3600,'4h':14400,'1d':86400 };
 
 function setTF(btn, tf) {
     document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
@@ -1187,8 +1209,8 @@ function setTF(btn, tf) {
     loadChart(currentSym, TF_MAP[tf]);
 }
 
-loadChart('BTC', 900);
 applyChartTheme(document.documentElement.classList.contains('light'));
+changePair('FOLKS');
 
 // ══════════════════════════════════════════════════════════════════
 // FORMAT HELPERS
@@ -1647,44 +1669,114 @@ function renderTape(asks, bids) {
 }
 
 // ══════════════════════════════════════════════════════════════════
+// BINANCE WEBSOCKET
+// ══════════════════════════════════════════════════════════════════
+
+let binanceWS = null;
+let realAsks  = [];
+let realBids  = [];
+
+function connectBinanceWS(symLow, tfLabel) {
+    const streams = [
+        `${symLow}@depth20@100ms`,
+        `${symLow}@kline_${tfLabel}`,
+        `${symLow}@aggTrade`
+    ].join('/');
+
+    binanceWS = new WebSocket(`wss://fstream.binance.com/stream?streams=${streams}`);
+
+    binanceWS.onmessage = (e) => {
+        const msg    = JSON.parse(e.data);
+        const stream = msg.stream || '';
+        const data   = msg.data;
+        if (stream.includes('@depth20'))  onDepthMsg(data);
+        else if (stream.includes('@kline_')) onKlineMsg(data);
+        else if (stream.includes('@aggTrade')) onAggTradeMsg(data);
+    };
+
+    binanceWS.onerror  = (e) => console.error('Binance WS error', e);
+    binanceWS.onclose  = ()  => console.log('Binance WS closed');
+}
+
+function onDepthMsg(data) {
+    realBids = (data.b || []).map(([p,q]) => ({ price:+p, size:+q })).filter(r=>r.size>0);
+    realAsks = (data.a || []).map(([p,q]) => ({ price:+p, size:+q })).filter(r=>r.size>0);
+    // asks from Binance: ascending (best ask first) → reverse for display (highest at top, best at bottom)
+    renderRealOB([...realAsks].reverse(), realBids);
+}
+
+function onKlineMsg(data) {
+    const k = data.k;
+    currentPrice = +k.c;
+    candles.update({ time:k.t/1000, open:+k.o, high:+k.h, low:+k.l, close:+k.c });
+    volSeries.update({ time:k.t/1000, value:+k.v,
+        color: +k.c >= +k.o ? '#5bba8930' : '#cd414130' });
+    updatePriceDisplay();
+}
+
+function onAggTradeMsg(data) {
+    const isBuy = !data.m;   // m=true: buyer is maker → aggressor = seller
+    const price = +data.p;
+    const size  = +data.q;
+    currentPrice = price;
+    const topP = realAsks.length ? realAsks[realAsks.length-1].price : price * 1.001;
+    const botP = realBids.length ? realBids[realBids.length-1].price : price * 0.999;
+    const pct  = topP > botP ? (price - botP) / (topP - botP) : 0.5;
+    tapeEntries.unshift({ price, size, isBuy, pct, ts: Date.now() });
+    if (tapeEntries.length > MAX_TAPE) tapeEntries.pop();
+    vpRecord(price, size, isBuy);
+}
+
+function renderRealOB(displayAsks, displayBids) {
+    const maxSize = Math.max(...displayAsks.map(r=>r.size), ...displayBids.map(r=>r.size), 1);
+    const { thresh1:t1, thresh2:t2, barOpacity:op } = obSettings;
+
+    function rowHtml(r, cls, isBest) {
+        const w  = (r.size / maxSize * 100).toFixed(1);
+        const lc = r.size >= t2 ? ' ob-large-2' : r.size >= t1 ? ' ob-large-1' : '';
+        const bc = isBest ? (cls === 'ask-row' ? ' best-ask' : ' best-bid') : '';
+        return `<div class="ob-row ${cls}${lc}${bc}">
+            <span class="ob-vol">${fmtK(r.size)}</span>
+            <span class="ob-price">${fmt(r.price)}</span>
+            <div class="ob-bar" style="width:${w}%;opacity:${op}"></div>
+        </div>`;
+    }
+
+    document.getElementById('ob-asks').innerHTML =
+        displayAsks.map((r,i) => rowHtml(r,'ask-row', i===displayAsks.length-1)).join('');
+    document.getElementById('ob-bids').innerHTML =
+        displayBids.map((r,i) => rowHtml(r,'bid-row', i===0)).join('');
+    document.getElementById('ob-spread').textContent = '$' + fmt(currentPrice);
+
+    renderVP(displayAsks, displayBids);
+    renderTape(displayAsks, displayBids);
+}
+
+function updatePriceDisplay() {
+    const p   = getPair(currentSym);
+    const pct = (currentPrice - p.base) / p.base * 100;
+    document.getElementById('header-price').textContent = '$' + fmt(currentPrice);
+    const chEl = document.getElementById('header-change');
+    chEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+    chEl.style.color  = pct >= 0 ? 'var(--green)' : 'var(--red)';
+    document.getElementById('pos-mark').textContent = '$' + fmt(currentPrice);
+}
+
+// ══════════════════════════════════════════════════════════════════
 // TICK
 // ══════════════════════════════════════════════════════════════════
 
 function tick() {
-    const p = getPair(currentSym);
-    currentPrice += (Math.random() - 0.495) * p.base * 0.0007;
-
-    const now     = Math.floor(Date.now() / 1000);
-    const barTime = Math.floor(now / tfInterval) * tfInterval;
-
-    if (barTime > lastBarTime) { lastBarTime = barTime; lastOpen = currentPrice; }
-
-    candles.update({
-        time: lastBarTime, open: lastOpen,
-        high: Math.max(lastOpen, currentPrice),
-        low:  Math.min(lastOpen, currentPrice),
-        close: currentPrice,
-    });
-
-    const pct  = (currentPrice - p.base) / p.base * 100;
-    document.getElementById('header-price').textContent = '$' + fmt(currentPrice);
-    const chEl = document.getElementById('header-change');
-    chEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
-    chEl.style.color = pct >= 0 ? 'var(--green)' : 'var(--red)';
-
-    document.getElementById('pos-mark').textContent = '$' + fmt(currentPrice);
-
-    const mult   = p.side === 'LONG' ? 1 : -1;
-    const unreal = (currentPrice - p.entry) * p.posSize * mult;
+    const p    = getPair(currentSym);
+    const mult = p.side === 'LONG' ? 1 : -1;
+    const unreal = p.posSize ? (currentPrice - p.entry) * p.posSize * mult : 0;
     const roe    = p.posSize ? unreal / (p.entry * p.posSize / leverage) * 100 : 0;
-
     setMetric('pnl-unreal', unreal >= 0, fmtD(unreal));
     setMetric('pnl-roe',    roe   >= 0,  (roe >= 0 ? '+' : '') + roe.toFixed(3) + '%');
-
-    const liqDist = p.liq ? (p.liq - currentPrice) / currentPrice * 100 : 0;
-    document.getElementById('liq-dist').textContent = liqDist.toFixed(1) + '% from mark';
-
-    renderOB();
+    if (p.liq) {
+        const liqDist = (p.liq - currentPrice) / currentPrice * 100;
+        document.getElementById('liq-dist').textContent = liqDist.toFixed(1) + '% from mark';
+    }
 }
 
 function setMetric(id, positive, text) {
@@ -1835,7 +1927,6 @@ function closeBotModal(e) {
 // ══════════════════════════════════════════════════════════════════
 
 renderBots();
-renderOB();
 updateFunding();
 
 setInterval(tick,            500);
