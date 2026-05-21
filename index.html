@@ -235,6 +235,10 @@
         .stat-label { color: var(--muted); font-size: 10px; }
         .stat-value { font-size: 13px; font-weight: bold; }
 
+        /* ── MAIN INNER / CENTER COL ── */
+        .main-inner { display: flex; flex: 1; overflow: hidden; min-height: 0; flex-direction: row; }
+        .center-col { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
         /* ── MAIN ── */
         .main { display: flex; flex: 1; overflow: hidden; min-height: 0; }
 
@@ -1097,6 +1101,9 @@
             </div>
         </div>
 
+        <div class="main-inner">
+        <div class="center-col">
+
         <!-- ═══ MAIN ═══ -->
         <div class="main">
 
@@ -1175,81 +1182,6 @@
                 </div>
             </div>
 
-            <!-- ─── ORDER BOOK ─── -->
-            <div class="orderbook">
-                <div class="panel-hdr">
-                    <span>ORDER BOOK</span>
-                    <div class="ob-hdr-btns">
-                        <button class="ob-icon-btn" onclick="obRefresh()" title="Обновить">↺</button>
-                        <button class="ob-icon-btn" onclick="toggleOBSettings()" title="Настройки">⚙</button>
-                    </div>
-                </div>
-                <div class="ob-settings-popup" id="ob-settings-popup">
-                    <div class="obs-row">
-                        <div class="obs-label">Заполнение строки при USD (полная заливка)</div>
-                        <input class="obs-input" id="obs-fill" type="number" value="10000" onchange="obSettings.fillUSD=+this.value">
-                    </div>
-                    <div class="obs-row">
-                        <div class="obs-label">Крупный объем USD 1 → желтый</div>
-                        <input class="obs-input" id="obs-t1" type="number" value="2500" onchange="obSettings.largeUSD1=+this.value">
-                    </div>
-                    <div class="obs-row">
-                        <div class="obs-label">Крупный объем USD 2 → фиолетовый</div>
-                        <input class="obs-input" id="obs-t2" type="number" value="5000" onchange="obSettings.largeUSD2=+this.value">
-                    </div>
-                    <button class="obs-close" onclick="toggleOBSettings()">Применить</button>
-                </div>
-                <div class="ob-lev-popup" id="ob-lev-popup">
-                    <div class="ob-lev-row">
-                        <div class="ob-lev-label">Плечо</div>
-                        <div class="ob-lev-val" id="ob-lev-val">20</div>
-                        <input class="ob-lev-slider" type="range" id="ob-lev-slider" min="1" max="125" value="20" oninput="obLevChange(this.value)">
-                    </div>
-                    <div class="ob-lev-info">
-                        <div class="ob-lev-info-item">Макс. плечо: <span id="ob-max-lev">125</span></div>
-                        <div class="ob-lev-info-item">Макс. позиция: <span id="ob-max-pos">100K USD</span></div>
-                    </div>
-                    <button class="ob-lev-close" onclick="obLevConfirm()">Применить</button>
-                </div>
-                <div class="vp-ctx-menu" id="vp-ctx-menu">
-                    <div class="vp-ctx-item" data-ms="0"        onclick="setVPPeriod(0)">Maximize</div>
-                    <div class="vp-ctx-item" data-ms="30000"    onclick="setVPPeriod(30000)">30s</div>
-                    <div class="vp-ctx-item" data-ms="60000"    onclick="setVPPeriod(60000)">1m</div>
-                    <div class="vp-ctx-item active" data-ms="300000" onclick="setVPPeriod(300000)">5m</div>
-                    <div class="vp-ctx-item" data-ms="600000"   onclick="setVPPeriod(600000)">10m</div>
-                    <div class="vp-ctx-item" data-ms="900000"   onclick="setVPPeriod(900000)">15m</div>
-                    <div class="vp-ctx-item" data-ms="1800000"  onclick="setVPPeriod(1800000)">30m</div>
-                    <div class="vp-ctx-item" data-ms="3600000"  onclick="setVPPeriod(3600000)">1h</div>
-                    <div class="vp-ctx-item" data-ms="86400000" onclick="setVPPeriod(86400000)">1d</div>
-                </div>
-                <div class="ob-panels">
-                    <div id="ob-pct-float" class="ob-pct-float"></div>
-                    <div class="ob-vp-wrap" id="ob-vp-wrap" oncontextmenu="showVPCtxMenu(event)" onwheel="vpScroll(event)">
-                        <div class="ob-vp-scroll">
-                            <div class="ob-vp-cols" id="ob-vp-cols"></div>
-                        </div>
-                        <div class="ob-vp-footer" id="ob-vp-footer"></div>
-                    </div>
-                    <div class="ob-book">
-                        <div class="ob-scroll" id="ob-scroll">
-                            <div class="ob-asks" id="ob-asks"></div>
-                            <div class="ob-bids" id="ob-bids"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="ob-control">
-                    <div class="ob-ctrl-top">
-                        <button class="ob-lev-btn" id="ob-lev-btn" ondblclick="toggleLevPopup()">20X</button>
-                        <div class="ob-pings" id="ob-pings">
-                            <span class="ob-ping-val none">—</span>
-                            <span class="ob-ping-val none">—</span>
-                            <span class="ob-ping-val none">—</span>
-                        </div>
-                    </div>
-                    <div class="ob-presets" id="ob-presets"></div>
-                </div>
-            </div>
-
         </div><!-- /.main -->
 
         <!-- ═══ TASKS PANEL ═══ -->
@@ -1296,6 +1228,85 @@
                 </table>
             </div>
         </div>
+
+        </div><!-- /.center-col -->
+
+        <!-- ─── ORDER BOOK ─── -->
+        <div class="orderbook">
+            <div class="panel-hdr">
+                <span>ORDER BOOK</span>
+                <div class="ob-hdr-btns">
+                    <button class="ob-icon-btn" onclick="obRefresh()" title="Обновить">↺</button>
+                    <button class="ob-icon-btn" onclick="toggleOBSettings()" title="Настройки">⚙</button>
+                </div>
+            </div>
+            <div class="ob-settings-popup" id="ob-settings-popup">
+                <div class="obs-row">
+                    <div class="obs-label">Заполнение строки при USD (полная заливка)</div>
+                    <input class="obs-input" id="obs-fill" type="number" value="10000" onchange="obSettings.fillUSD=+this.value">
+                </div>
+                <div class="obs-row">
+                    <div class="obs-label">Крупный объем USD 1 → желтый</div>
+                    <input class="obs-input" id="obs-t1" type="number" value="2500" onchange="obSettings.largeUSD1=+this.value">
+                </div>
+                <div class="obs-row">
+                    <div class="obs-label">Крупный объем USD 2 → фиолетовый</div>
+                    <input class="obs-input" id="obs-t2" type="number" value="5000" onchange="obSettings.largeUSD2=+this.value">
+                </div>
+                <button class="obs-close" onclick="toggleOBSettings()">Применить</button>
+            </div>
+            <div class="ob-lev-popup" id="ob-lev-popup">
+                <div class="ob-lev-row">
+                    <div class="ob-lev-label">Плечо</div>
+                    <div class="ob-lev-val" id="ob-lev-val">20</div>
+                    <input class="ob-lev-slider" type="range" id="ob-lev-slider" min="1" max="125" value="20" oninput="obLevChange(this.value)">
+                </div>
+                <div class="ob-lev-info">
+                    <div class="ob-lev-info-item">Макс. плечо: <span id="ob-max-lev">125</span></div>
+                    <div class="ob-lev-info-item">Макс. позиция: <span id="ob-max-pos">100K USD</span></div>
+                </div>
+                <button class="ob-lev-close" onclick="obLevConfirm()">Применить</button>
+            </div>
+            <div class="vp-ctx-menu" id="vp-ctx-menu">
+                <div class="vp-ctx-item" data-ms="0"        onclick="setVPPeriod(0)">Maximize</div>
+                <div class="vp-ctx-item" data-ms="30000"    onclick="setVPPeriod(30000)">30s</div>
+                <div class="vp-ctx-item" data-ms="60000"    onclick="setVPPeriod(60000)">1m</div>
+                <div class="vp-ctx-item active" data-ms="300000" onclick="setVPPeriod(300000)">5m</div>
+                <div class="vp-ctx-item" data-ms="600000"   onclick="setVPPeriod(600000)">10m</div>
+                <div class="vp-ctx-item" data-ms="900000"   onclick="setVPPeriod(900000)">15m</div>
+                <div class="vp-ctx-item" data-ms="1800000"  onclick="setVPPeriod(1800000)">30m</div>
+                <div class="vp-ctx-item" data-ms="3600000"  onclick="setVPPeriod(3600000)">1h</div>
+                <div class="vp-ctx-item" data-ms="86400000" onclick="setVPPeriod(86400000)">1d</div>
+            </div>
+            <div class="ob-panels">
+                <div id="ob-pct-float" class="ob-pct-float"></div>
+                <div class="ob-vp-wrap" id="ob-vp-wrap" oncontextmenu="showVPCtxMenu(event)" onwheel="vpScroll(event)">
+                    <div class="ob-vp-scroll">
+                        <div class="ob-vp-cols" id="ob-vp-cols"></div>
+                    </div>
+                    <div class="ob-vp-footer" id="ob-vp-footer"></div>
+                </div>
+                <div class="ob-book">
+                    <div class="ob-scroll" id="ob-scroll">
+                        <div class="ob-asks" id="ob-asks"></div>
+                        <div class="ob-bids" id="ob-bids"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="ob-control">
+                <div class="ob-ctrl-top">
+                    <button class="ob-lev-btn" id="ob-lev-btn" ondblclick="toggleLevPopup()">20X</button>
+                    <div class="ob-pings" id="ob-pings">
+                        <span class="ob-ping-val none">—</span>
+                        <span class="ob-ping-val none">—</span>
+                        <span class="ob-ping-val none">—</span>
+                    </div>
+                </div>
+                <div class="ob-presets" id="ob-presets"></div>
+            </div>
+        </div><!-- /.orderbook -->
+
+        </div><!-- /.main-inner -->
 
     </div><!-- /.main-content -->
 
