@@ -1088,6 +1088,9 @@ function toggleTheme() {
 let currentPrice = 67234.50;
 let leverage     = 20;
 let pendingLev   = 20;
+let binanceWS    = null;
+let realAsks     = [];
+let realBids     = [];
 let lastBarTime  = 0;
 let lastOpen     = currentPrice;
 let tfInterval   = 900;
@@ -1671,10 +1674,6 @@ function renderTape(asks, bids) {
 // ══════════════════════════════════════════════════════════════════
 // BINANCE WEBSOCKET
 // ══════════════════════════════════════════════════════════════════
-
-let binanceWS = null;
-let realAsks  = [];
-let realBids  = [];
 
 function connectBinanceWS(symLow, tfLabel) {
     const streams = [
