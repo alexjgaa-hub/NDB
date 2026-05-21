@@ -10,30 +10,54 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --bg:       #a9a9a9;
-            --surface:  #131c2e;
-            --surface2: #0f1623;
-            --border:   #1f2a3d;
-            --green:    #5bba89;
-            --red:      #cd4141;
-            --blue:     #d9ad70;
-            --yellow:   #d9ad70;
-            --text:     #e5edf6;
-            --muted:    #8594a8;
-            --font:     'Figtree', ui-sans-serif, system-ui, sans-serif;
+            /* dark theme — matches platform dark */
+            --bg:           #0b0f17;
+            --surface:      #121925;
+            --surface2:     #151e2d;
+            --surface-muted:#1b2638;
+            --border:       #223047;
+            --border2:      #2e3c55;
+            --green:        #34d399;
+            --red:          #f87171;
+            --blue:         #60a5fa;
+            --yellow:       #d9ad70;
+            --gold:         #d9ad70;
+            --text:         #f8fafc;
+            --muted:        #cbd5e1;
+            --positive:     #34d399;
+            --negative:     #f87171;
+            /* sidebar always dark */
+            --sidebar-bg:       #111827;
+            --sidebar-bg2:      #0b1220;
+            --sidebar-border:   #1f2a3d;
+            --sidebar-text:     #f8fafc;
+            --sidebar-muted:    #cbd5e1;
+            --font: 'Figtree', ui-sans-serif, system-ui, sans-serif;
         }
 
         :root.light {
-            --bg:       #f0f3f8;
-            --surface:  #ffffff;
-            --surface2: #f1f4f8;
-            --border:   #dbe3ee;
-            --green:    #0e9f6e;
-            --red:      #d64545;
-            --blue:     #b8862a;
-            --yellow:   #b8862a;
-            --text:     #181d30;
-            --muted:    #515151;
+            /* light theme — matches platform light */
+            --bg:           #f7f7f7;
+            --surface:      #ffffff;
+            --surface2:     #f1f4f8;
+            --surface-muted:#f1f4f8;
+            --border:       #f0f0f0;
+            --border2:      #e3e3e3;
+            --green:        #0e9f6e;
+            --red:          #d64545;
+            --blue:         #306eb2;
+            --yellow:       #d9ad70;
+            --gold:         #d9ad70;
+            --text:         #111827;
+            --muted:        #64748b;
+            --positive:     #0e9f6e;
+            --negative:     #d64545;
+            /* sidebar stays dark even in light mode */
+            --sidebar-bg:       #111827;
+            --sidebar-bg2:      #0b1220;
+            --sidebar-border:   #1f2a3d;
+            --sidebar-text:     #f8fafc;
+            --sidebar-muted:    #cbd5e1;
         }
 
         body {
@@ -794,82 +818,89 @@
         /* ── APP BODY ── */
         .app-body { display: flex; flex: 1; overflow: hidden; min-height: 0; }
 
-        /* ── SIDEBAR ── */
+        /* ── SIDEBAR ── always dark regardless of theme */
         .sidebar {
-            width: 200px; flex-shrink: 0;
-            background: var(--surface2);
-            border-right: 1px solid var(--border);
+            width: 210px; flex-shrink: 0;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--sidebar-border);
             display: flex; flex-direction: column;
             overflow-y: auto; overflow-x: hidden;
         }
         .sb-logo {
-            padding: 14px 16px 10px;
-            border-bottom: 1px solid var(--border);
+            padding: 14px 16px 12px;
+            border-bottom: 1px solid var(--sidebar-border);
             display: flex; align-items: center; gap: 8px;
         }
         .sb-logo-icon {
-            width: 28px; height: 28px; background: var(--blue);
+            width: 28px; height: 28px; background: var(--gold);
             border-radius: 6px; display: flex; align-items: center;
             justify-content: center; font-size: 13px; font-weight: 700; color: #1a1000; flex-shrink: 0;
         }
-        .sb-logo-text { font-size: 12px; font-weight: 700; color: var(--text); line-height: 1.2; }
-        .sb-logo-text span { display: block; font-size: 9px; font-weight: 400; color: var(--muted); letter-spacing: 1px; }
-        .sb-nav { padding: 8px 0; }
+        .sb-logo-text { font-size: 12px; font-weight: 700; color: var(--sidebar-text); line-height: 1.2; }
+        .sb-logo-text span { display: block; font-size: 9px; font-weight: 400; color: var(--sidebar-muted); letter-spacing: 1px; }
+        .sb-nav { padding: 6px 0; }
         .sb-item {
-            display: flex; align-items: center; gap: 9px;
-            padding: 7px 16px; color: var(--muted); font-size: 12px;
-            cursor: pointer; transition: all 0.12s; user-select: none;
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 16px; color: var(--sidebar-muted); font-size: 13px;
+            cursor: pointer; transition: color 0.12s; user-select: none;
         }
-        .sb-item:hover { color: var(--text); background: rgba(255,255,255,0.04); }
-        .sb-item.active { color: var(--text); background: rgba(217,173,112,0.10); }
-        .sb-item-icon { font-size: 13px; width: 16px; text-align: center; flex-shrink: 0; }
-        .sb-divider { height: 1px; background: var(--border); margin: 4px 0; }
-        .sb-section { padding: 4px 0; }
+        .sb-item:hover { color: var(--sidebar-text); }
+        .sb-item.active { color: var(--sidebar-text); font-weight: bold; }
+        /* icon placeholder 18×18 — no actual icon per platform spec */
+        .sb-icon { width: 18px; height: 18px; flex-shrink: 0; }
+        .sb-divider { height: 1px; background: var(--sidebar-border); margin: 4px 0; }
+        .sb-section { padding: 2px 0; }
         .sb-section-hdr {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 6px 16px; color: var(--muted); font-size: 10px;
-            letter-spacing: 1px; cursor: pointer; user-select: none;
+            padding: 8px 16px 4px; color: var(--sidebar-muted); font-size: 11px;
+            letter-spacing: 0.5px; cursor: pointer; user-select: none; font-weight: 600;
         }
-        .sb-section-hdr:hover { color: var(--text); }
-        .sb-sub { padding-left: 12px; }
-        .sb-sub .sb-item { font-size: 11px; padding: 5px 16px 5px 12px; }
+        .sb-section-hdr:hover { color: var(--sidebar-text); }
+        .sb-sub .sb-item { font-size: 12px; padding: 6px 16px 6px 20px; }
 
         /* ── MAIN CONTENT ── */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 
         /* ── EXCHANGE STATS ── */
         .exchange-stats {
-            height: 72px; flex-shrink: 0;
-            background: var(--surface); border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; padding: 0 14px; gap: 0;
+            flex-shrink: 0;
+            background: var(--surface); border-bottom: 1px solid var(--border2);
+            display: flex; align-items: stretch; padding: 10px 16px; gap: 12px;
             overflow-x: auto;
         }
         .exch-card {
+            flex: 0 1 320px; min-width: 280px; max-width: 360px;
+            min-height: 88px;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 8px; padding: 10px 14px;
             display: flex; align-items: center; gap: 12px;
-            padding: 0 20px; height: 100%;
-            border-right: 1px solid var(--border); cursor: pointer;
-            transition: background 0.12s; flex-shrink: 0; min-width: 190px;
+            cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s;
+            position: relative;
         }
-        .exch-card:first-child { padding-left: 0; }
-        .exch-card:hover { background: rgba(255,255,255,0.03); }
-        .exch-icon {
-            width: 36px; height: 36px; border-radius: 50%;
-            border: 2px solid var(--border); display: flex; align-items: center;
-            justify-content: center; flex-shrink: 0; position: relative;
+        .exch-card:hover {
+            border-color: var(--border2);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.18);
         }
-        .exch-icon svg { width: 20px; height: 20px; }
-        .exch-ring {
-            width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
-            background: conic-gradient(var(--blue) 0% 35%, var(--border) 35% 100%);
+        /* donut chart */
+        .exch-donut {
+            width: 52px; height: 52px; flex-shrink: 0;
+            border-radius: 50%; position: relative;
         }
+        .exch-donut canvas { border-radius: 50%; }
         .exch-info { flex: 1; min-width: 0; }
-        .exch-name { font-size: 12px; font-weight: 600; color: var(--text); }
-        .exch-pairs { display: flex; flex-direction: column; gap: 1px; margin-top: 3px; }
-        .exch-pair { display: flex; align-items: center; gap: 5px; font-size: 11px; }
-        .exch-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-        .exch-sym { color: var(--muted); }
+        .exch-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+        .exch-balances { display: flex; flex-direction: column; gap: 3px; }
+        .exch-row { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+        .exch-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+        .exch-sym { color: var(--muted); min-width: 36px; }
         .exch-val { font-weight: 600; color: var(--text); }
-        .exch-arrow { color: var(--muted); font-size: 11px; margin-left: auto; }
+        .exch-usd { color: var(--muted); font-size: 10px; margin-left: 4px; display: none; }
+        .exch-card:hover .exch-usd { display: inline; }
+        .exch-arrow { color: var(--muted); font-size: 13px; margin-left: auto; flex-shrink: 0; align-self: flex-start; }
+        /* used block on hover */
+        .exch-used { display: none; margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--border); }
+        .exch-card:hover .exch-used { display: block; }
+        .exch-used-label { font-size: 10px; color: var(--muted); margin-bottom: 2px; }
 
         /* ── TASKS PANEL ── */
         .tasks-panel {
@@ -1042,20 +1073,27 @@
             <div class="sb-logo-text">Fibonacci<span>MARKET MAKER</span></div>
         </div>
         <div class="sb-nav">
-            <div class="sb-item"><span class="sb-item-icon">◈</span>Projects</div>
-            <div class="sb-item"><span class="sb-item-icon">◎</span>Performance</div>
-            <div class="sb-item"><span class="sb-item-icon">◉</span>Users</div>
-            <div class="sb-item"><span class="sb-item-icon">◈</span>Users subscriptions</div>
-            <div class="sb-item"><span class="sb-item-icon">◎</span>Telegram logins</div>
+            <div class="sb-item"><span class="sb-icon"></span>Projects</div>
+            <div class="sb-item"><span class="sb-icon"></span>Performance</div>
+            <div class="sb-item"><span class="sb-icon"></span>Users</div>
+            <div class="sb-item"><span class="sb-icon"></span>Users subscriptions</div>
+            <div class="sb-item"><span class="sb-icon"></span>Telegram logins</div>
             <div class="sb-divider"></div>
             <div class="sb-section">
                 <div class="sb-section-hdr">SOIL <span>▾</span></div>
                 <div class="sb-sub">
-                    <div class="sb-item"><span class="sb-item-icon">◎</span>Summary</div>
-                    <div class="sb-item active"><span class="sb-item-icon">◈</span>Trading Panel</div>
-                    <div class="sb-item"><span class="sb-item-icon">◎</span>Tasks</div>
-                    <div class="sb-item"><span class="sb-item-icon">◎</span>Arbitrage tasks</div>
-                    <div class="sb-item"><span class="sb-item-icon">◎</span>Statistics</div>
+                    <div class="sb-item"><span class="sb-icon"></span>Summary</div>
+                    <div class="sb-item active"><span class="sb-icon"></span>Trading Panel</div>
+                    <div class="sb-item"><span class="sb-icon"></span>Tasks</div>
+                    <div class="sb-item"><span class="sb-icon"></span>Arbitrage tasks</div>
+                    <div class="sb-item" id="sb-stats-hdr" onclick="toggleSbStats()"><span class="sb-icon"></span>Statistics <span id="sb-stats-arrow" style="margin-left:auto;font-size:10px">▾</span></div>
+                    <div class="sb-sub" id="sb-stats-sub" style="display:none">
+                        <div class="sb-item"><span class="sb-icon"></span>Liquidity</div>
+                        <div class="sb-item"><span class="sb-icon"></span>Principal MM</div>
+                        <div class="sb-item"><span class="sb-icon"></span>Volume</div>
+                        <div class="sb-item"><span class="sb-icon"></span>Arbitrage</div>
+                        <div class="sb-item"><span class="sb-icon"></span>PnL</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1067,34 +1105,49 @@
         <!-- Exchange stats -->
         <div class="exchange-stats">
             <div class="exch-card">
-                <div class="exch-ring" style="background:conic-gradient(#d9ad70 0% 30%, #1f2a3d 30% 100%)"></div>
+                <canvas class="exch-donut" id="donut-binance" width="52" height="52"></canvas>
                 <div class="exch-info">
                     <div class="exch-name">Binance</div>
-                    <div class="exch-pairs">
-                        <div class="exch-pair"><span class="exch-dot" style="background:#d9ad70"></span><span class="exch-sym">FOLKS</span><span class="exch-val" style="margin-left:6px">0</span></div>
-                        <div class="exch-pair"><span class="exch-dot" style="background:#5bba89"></span><span class="exch-sym">USDT</span><span class="exch-val" style="margin-left:6px">29 713</span></div>
+                    <div class="exch-balances">
+                        <div class="exch-row"><span class="exch-dot" style="background:#306eb2"></span><span class="exch-sym">FOLKS</span><span class="exch-val">0</span></div>
+                        <div class="exch-row"><span class="exch-dot" style="background:#d9ad70"></span><span class="exch-sym">USDT</span><span class="exch-val">29,713</span></div>
+                    </div>
+                    <div class="exch-used">
+                        <div class="exch-used-label">Used</div>
+                        <div class="exch-row"><span class="exch-dot" style="background:#306eb2"></span><span class="exch-sym">FOLKS</span><span class="exch-val">0</span></div>
+                        <div class="exch-row"><span class="exch-dot" style="background:#d9ad70"></span><span class="exch-sym">USDT</span><span class="exch-val">0</span></div>
                     </div>
                 </div>
                 <span class="exch-arrow">›</span>
             </div>
             <div class="exch-card">
-                <div class="exch-ring" style="background:conic-gradient(#d9ad70 0% 55%, #1f2a3d 55% 100%)"></div>
+                <canvas class="exch-donut" id="donut-bitmart" width="52" height="52"></canvas>
                 <div class="exch-info">
                     <div class="exch-name">BitMart</div>
-                    <div class="exch-pairs">
-                        <div class="exch-pair"><span class="exch-dot" style="background:#d9ad70"></span><span class="exch-sym">SOIL</span><span class="exch-val" style="margin-left:6px">54 694</span></div>
-                        <div class="exch-pair"><span class="exch-dot" style="background:#5bba89"></span><span class="exch-sym">USDT</span><span class="exch-val" style="margin-left:6px">4 297.3</span></div>
+                    <div class="exch-balances">
+                        <div class="exch-row"><span class="exch-dot" style="background:#306eb2"></span><span class="exch-sym">SOIL</span><span class="exch-val">54,694</span></div>
+                        <div class="exch-row"><span class="exch-dot" style="background:#d9ad70"></span><span class="exch-sym">USDT</span><span class="exch-val">4,297.3</span></div>
+                    </div>
+                    <div class="exch-used">
+                        <div class="exch-used-label">Used</div>
+                        <div class="exch-row"><span class="exch-dot" style="background:#306eb2"></span><span class="exch-sym">SOIL</span><span class="exch-val">1,200</span></div>
+                        <div class="exch-row"><span class="exch-dot" style="background:#d9ad70"></span><span class="exch-sym">USDT</span><span class="exch-val">850</span></div>
                     </div>
                 </div>
                 <span class="exch-arrow">›</span>
             </div>
             <div class="exch-card">
-                <div class="exch-ring" style="background:conic-gradient(#d9ad70 0% 70%, #1f2a3d 70% 100%)"></div>
+                <canvas class="exch-donut" id="donut-gateio" width="52" height="52"></canvas>
                 <div class="exch-info">
                     <div class="exch-name">Gate.io</div>
-                    <div class="exch-pairs">
-                        <div class="exch-pair"><span class="exch-dot" style="background:#d9ad70"></span><span class="exch-sym">SOIL</span><span class="exch-val" style="margin-left:6px">122 635</span></div>
-                        <div class="exch-pair"><span class="exch-dot" style="background:#5bba89"></span><span class="exch-sym">USDT</span><span class="exch-val" style="margin-left:6px">4 787</span></div>
+                    <div class="exch-balances">
+                        <div class="exch-row"><span class="exch-dot" style="background:#306eb2"></span><span class="exch-sym">SOIL</span><span class="exch-val">122,635</span></div>
+                        <div class="exch-row"><span class="exch-dot" style="background:#d9ad70"></span><span class="exch-sym">USDT</span><span class="exch-val">4,787</span></div>
+                    </div>
+                    <div class="exch-used">
+                        <div class="exch-used-label">Used</div>
+                        <div class="exch-row"><span class="exch-dot" style="background:#306eb2"></span><span class="exch-sym">SOIL</span><span class="exch-val">5,400</span></div>
+                        <div class="exch-row"><span class="exch-dot" style="background:#d9ad70"></span><span class="exch-sym">USDT</span><span class="exch-val">320</span></div>
                     </div>
                 </div>
                 <span class="exch-arrow">›</span>
@@ -2855,6 +2908,49 @@ function setupOBHover() {
     });
 }
 
+// ══ SIDEBAR ══
+function toggleSbStats() {
+    const sub = document.getElementById('sb-stats-sub');
+    const arrow = document.getElementById('sb-stats-arrow');
+    const open = sub.style.display !== 'none';
+    sub.style.display = open ? 'none' : 'block';
+    arrow.textContent = open ? '▾' : '▴';
+}
+
+// ══ DONUT CHARTS ══
+const DONUT_COLORS = ['#306eb2','#d9ad70','rgba(75,192,192,0.8)','rgba(153,102,255,0.8)','rgba(255,159,64,0.8)'];
+function drawDonut(id, segments) {
+    const canvas = document.getElementById(id);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const cx = 26, cy = 26, r = 22, inner = 13;
+    const total = segments.reduce((s,v) => s + v, 0);
+    ctx.clearRect(0, 0, 52, 52);
+    if (!total) {
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2);
+        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border') || '#223047';
+        ctx.lineWidth = r - inner; ctx.stroke(); return;
+    }
+    let start = -Math.PI / 2;
+    segments.forEach((v, i) => {
+        const angle = (v / total) * Math.PI * 2;
+        ctx.beginPath(); ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, start, start + angle);
+        ctx.closePath();
+        ctx.fillStyle = DONUT_COLORS[i % DONUT_COLORS.length];
+        ctx.fill();
+        start += angle;
+    });
+    ctx.beginPath(); ctx.arc(cx, cy, inner, 0, Math.PI*2);
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--surface2') || '#151e2d';
+    ctx.fill();
+}
+function initDonuts() {
+    drawDonut('donut-binance', [0, 29713]);
+    drawDonut('donut-bitmart', [54694, 4297]);
+    drawDonut('donut-gateio', [122635, 4787]);
+}
+
 // ══ TASKS TABLE ══
 const tasksData = [
     { id:58075, strat:'Iceberg',    pair:'AXYZ/USDT', exch:'Weex', region:'hq', status:'Finished', side:'Buy',  created:'19-05-2026 03:37', started:'19-05-2026 03:38', owner:'Eugene owner' },
@@ -2918,10 +3014,12 @@ function renderTasksTable() {
                 <td class="task-ts">${t.started}<br><span style="color:var(--border)">started at</span></td>
                 <td class="task-owner">${t.owner}</td>
                 <td><div class="task-actions">
+                    <button class="task-act-btn" title="${t.status==='InWork'?'Pause':'Play'}">${t.status==='InWork'?'⏸':'▶'}</button>
+                    <button class="task-act-btn" title="Reload" ${t.status==='Finished'||t.status==='Canceled'?'style="opacity:.35;pointer-events:none"':''}>↺</button>
                     <button class="task-act-btn" title="Edit">✎</button>
-                    <button class="task-act-btn" title="Copy">⧉</button>
-                    <button class="task-act-btn" title="History">⏱</button>
-                    <button class="task-act-btn" title="Cancel">⊗</button>
+                    <button class="task-act-btn" title="Copy" onclick="this.title='Copied';setTimeout(()=>this.title='Copy',1500)">⧉</button>
+                    <button class="task-act-btn" title="Log history">🕐</button>
+                    <button class="task-act-btn" title="Delete">✕</button>
                     <button class="task-act-btn" title="Expand">∨</button>
                 </div></td>
             </tr>`;
@@ -2936,6 +3034,7 @@ vpRestartTimer();
 setupOBHover();
 updateFunding();
 renderTasksTable();
+initDonuts();
 
 setInterval(tick,           500);
 setInterval(updateFunding, 1000);
