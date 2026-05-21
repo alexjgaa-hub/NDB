@@ -654,6 +654,25 @@
         ::-webkit-scrollbar { width:4px; height:4px; }
         ::-webkit-scrollbar-track { background:transparent; }
         ::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+        /* ── BUBBLE ORDER BOOK ── */
+        .ob-view-btns { display:flex; gap:2px; }
+        .ob-view-btn {
+            padding: 1px 8px; border: 1px solid var(--border); border-radius: 3px;
+            background: transparent; color: var(--muted); cursor: pointer;
+            font-size: 9px; font-family: var(--font); transition: all 0.15s; line-height: 1.9;
+        }
+        .ob-view-btn.active {
+            border-color: var(--yellow); color: var(--yellow);
+            background: rgba(217,173,112,0.1);
+        }
+        .orderbook .ob-view-btn.active { border-color: #b8862a; color: #b8862a; background: rgba(184,134,42,0.1); }
+        .ob-bubble-wrap {
+            display: none; flex: 1; position: relative; overflow: hidden; min-height: 0;
+        }
+        .ob-bubble-wrap.visible { display: block; }
+        .ob-panels.hidden { display: none; }
+        #bubble-ob-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
     </style>
 </head>
 <body>
@@ -730,7 +749,13 @@
     <div class="orderbook">
         <div class="panel-hdr">
             <span>ORDER BOOK</span>
-            <button class="ob-gear-btn" onclick="toggleOBSettings()" title="Settings">⚙</button>
+            <div style="display:flex;align-items:center;gap:6px">
+                <div class="ob-view-btns">
+                    <button class="ob-view-btn active" id="ob-view-classic" onclick="setOBView('classic')">Classic</button>
+                    <button class="ob-view-btn" id="ob-view-bubble" onclick="setOBView('bubble')">Bubble</button>
+                </div>
+                <button class="ob-gear-btn" onclick="toggleOBSettings()" title="Settings">⚙</button>
+            </div>
         </div>
         <div class="ob-settings-popup" id="ob-settings-popup">
             <div class="obs-row">
@@ -747,7 +772,10 @@
             </div>
             <button class="obs-close" onclick="toggleOBSettings()">Apply & Close</button>
         </div>
-        <div class="ob-panels">
+        <div class="ob-bubble-wrap" id="ob-bubble-wrap">
+            <canvas id="bubble-ob-canvas"></canvas>
+        </div>
+        <div class="ob-panels" id="ob-panels">
             <div class="ob-vp">
                 <div class="ob-vp-rows" id="ob-vp"></div>
                 <div class="vp-footer" id="vp-footer"></div>
@@ -1926,6 +1954,278 @@ function closeBotModal(e) {
 // ══════════════════════════════════════════════════════════════════
 // INTERVALS
 // ══════════════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════════════
+// BUBBLE ORDER BOOK
+// ══════════════════════════════════════════════════════════════════
+
+const BubbleOB = (() => {
+    let canvas, ctx, rafId = null, active = false;
+    const states = new Map();
+
+    const CFG = {
+        LEVELS:  20,
+        MIN_R:   2.5,
+        MAX_R:   46,
+        PRICE_W: 72,
+        PAD:     10,
+        SPRING:  0.13,
+    };
+
+    function fmtP(p) {
+        if (p >= 10000) return p.toFixed(0);
+        if (p >= 100)   return p.toFixed(1);
+        if (p >= 1)     return p.toFixed(3);
+        if (p >= 0.001) return p.toFixed(5);
+        return p.toFixed(8);
+    }
+
+    function fmtVol(v) {
+        if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+        if (v >= 1e3) return (v / 1e3).toFixed(1) + 'K';
+        return v.toFixed(0);
+    }
+
+    function getColors() {
+        const s = getComputedStyle(document.documentElement);
+        const isLight = document.documentElement.classList.contains('light');
+        return {
+            bg:     isLight ? '#f0f3f8' : (s.getPropertyValue('--surface').trim() || '#131c2e'),
+            border: s.getPropertyValue('--border').trim()  || '#1f2a3d',
+            muted:  s.getPropertyValue('--muted').trim()   || '#8594a8',
+        };
+    }
+
+    function volToR(vol, maxVol) {
+        return CFG.MIN_R + Math.sqrt(Math.max(0, vol / maxVol)) * (CFG.MAX_R - CFG.MIN_R);
+    }
+
+    function drawRoundRect(x, y, w, h, r) {
+        if (ctx.roundRect) {
+            ctx.beginPath(); ctx.roundRect(x, y, w, h, r);
+        } else {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y); ctx.arcTo(x + w, y, x + w, y + r, r);
+            ctx.lineTo(x + w, y + h - r); ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+            ctx.lineTo(x + r, y + h); ctx.arcTo(x, y + h, x, y + h - r, r);
+            ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r);
+            ctx.closePath();
+        }
+    }
+
+    function frame() {
+        if (!active) return;
+        rafId = requestAnimationFrame(frame);
+
+        const W = canvas.width;
+        const H = canvas.height;
+        if (!W || !H) return;
+
+        const col = getColors();
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = col.bg;
+        ctx.fillRect(0, 0, W, H);
+
+        const asks = realAsks.slice(0, CFG.LEVELS);
+        const bids = realBids.slice(0, CFG.LEVELS);
+
+        if (!asks.length && !bids.length) {
+            ctx.fillStyle = col.muted;
+            ctx.font = '11px Figtree, sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('Waiting for data…', W / 2, H / 2);
+            return;
+        }
+
+        const topPrice    = asks.length ? asks[asks.length - 1].price : currentPrice * 1.015;
+        const bottomPrice = bids.length ? bids[bids.length - 1].price : currentPrice * 0.985;
+        const priceRange  = (topPrice - bottomPrice) || currentPrice * 0.02;
+        const toY = p => CFG.PAD + (1 - (p - bottomPrice) / priceRange) * (H - CFG.PAD * 2);
+
+        let maxVol = 1;
+        for (const r of asks) if (r.size > maxVol) maxVol = r.size;
+        for (const r of bids) if (r.size > maxVol) maxVol = r.size;
+
+        const activeKeys = new Set();
+
+        for (const r of asks) {
+            const key = 'a' + r.price;
+            activeKeys.add(key);
+            const tR = volToR(r.size, maxVol);
+            const tY = toY(r.price);
+            if (!states.has(key)) {
+                states.set(key, { r: 0, tR, y: tY, tY, alpha: 0, tA: 1, side: 'ask', price: r.price, vol: r.size });
+            } else {
+                const s = states.get(key); s.tR = tR; s.tY = tY; s.tA = 1; s.price = r.price; s.vol = r.size;
+            }
+        }
+
+        for (const r of bids) {
+            const key = 'b' + r.price;
+            activeKeys.add(key);
+            const tR = volToR(r.size, maxVol);
+            const tY = toY(r.price);
+            if (!states.has(key)) {
+                states.set(key, { r: 0, tR, y: tY, tY, alpha: 0, tA: 1, side: 'bid', price: r.price, vol: r.size });
+            } else {
+                const s = states.get(key); s.tR = tR; s.tY = tY; s.tA = 1; s.price = r.price; s.vol = r.size;
+            }
+        }
+
+        for (const [key, s] of states) {
+            if (!activeKeys.has(key)) { s.tA = 0; s.tR = 0; }
+        }
+
+        const sp = CFG.SPRING;
+        for (const [key, s] of states) {
+            s.r     += (s.tR - s.r)     * sp;
+            s.y     += (s.tY - s.y)     * sp;
+            s.alpha += (s.tA - s.alpha) * sp;
+            if (s.tA === 0 && s.alpha < 0.015) { states.delete(key); }
+        }
+
+        const CX = CFG.PRICE_W + (W - CFG.PRICE_W) / 2;
+
+        // Cumulative depth bars
+        let cumA = 0;
+        for (const r of [...asks].reverse()) {
+            cumA += r.size;
+            const y = toY(r.price);
+            const bw = Math.sqrt(cumA / (maxVol * CFG.LEVELS)) * (W - CFG.PRICE_W - 4);
+            ctx.fillStyle = 'rgba(205,65,65,0.05)';
+            ctx.fillRect(CFG.PRICE_W, y - 1.5, bw, 3);
+        }
+        let cumB = 0;
+        for (const r of bids) {
+            cumB += r.size;
+            const y = toY(r.price);
+            const bw = Math.sqrt(cumB / (maxVol * CFG.LEVELS)) * (W - CFG.PRICE_W - 4);
+            ctx.fillStyle = 'rgba(91,186,137,0.05)';
+            ctx.fillRect(CFG.PRICE_W, y - 1.5, bw, 3);
+        }
+
+        // Price axis divider
+        ctx.strokeStyle = col.border;
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(CFG.PRICE_W, 0); ctx.lineTo(CFG.PRICE_W, H); ctx.stroke();
+
+        // Spread dashed line
+        if (currentPrice) {
+            const midY = toY(currentPrice);
+            if (midY > 0 && midY < H) {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(217,173,112,0.2)';
+                ctx.lineWidth = 1; ctx.setLineDash([3, 6]);
+                ctx.beginPath(); ctx.moveTo(CFG.PRICE_W, midY); ctx.lineTo(W, midY); ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        // Bubbles — small first so large appear on top
+        const sorted = [...states.values()].sort((a, b) => a.r - b.r);
+
+        for (const s of sorted) {
+            if (s.r < 0.4 || s.alpha < 0.01) continue;
+
+            const isAsk = s.side === 'ask';
+            const isLg1 = s.vol >= obSettings.thresh1;
+            const isLg2 = s.vol >= obSettings.thresh2;
+            const rgb   = isAsk ? '205,65,65' : '91,186,137';
+            const aFill = isLg2 ? 0.72 * s.alpha : isLg1 ? 0.50 * s.alpha : 0.25 * s.alpha;
+
+            if (isLg1 && s.r > 6) {
+                ctx.save();
+                ctx.shadowColor = isAsk ? '#cd4141' : '#5bba89';
+                ctx.shadowBlur  = isLg2 ? 22 : 12;
+                ctx.beginPath(); ctx.arc(CX, s.y, s.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${rgb},${aFill * 0.22})`; ctx.fill();
+                ctx.restore();
+            }
+
+            ctx.beginPath(); ctx.arc(CX, s.y, s.r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${rgb},${aFill})`; ctx.fill();
+            ctx.strokeStyle = `rgba(${rgb},${Math.min(s.alpha * 0.8, 0.8)})`;
+            ctx.lineWidth   = isLg2 ? 1.5 : 0.7; ctx.stroke();
+
+            if (s.r >= 16 && s.alpha > 0.45) {
+                ctx.save(); ctx.shadowBlur = 0;
+                ctx.fillStyle    = `rgba(255,255,255,${Math.min(s.alpha * 0.9, 0.9)})`;
+                ctx.font         = `bold ${s.r >= 28 ? 10 : 9}px Figtree, sans-serif`;
+                ctx.textAlign    = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(fmtVol(s.vol), CX, s.y); ctx.restore();
+            }
+        }
+
+        // Price labels — most important first, no overlap
+        ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+        const usedBuckets = new Set();
+        const labelCandidates = [...states.values()]
+            .filter(s => s.alpha > 0.18 && s.r > 0.8)
+            .sort((a, b) => b.vol - a.vol);
+
+        for (const s of labelCandidates) {
+            const bk = Math.round(s.y / 9);
+            if (usedBuckets.has(bk) || usedBuckets.has(bk - 1) || usedBuckets.has(bk + 1)) continue;
+            usedBuckets.add(bk);
+            const isAsk = s.side === 'ask';
+            const isLg1 = s.vol >= obSettings.thresh1;
+            const rgb   = isAsk ? '205,65,65' : '91,186,137';
+            ctx.fillStyle = `rgba(${rgb},${Math.min(s.alpha * (isLg1 ? 0.95 : 0.6), 0.92)})`;
+            ctx.font = `${isLg1 ? 'bold ' : ''}${isLg1 ? 10 : 9}px Figtree, sans-serif`;
+            ctx.fillText(fmtP(s.price), CFG.PRICE_W - 5, s.y);
+        }
+
+        // Current price pill
+        if (currentPrice) {
+            const midY = toY(currentPrice);
+            if (midY > 8 && midY < H - 8) {
+                const txt = '$' + fmtP(currentPrice);
+                ctx.font = 'bold 9.5px Figtree, sans-serif';
+                const pw = CFG.PRICE_W - 8, ph = 14;
+                drawRoundRect(3, midY - ph / 2, pw, ph, 3);
+                ctx.fillStyle = 'rgba(217,173,112,0.14)'; ctx.fill();
+                ctx.strokeStyle = 'rgba(217,173,112,0.5)'; ctx.lineWidth = 0.75; ctx.stroke();
+                ctx.fillStyle = '#d9ad70'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(txt, 3 + pw / 2, midY);
+            }
+        }
+    }
+
+    return {
+        init() {
+            canvas = document.getElementById('bubble-ob-canvas');
+            ctx    = canvas.getContext('2d');
+            new ResizeObserver(() => {
+                canvas.width  = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+            }).observe(canvas.parentElement);
+        },
+        activate() {
+            if (active) return;
+            active = true;
+            canvas.width  = canvas.offsetWidth  || canvas.parentElement.offsetWidth;
+            canvas.height = canvas.offsetHeight || canvas.parentElement.offsetHeight;
+            states.clear();
+            frame();
+        },
+        deactivate() {
+            active = false;
+            if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+        },
+    };
+})();
+
+function setOBView(mode) {
+    const isCl = mode === 'classic';
+    document.getElementById('ob-panels').classList.toggle('hidden', !isCl);
+    document.getElementById('ob-bubble-wrap').classList.toggle('visible', !isCl);
+    document.getElementById('ob-view-classic').classList.toggle('active', isCl);
+    document.getElementById('ob-view-bubble').classList.toggle('active', !isCl);
+    if (isCl) BubbleOB.deactivate(); else BubbleOB.activate();
+}
+
+BubbleOB.init();
 
 renderBots();
 updateFunding();
