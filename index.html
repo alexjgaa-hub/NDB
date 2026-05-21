@@ -853,6 +853,7 @@
         <!-- Header -->
         <div class="panel-hdr">
             <span>ORDER BOOK</span>
+            <span id="vp-dbg" style="font-size:9px;color:#e00;font-weight:700;flex:1;text-align:center;"></span>
             <div class="ob-hdr-btns">
                 <button class="ob-icon-btn" onclick="obRefresh()" title="Обновить">↺</button>
                 <button class="ob-icon-btn" onclick="toggleOBSettings()" title="Настройки">⚙</button>
@@ -1712,6 +1713,7 @@ function drawFib(d, A, B, W) {
 const obSettings = { fillUSD: 10000, largeUSD1: 2500, largeUSD2: 5000 };
 
 // ── VP state ──
+let vpDbgTrades     = 0;
 let vpPeriodMs      = 300000;
 let vpPeriodTimer   = null;
 let vpCurrentPeriod = { startTs: Date.now(), priceMap: new Map() };
@@ -2048,11 +2050,13 @@ function connectBinanceWS(symLow, tfLabel) {
 
     if (aggTradeWS) { aggTradeWS.close(); aggTradeWS = null; }
     aggTradeWS = new WebSocket(`wss://fstream.binance.com/ws/${symLow}@aggTrade`);
+    aggTradeWS.onopen    = ()  => { console.log('aggTradeWS open'); const el = document.getElementById('vp-dbg'); if (el) el.textContent = 'WS OK'; };
     aggTradeWS.onmessage = (e) => {
         const data = JSON.parse(e.data);
         if (data.p) onAggTradeMsg(data);
     };
-    aggTradeWS.onerror = (e) => console.error('AggTrade WS error', e);
+    aggTradeWS.onerror = (e) => { console.error('AggTrade WS error', e); const el = document.getElementById('vp-dbg'); if (el) el.textContent = 'WS ERR'; };
+    aggTradeWS.onclose = (e) => { console.log('aggTradeWS closed', e.code, e.reason); };
 }
 
 function onDepthMsg(data) {
@@ -2076,6 +2080,11 @@ function onAggTradeMsg(data) {
     const size  = +data.q;
     currentPrice = price;
     vpRecord(price, size, isBuy);
+    vpDbgTrades++;
+    if (vpDbgTrades % 50 === 0) {
+        const el = document.getElementById('vp-dbg');
+        if (el) el.textContent = 'T:' + vpDbgTrades + ' M:' + vpCurrentPeriod.priceMap.size;
+    }
 }
 
 function updatePriceDisplay() {
