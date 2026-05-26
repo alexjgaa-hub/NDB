@@ -99,101 +99,68 @@
 
         .v-div { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
 
-        /* ── PAIR DROPDOWN ── */
-        .pair-dropdown { position: relative; }
-
-        .pair-trigger {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 5px 10px;
-            border: 1px solid var(--border);
-            border-radius: 5px;
+        /* ── ORDERBOOK PAIR LABEL ── */
+        .ob-set-pair {
+            text-decoration: underline;
             cursor: pointer;
-            background: var(--surface2);
-            transition: border-color 0.15s;
-            user-select: none;
-            min-width: 140px;
+            color: var(--muted);
+            transition: color 0.1s;
+            letter-spacing: 1px;
         }
+        .ob-set-pair:hover { color: var(--text); }
 
-        .pair-trigger:hover { border-color: var(--blue); }
-        .pair-trigger.open  { border-color: var(--blue); }
+        /* OB header color by market type */
+        .ob-hdr-spot { background: rgba(232,228,58,0.12) !important; border-bottom-color: rgba(232,228,58,0.28) !important; }
+        .ob-hdr-spot #ob-pair-label { color: rgb(222,218,50); }
+        .ob-hdr-perp { background: rgba(183,253,99,0.12) !important; border-bottom-color: rgba(183,253,99,0.28) !important; }
+        .ob-hdr-perp #ob-pair-label { color: rgb(170,240,88); }
 
-        .pt-name  { font-size: 13px; font-weight: bold; }
-        .pt-type  { font-size: 10px; color: var(--muted); }
-        .pt-arrow { margin-left: auto; color: var(--muted); font-size: 10px; }
-
-        .pair-panel {
-            display: none;
-            position: absolute;
-            top: calc(100% + 6px);
-            left: 0;
-            width: 340px;
+        /* ── ORDERBOOK PAIR PICKER MODAL ── */
+        .ob-pp-overlay {
+            position: fixed; inset: 0; z-index: 300;
+            background: rgba(0,0,0,0.55);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .ob-pp-overlay.hidden { display: none; }
+        .ob-pp-card {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 6px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-            z-index: 200;
-            overflow: hidden;
+            border-radius: 10px;
+            width: 460px;
+            max-height: 500px;
+            display: flex; flex-direction: column;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6);
         }
-
-        .pair-panel.open { display: block; }
-
-        .pair-search-wrap { padding: 8px; border-bottom: 1px solid var(--border); }
-
-        .pair-search {
-            width: 100%;
-            padding: 6px 10px;
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            color: var(--text);
-            border-radius: 4px;
-            font-family: var(--font);
-            font-size: 12px;
-            outline: none;
-        }
-
-        .pair-search:focus { border-color: var(--blue); }
-
-        .pair-cats {
-            display: flex;
-            gap: 4px;
-            padding: 6px 8px;
+        .ob-pp-hdr {
+            padding: 13px 18px;
             border-bottom: 1px solid var(--border);
-            overflow-x: auto;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 13px; font-weight: 600; flex-shrink: 0;
         }
-
-        .pcat {
-            padding: 2px 8px;
-            border: 1px solid var(--border);
-            border-radius: 3px;
-            background: transparent;
-            color: var(--muted);
-            cursor: pointer;
-            font-family: var(--font);
-            font-size: 10px;
-            white-space: nowrap;
+        .ob-pp-close {
+            background: none; border: none; color: var(--muted);
+            cursor: pointer; font-size: 20px; line-height: 1; padding: 0 2px;
+            transition: color 0.1s; font-family: var(--font);
         }
-
-        .pcat.active { border-color: var(--blue); color: var(--blue); background: rgba(88,166,255,0.1); }
-
-        .pair-items { max-height: 280px; overflow-y: auto; }
-
-        .pair-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 7px 12px;
-            cursor: pointer;
-            transition: background 0.1s;
+        .ob-pp-close:hover { color: var(--text); }
+        .ob-pp-body { overflow-y: auto; flex: 1; }
+        .ob-pp-empty { padding: 32px 18px; text-align: center; color: var(--muted); font-size: 13px; }
+        .ob-pp-item {
+            padding: 11px 18px; cursor: pointer;
+            display: flex; align-items: center; gap: 12px;
+            border-bottom: 1px solid var(--border2); transition: background 0.1s;
         }
-
-        .pair-item:hover { background: var(--surface2); }
-        .pair-item.active { background: rgba(88,166,255,0.08); }
-
-        .pi-sym  { font-size: 12px; font-weight: bold; width: 60px; }
-        .pi-name { font-size: 11px; color: var(--muted); flex: 1; }
-        .pi-cat  { font-size: 10px; color: var(--muted); background: var(--surface2); padding: 1px 5px; border-radius: 2px; }
+        .ob-pp-item:last-child { border-bottom: none; }
+        .ob-pp-item:hover { background: var(--surface2); }
+        .ob-pp-item-name { font-size: 13px; font-weight: 600; flex: 1; }
+        .ob-pp-item-exchange { font-size: 11px; color: var(--muted); }
+        .ob-pp-badge {
+            padding: 2px 7px; border-radius: 4px;
+            font-size: 10px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .ob-pp-badge-spot { background: rgba(232,228,58,0.15); color: rgb(222,218,50); }
+        .ob-pp-badge-perp { background: rgba(183,253,99,0.15); color: rgb(170,240,88); }
 
         /* ── HEADER REST ── */
         select {
@@ -286,13 +253,13 @@
             justify-content: space-between;
             flex-shrink: 0;
         }
-        .orderbook .panel-hdr { color: #333; background: #e0e0e0; border-bottom-color: #c0c0c0; }
+        .orderbook .panel-hdr { color: var(--muted); background: var(--surface2); border-bottom-color: var(--border); }
         .ob-hdr-btns { display: flex; gap: 2px; }
         .ob-icon-btn {
-            background: none; border: none; color: #555;
+            background: none; border: none; color: var(--muted);
             cursor: pointer; font-size: 14px; padding: 0 4px; line-height: 1; transition: color 0.1s;
         }
-        .ob-icon-btn:hover { color: #000; }
+        .ob-icon-btn:hover { color: var(--text); }
 
         /* Settings popup */
         .ob-settings-popup {
@@ -1149,32 +1116,6 @@
 <!-- ═══ HEADER ═══ -->
 <div class="header">
     <div class="logo">FIBONACCI<span>MARKET MAKER</span></div>
-    <div class="v-div"></div>
-
-    <!-- Pair dropdown -->
-    <div class="pair-dropdown" id="pair-dropdown">
-        <div class="pair-trigger" id="pair-trigger" onclick="togglePairDD()">
-            <div>
-                <div class="pt-name" id="pt-name">BTC/USDT</div>
-                <div class="pt-type">PERP</div>
-            </div>
-            <span class="pt-arrow">▾</span>
-        </div>
-        <div class="pair-panel" id="pair-panel">
-            <div class="pair-search-wrap">
-                <input class="pair-search" id="pair-search" type="text" placeholder="Search pairs…" oninput="filterPairs(this.value)" autocomplete="off">
-            </div>
-            <div class="pair-cats">
-                <button class="pcat active" onclick="setPairCat(this,'ALL')">ALL</button>
-                <button class="pcat" onclick="setPairCat(this,'L1')">Layer 1</button>
-                <button class="pcat" onclick="setPairCat(this,'L2')">Layer 2</button>
-                <button class="pcat" onclick="setPairCat(this,'DeFi')">DeFi</button>
-                <button class="pcat" onclick="setPairCat(this,'Meme')">Meme</button>
-                <button class="pcat" onclick="setPairCat(this,'AI')">AI</button>
-            </div>
-            <div class="pair-items" id="pair-items"></div>
-        </div>
-    </div>
 
     <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">☀</button>
 
@@ -1362,8 +1303,8 @@
 
         <!-- ─── ORDER BOOK ─── -->
         <div class="orderbook">
-            <div class="panel-hdr">
-                <span>ORDER BOOK</span>
+            <div class="panel-hdr" id="ob-hdr">
+                <span class="ob-set-pair" id="ob-pair-label" onclick="openOBPairPicker()">SET PAIR</span>
                 <div class="ob-hdr-btns">
                     <button class="ob-icon-btn" onclick="obRefresh()" title="Обновить">↺</button>
                     <button class="ob-icon-btn" onclick="toggleOBSettings()" title="Настройки">⚙</button>
@@ -1792,66 +1733,10 @@ const PAIR_DB = [
 ];
 
 let currentSym = 'FOLKS';
-let pairCatFilter = 'ALL';
 
 function getPair(sym) { return PAIR_DB.find(p => p.sym === sym) || PAIR_DB[0]; }
 
-// ── Pair Dropdown ──────────────────────────────────────────────────
-
-function togglePairDD() {
-    const panel   = document.getElementById('pair-panel');
-    const trigger = document.getElementById('pair-trigger');
-    const open    = panel.classList.toggle('open');
-    trigger.classList.toggle('open', open);
-    if (open) {
-        setTimeout(() => document.getElementById('pair-search').focus(), 50);
-        renderPairItems('', pairCatFilter);
-    }
-}
-
-function closePairDD() {
-    document.getElementById('pair-panel').classList.remove('open');
-    document.getElementById('pair-trigger').classList.remove('open');
-}
-
-document.addEventListener('click', e => {
-    if (!document.getElementById('pair-dropdown').contains(e.target)) closePairDD();
-});
-
-function setPairCat(btn, cat) {
-    pairCatFilter = cat;
-    document.querySelectorAll('.pcat').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    renderPairItems(document.getElementById('pair-search').value, cat);
-}
-
-function filterPairs(q) {
-    renderPairItems(q, pairCatFilter);
-}
-
-function renderPairItems(q, cat) {
-    q = (q || '').toLowerCase();
-    const filtered = PAIR_DB.filter(p =>
-        (cat === 'ALL' || p.cat === cat) &&
-        (p.sym.toLowerCase().includes(q) || p.name.toLowerCase().includes(q))
-    );
-
-    document.getElementById('pair-items').innerHTML = filtered.map(p => `
-        <div class="pair-item ${p.sym === currentSym ? 'active' : ''}" onclick="selectPair('${p.sym}')">
-            <span class="pi-sym">${p.sym}/USDT</span>
-            <span class="pi-name">${p.name}</span>
-            <span class="pi-cat">${p.cat}</span>
-        </div>
-    `).join('') || '<div style="padding:12px;color:var(--muted);text-align:center">No pairs found</div>';
-}
-
-function selectPair(sym) {
-    currentSym = sym;
-    const p = getPair(sym);
-    document.getElementById('pt-name').textContent = p.sym + '/USDT';
-    closePairDD();
-    changePair(sym);
-}
+// (pair dropdown removed — pair is set per-orderbook via project pairs)
 
 // ══════════════════════════════════════════════════════════════════
 // THEME
@@ -1891,7 +1776,9 @@ function toggleTheme() {
 let currentPrice = 67234.50;
 let leverage     = 20;
 let pendingLev   = 20;
-let binanceWS      = null;
+let obWS           = null;
+let chartWS        = null;
+let obSelectedPair = null; // { id, symbol, exchange, type } from project pairs
 let prevDepthAsks  = new Map();
 let prevDepthBids  = new Map();
 let realAsks     = [];
@@ -1985,7 +1872,7 @@ async function loadChart(sym, interval) {
     const bnSym   = sym.toUpperCase() + 'USDT';
     const tfLabel = TF_LABEL_MAP[tfInterval] || '15m';
 
-    if (binanceWS) { binanceWS.close(); binanceWS = null; }
+    if (chartWS) { chartWS.close(); chartWS = null; }
     obNeedCenter = true;
 
     try {
@@ -2009,13 +1896,18 @@ async function loadChart(sym, interval) {
 
     clearInProgress();
     redrawCanvas();
-    connectBinanceWS(bnSym.toLowerCase(), tfLabel);
+    connectBinanceFuturesChartWS(bnSym.toLowerCase(), tfLabel);
 }
 
 function setTF(btn, tf) {
     document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    loadChart(currentSym, TF_MAP[tf]);
+    if (obSelectedPair) {
+        const [base] = obSelectedPair.symbol.split('/');
+        loadChartForPair(base, obSelectedPair.exchange, obSelectedPair.type, TF_MAP[tf]);
+    } else {
+        loadChart(currentSym, TF_MAP[tf]);
+    }
 }
 
 applyChartTheme(document.documentElement.classList.contains('light'));
@@ -2402,9 +2294,16 @@ function obLevConfirm() {
 }
 
 function obRefresh() {
-    if (binanceWS) { binanceWS.close(); binanceWS = null; }
     obNeedCenter = true;
-    loadChart(currentSym, tfInterval);
+    if (obSelectedPair) {
+        const [base, quote] = obSelectedPair.symbol.split('/');
+        const sym = (base + (quote || 'USDT')).toLowerCase();
+        if (obWS) { obWS.close(); obWS = null; }
+        connectOBWS(sym, obSelectedPair.exchange, obSelectedPair.type);
+        loadChartForPair(base, obSelectedPair.exchange, obSelectedPair.type, tfInterval);
+    } else {
+        loadChart(currentSym, tfInterval);
+    }
 }
 
 // ── Presets ──
@@ -2657,27 +2556,195 @@ function renderVPCols(displayAsks, displayBids) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// BINANCE WEBSOCKET
+// WEBSOCKET — CHART (klines)
 // ══════════════════════════════════════════════════════════════════
 
-function connectBinanceWS(symLow, tfLabel) {
-    const streams = [
-        `${symLow}@depth20@100ms`,
-        `${symLow}@kline_${tfLabel}`
-    ].join('/');
+function connectBinanceFuturesChartWS(symLow, tfLabel) {
+    if (chartWS) { chartWS.close(); chartWS = null; }
+    chartWS = new WebSocket(`wss://fstream.binance.com/ws/${symLow}@kline_${tfLabel}`);
+    chartWS.onmessage = (e) => { const d = JSON.parse(e.data); if (d.e === 'kline') onKlineMsg(d); };
+    chartWS.onerror = (e) => console.error('chartWS error', e);
+    chartWS.onclose = ()  => {};
+}
 
-    binanceWS = new WebSocket(`wss://fstream.binance.com/stream?streams=${streams}`);
+function connectBinanceSpotChartWS(symLow, tfLabel) {
+    if (chartWS) { chartWS.close(); chartWS = null; }
+    chartWS = new WebSocket(`wss://stream.binance.com:9443/ws/${symLow}@kline_${tfLabel}`);
+    chartWS.onmessage = (e) => { const d = JSON.parse(e.data); if (d.e === 'kline') onKlineMsg(d); };
+    chartWS.onerror = (e) => console.error('chartWS error', e);
+    chartWS.onclose = ()  => {};
+}
 
-    binanceWS.onmessage = (e) => {
-        const msg    = JSON.parse(e.data);
-        const stream = msg.stream || '';
-        const data   = msg.data;
-        if (stream.includes('@depth20'))     onDepthMsg(data);
-        else if (stream.includes('@kline_')) onKlineMsg(data);
+function connectBybitChartWS(symUp, type, bybitInterval) {
+    if (chartWS) { chartWS.close(); chartWS = null; }
+    const cat = type === 'Perpetual' ? 'linear' : 'spot';
+    chartWS = new WebSocket(`wss://stream.bybit.com/v5/public/${cat}`);
+    chartWS.onopen = () => {
+        chartWS.send(JSON.stringify({ op: 'subscribe', args: [`kline.${bybitInterval}.${symUp}`] }));
     };
+    chartWS.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
+        if (!msg.topic?.includes('kline') || !msg.data?.length) return;
+        const k = msg.data[0];
+        currentPrice = +k.close;
+        candles.update({ time: +k.start / 1000, open: +k.open, high: +k.high, low: +k.low, close: +k.close });
+        volSeries.update({ time: +k.start / 1000, value: +k.volume,
+            color: +k.close >= +k.open ? '#5bba8930' : '#cd414130' });
+        updatePriceDisplay();
+    };
+    chartWS.onerror = (e) => console.error('chartWS error', e);
+    chartWS.onclose = ()  => {};
+}
 
-    binanceWS.onerror = (e) => console.error('Binance WS error', e);
-    binanceWS.onclose = ()  => console.log('Binance WS closed');
+// ══════════════════════════════════════════════════════════════════
+// WEBSOCKET — ORDERBOOK (depth)
+// ══════════════════════════════════════════════════════════════════
+
+function connectOBWS(symLow, exchange, type) {
+    if (obWS) { obWS.close(); obWS = null; }
+    const exch = (exchange || '').toLowerCase();
+    const symUp = symLow.toUpperCase();
+
+    if (exch === 'binance') {
+        const wsBase = type === 'Perpetual'
+            ? 'wss://fstream.binance.com'
+            : 'wss://stream.binance.com:9443';
+        obWS = new WebSocket(`${wsBase}/ws/${symLow}@depth20@100ms`);
+        obWS.onmessage = (e) => {
+            const d = JSON.parse(e.data);
+            realBids = (d.b || d.bids || []).map(([p,q]) => ({ price:+p, size:+q })).filter(r=>r.size>0);
+            realAsks = (d.a || d.asks || []).map(([p,q]) => ({ price:+p, size:+q })).filter(r=>r.size>0);
+            renderRealOB([...realAsks].reverse(), realBids);
+        };
+    } else if (exch === 'bybit') {
+        const cat = type === 'Perpetual' ? 'linear' : 'spot';
+        obWS = new WebSocket(`wss://stream.bybit.com/v5/public/${cat}`);
+        obWS.onopen = () => {
+            obWS.send(JSON.stringify({ op: 'subscribe', args: [`orderbook.20.${symUp}`] }));
+        };
+        obWS.onmessage = (e) => {
+            const msg = JSON.parse(e.data);
+            if (!msg.data) return;
+            const bids = (msg.data.b || []).map(([p,q]) => ({ price:+p, size:+q })).filter(r=>r.size>0);
+            const asks = (msg.data.a || []).map(([p,q]) => ({ price:+p, size:+q })).filter(r=>r.size>0);
+            if (!bids.length && !asks.length) return;
+            realBids = bids;
+            realAsks = asks;
+            renderRealOB([...asks].reverse(), bids);
+        };
+    } else {
+        // Other exchanges: fetch REST snapshot
+        fetchOBSnapshot(symUp, exchange, type);
+    }
+
+    if (obWS) {
+        obWS.onerror = (e) => console.error('obWS error', e);
+        obWS.onclose = ()  => {};
+    }
+}
+
+async function fetchOBSnapshot(symUp, exchange, type) {
+    try {
+        let bids = [], asks = [];
+        const exch = (exchange || '').toLowerCase();
+        if (exch === 'gate') {
+            const [base, quote] = symUp.split('USDT');
+            const res = await fetch(`https://api.gateio.ws/api/v4/spot/order_book?currency_pair=${base}_USDT&limit=20`);
+            const d = await res.json();
+            bids = (d.bids || []).map(([p,q]) => ({ price:+p, size:+q }));
+            asks = (d.asks || []).map(([p,q]) => ({ price:+p, size:+q }));
+        } else if (exch === 'mexc') {
+            const res = await fetch(`https://api.mexc.com/api/v3/depth?symbol=${symUp}&limit=20`);
+            const d = await res.json();
+            bids = (d.bids || []).map(([p,q]) => ({ price:+p, size:+q }));
+            asks = (d.asks || []).map(([p,q]) => ({ price:+p, size:+q }));
+        } else if (exch === 'bitget') {
+            const res = await fetch(`https://api.bitget.com/api/v2/spot/market/orderbook?symbol=${symUp}&limit=20`);
+            const d = await res.json();
+            bids = (d.data?.bids || []).map(([p,q]) => ({ price:+p, size:+q }));
+            asks = (d.data?.asks || []).map(([p,q]) => ({ price:+p, size:+q }));
+        } else if (exch === 'kucoin') {
+            const res = await fetch(`https://api.kucoin.com/api/v1/market/orderbook/level2_20?symbol=${symUp.slice(0,-4)}-USDT`);
+            const d = await res.json();
+            bids = (d.data?.bids || []).map(([p,q]) => ({ price:+p, size:+q }));
+            asks = (d.data?.asks || []).map(([p,q]) => ({ price:+p, size:+q }));
+        }
+        if (bids.length || asks.length) {
+            realBids = bids;
+            realAsks = [...asks].reverse();
+            renderRealOB(realAsks, realBids);
+        }
+    } catch(e) {
+        console.error('OB snapshot error', e);
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// LOAD CHART FOR PROJECT PAIR (multi-exchange)
+// ══════════════════════════════════════════════════════════════════
+
+const BYBIT_TF = { 60:'1', 300:'5', 900:'15', 3600:'60', 14400:'240', 86400:'D' };
+
+async function loadChartForPair(base, exchange, type, interval) {
+    tfInterval = interval || 900;
+    const tfLabel = TF_LABEL_MAP[tfInterval] || '15m';
+    currentSym = base;
+
+    if (chartWS) { chartWS.close(); chartWS = null; }
+    obNeedCenter = true;
+
+    const symUp = base.toUpperCase() + 'USDT';
+    const exch  = (exchange || '').toLowerCase();
+    let url, parser;
+
+    if (exch === 'binance') {
+        if (type === 'Perpetual') {
+            url    = `https://fapi.binance.com/fapi/v1/klines?symbol=${symUp}&interval=${tfLabel}&limit=500`;
+            parser = raw => raw.map(k => ({ time:k[0]/1000, open:+k[1], high:+k[2], low:+k[3], close:+k[4], vol:+k[5] }));
+        } else {
+            url    = `https://api.binance.com/api/v3/klines?symbol=${symUp}&interval=${tfLabel}&limit=500`;
+            parser = raw => raw.map(k => ({ time:k[0]/1000, open:+k[1], high:+k[2], low:+k[3], close:+k[4], vol:+k[5] }));
+        }
+    } else if (exch === 'bybit') {
+        const cat  = type === 'Perpetual' ? 'linear' : 'spot';
+        const bvTF = BYBIT_TF[tfInterval] || '15';
+        url    = `https://api.bybit.com/v5/market/kline?category=${cat}&symbol=${symUp}&interval=${bvTF}&limit=500`;
+        parser = resp => ((resp.result?.list) || []).slice().reverse()
+                    .map(k => ({ time:+k[0]/1000, open:+k[1], high:+k[2], low:+k[3], close:+k[4], vol:+k[5] }));
+    } else {
+        // fallback — Binance Futures
+        url    = `https://fapi.binance.com/fapi/v1/klines?symbol=${symUp}&interval=${tfLabel}&limit=500`;
+        parser = raw => raw.map(k => ({ time:k[0]/1000, open:+k[1], high:+k[2], low:+k[3], close:+k[4], vol:+k[5] }));
+    }
+
+    try {
+        const res  = await fetch(url);
+        const raw  = await res.json();
+        const data = parser(raw);
+        if (!data.length) throw new Error('empty');
+        const cData = data.map(k => ({ time:k.time, open:k.open, high:k.high, low:k.low, close:k.close }));
+        const vData = data.map(k => ({ time:k.time, value:k.vol,
+            color: k.close >= k.open ? '#5bba8930' : '#cd414130' }));
+        candles.setData(cData);
+        volSeries.setData(vData);
+        currentPrice = cData[cData.length - 1].close;
+        lastBarTime  = cData[cData.length - 1].time;
+        lastOpen     = cData[cData.length - 1].open;
+        chart.timeScale().fitContent();
+    } catch(e) {
+        console.error('Chart load error:', e);
+    }
+
+    clearInProgress();
+    redrawCanvas();
+
+    // Connect chart WS
+    if (exch === 'binance') {
+        if (type === 'Perpetual') connectBinanceFuturesChartWS(symUp.toLowerCase(), tfLabel);
+        else                      connectBinanceSpotChartWS(symUp.toLowerCase(), tfLabel);
+    } else if (exch === 'bybit') {
+        connectBybitChartWS(symUp, type, BYBIT_TF[tfInterval] || '15');
+    }
 }
 
 function onDepthMsg(data) {
@@ -2701,13 +2768,17 @@ function onAggTradeMsg(data) {
 }
 
 function updatePriceDisplay() {
-    const p   = getPair(currentSym);
-    const pct = (currentPrice - p.base) / p.base * 100;
-    document.getElementById('header-price').textContent = '$' + fmt(currentPrice);
+    const p    = getPair(currentSym);
+    const pct  = (currentPrice - p.base) / p.base * 100;
+    const hpEl = document.getElementById('header-price');
+    if (hpEl) hpEl.textContent = '$' + fmt(currentPrice);
     const chEl = document.getElementById('header-change');
-    chEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
-    chEl.style.color  = pct >= 0 ? 'var(--green)' : 'var(--red)';
-    document.getElementById('pos-mark').textContent = '$' + fmt(currentPrice);
+    if (chEl) {
+        chEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+        chEl.style.color  = pct >= 0 ? 'var(--green)' : 'var(--red)';
+    }
+    const pmEl = document.getElementById('pos-mark');
+    if (pmEl) pmEl.textContent = '$' + fmt(currentPrice);
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -3459,6 +3530,77 @@ function showPage(p) {
     if (p === 'projects') renderProjectsList();
 }
 
+// ══ ORDERBOOK PAIR PICKER ══
+
+function openOBPairPicker() {
+    const overlay = document.getElementById('ob-pp-overlay');
+    overlay.classList.remove('hidden');
+    _renderOBPairList();
+}
+
+function closeOBPairPickerOverlay(e) {
+    if (e.target === document.getElementById('ob-pp-overlay'))
+        closeOBPairPickerBtn();
+}
+
+function closeOBPairPickerBtn() {
+    document.getElementById('ob-pp-overlay').classList.add('hidden');
+}
+
+function _renderOBPairList() {
+    const body = document.getElementById('ob-pp-body');
+    const pr   = currentProject;
+    if (!pr) {
+        body.innerHTML = '<div class="ob-pp-empty">Select a project in the sidebar first</div>';
+        return;
+    }
+    const pairs = pr.pairs || [];
+    if (!pairs.length) {
+        body.innerHTML = `<div class="ob-pp-empty">No pairs in project <b>${pr.title}</b>.<br>Add pairs on the Projects → Pairs page.</div>`;
+        return;
+    }
+    body.innerHTML = pairs.map(p => {
+        const isPerp  = (p.type || '').toLowerCase() === 'perpetual';
+        const badgeCls = isPerp ? 'ob-pp-badge-perp' : 'ob-pp-badge-spot';
+        const typeLabel = isPerp ? 'PERP' : 'SPOT';
+        return `<div class="ob-pp-item" onclick="selectOBPair(${p.id})">
+            <div>
+                <div class="ob-pp-item-name">${p.symbol}</div>
+                <div class="ob-pp-item-exchange">${p.exchange}</div>
+            </div>
+            <span class="ob-pp-badge ${badgeCls}">${typeLabel}</span>
+        </div>`;
+    }).join('');
+}
+
+function selectOBPair(pairId) {
+    const pr = currentProject;
+    if (!pr) return;
+    const pair = (pr.pairs || []).find(p => p.id === pairId);
+    if (!pair) return;
+
+    obSelectedPair = pair;
+
+    // Update header label and color
+    const label  = document.getElementById('ob-pair-label');
+    const hdr    = document.getElementById('ob-hdr');
+    const isPerp = (pair.type || '').toLowerCase() === 'perpetual';
+    label.textContent = `${pair.symbol} · ${pair.exchange.toUpperCase()} · ${isPerp ? 'PERPETUAL' : 'SPOT'}`;
+    label.classList.remove('ob-set-pair');
+    hdr.classList.remove('ob-hdr-spot', 'ob-hdr-perp');
+    hdr.classList.add(isPerp ? 'ob-hdr-perp' : 'ob-hdr-spot');
+
+    // Connect orderbook WebSocket
+    const [base, quote] = pair.symbol.split('/');
+    const symLow = (base + (quote || 'USDT')).toLowerCase();
+    connectOBWS(symLow, pair.exchange, pair.type);
+
+    // Load chart for this pair
+    loadChartForPair(base, pair.exchange, pair.type, tfInterval);
+
+    closeOBPairPickerBtn();
+}
+
 // ══ PROJECTS ══
 let projectsList = JSON.parse(localStorage.getItem('ndb_projects') || '[]');
 let currentProjectId = null;
@@ -3986,5 +4128,19 @@ setInterval(() => {
     el.style.color = total >= 0 ? 'var(--green)' : 'var(--red)';
 }, 1000);
 </script>
+
+<!-- ═══ ORDERBOOK PAIR PICKER ═══ -->
+<div class="ob-pp-overlay hidden" id="ob-pp-overlay" onclick="closeOBPairPickerOverlay(event)">
+    <div class="ob-pp-card" onclick="event.stopPropagation()">
+        <div class="ob-pp-hdr">
+            <span>Select Pair for Order Book</span>
+            <button class="ob-pp-close" onclick="closeOBPairPickerBtn()">×</button>
+        </div>
+        <div class="ob-pp-body" id="ob-pp-body">
+            <div class="ob-pp-empty">No project selected</div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
