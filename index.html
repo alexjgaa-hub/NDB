@@ -953,7 +953,7 @@
 
         /* ── PAGE LAYOUT ── */
         .page-layout { display:flex; flex:1; overflow:hidden; min-height:0; }
-        .page-content { display:flex; flex:1; flex-direction:column; overflow:hidden; min-height:0; }
+        .page-content { display:flex; flex:1; flex-direction:column; overflow-y:auto; overflow-x:hidden; min-height:0; }
         .sb-toggle-btn {
             width:14px; flex-shrink:0; border:none; padding:0; cursor:pointer;
             background:var(--sidebar-bg); border-right:1px solid var(--sidebar-border);
@@ -964,7 +964,7 @@
         .sb-toggle-btn:hover { background:var(--surface-muted); color:var(--sidebar-text); }
 
         /* ── APP BODY ── */
-        .app-body { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+        .app-body { display: flex; flex: 1; min-height: 0; }
 
         /* ── SIDEBAR ── always dark regardless of theme */
         .sidebar {
@@ -1025,7 +1025,7 @@
         .sb-proj-empty { padding:10px 16px; font-size:12px; color:var(--sidebar-muted); }
 
         /* ── MAIN CONTENT ── */
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+        .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
         /* ── EXCHANGE STATS ── */
         .exchange-stats {
@@ -1161,6 +1161,104 @@
         }
         .task-act-btn:hover { border-color: var(--border); color: var(--text); }
         .tasks-title { font-size: 11px; font-weight: 600; color: var(--text); padding: 0 6px 0 2px; white-space: nowrap; }
+
+        /* ── OB-CHART LAYOUT ── */
+        .ob-chart-viewport {
+            height: calc(100vh - 48px);
+            min-height: calc(100vh - 48px);
+            flex-shrink: 0;
+            display: flex;
+            overflow: hidden;
+            width: 100%;
+        }
+        .ob-chart-scroll {
+            flex: 1;
+            display: flex;
+            overflow-x: auto;
+            overflow-y: hidden;
+            min-width: 0;
+        }
+        .ob-chart-scroll::-webkit-scrollbar { height: 3px; }
+        .ob-chart-scroll::-webkit-scrollbar-thumb { background: #b0b0b0; border-radius: 2px; }
+        .ob-chart-group {
+            flex: 1 1 25%;
+            min-width: 280px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #b0b0b0;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .ob-chart-group:last-child { border-right: none; }
+        .ob-chart-group .orderbook {
+            width: 100% !important;
+            flex: 0 0 62%;
+            border-left: none;
+            position: relative;
+        }
+        .chart-mini {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            min-height: 0;
+        }
+        .chart-mini-top {
+            flex-shrink: 0;
+        }
+        .chart-mini-top .exch-sel-row {
+            padding: 2px 6px;
+            gap: 2px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+        }
+        .chart-mini-top .exch-sel-btn {
+            padding: 2px 6px;
+            font-size: 10px;
+        }
+        .chart-mini-top .exch-sel-btn span { font-size: 8px; }
+        .chart-mini-top .chart-toolbar {
+            padding: 3px 6px;
+        }
+        .chart-mini-body {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            min-height: 0;
+        }
+        .chart-mini-body .draw-sidebar {
+            width: 32px;
+            padding: 4px 0;
+        }
+        .chart-mini-body .dt-btn {
+            width: 26px;
+            height: 26px;
+            font-size: 10px;
+        }
+        .chart-mini-body .chart-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        .chart-mini-clone {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+        }
+        .chart-mini-clone .chart-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            min-height: 0;
+        }
+        #chart-container-2, #chart-container-3, #chart-container-4 {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+        }
     </style>
 </head>
 <body>
@@ -1249,11 +1347,8 @@
     <div class="main-content">
 
 
-        <div class="main-inner">
-        <div class="center-col">
-
-        <!-- ═══ MAIN ═══ -->
-        <div class="main">
+        <!-- ═══ OB+CHART VIEWPORT ═══ -->
+        <div class="ob-chart-viewport main">
 
             <!-- ─── POSITION PANEL ─── -->
             <div class="position-panel">
@@ -1287,69 +1382,235 @@
                 </div>
             </div>
 
-            <!-- ─── CHART AREA ─── -->
-            <div class="chart-area">
-                <div class="draw-sidebar">
-                    <button class="dt-btn active" id="dt-cursor" data-tip="Cursor (Esc)" onclick="selectTool('cursor')">↖</button>
-                    <div class="dt-sep"></div>
-                    <button class="dt-btn" id="dt-line"    data-tip="Trend Line"      onclick="selectTool('line')">╱</button>
-                    <button class="dt-btn" id="dt-extline" data-tip="Extended Line"   onclick="selectTool('extline')">↔</button>
-                    <button class="dt-btn" id="dt-ray"     data-tip="Ray"             onclick="selectTool('ray')">→</button>
-                    <button class="dt-btn" id="dt-hline"   data-tip="Horizontal Line" onclick="selectTool('hline')">─</button>
-                    <button class="dt-btn" id="dt-vline"   data-tip="Vertical Line"   onclick="selectTool('vline')">│</button>
-                    <div class="dt-sep"></div>
-                    <button class="dt-btn" id="dt-rect"    data-tip="Rectangle"       onclick="selectTool('rect')">▭</button>
-                    <button class="dt-btn" id="dt-fib"     data-tip="Fibonacci"       onclick="selectTool('fib')">ℱ</button>
-                    <div class="dt-sep"></div>
-                    <button class="dt-btn" id="dt-text"    data-tip="Text Label"      onclick="selectTool('text')">T</button>
-                    <div class="dt-sep"></div>
-                    <button class="dt-btn" data-tip="Line Color" onclick="document.getElementById('draw-color-input').click()" style="padding:0">
-                        <span class="color-swatch" id="color-swatch" style="background:#d9ad70"></span>
-                    </button>
-                    <input type="color" id="draw-color-input" value="#d9ad70" oninput="setDrawColor(this.value)" style="display:none">
-                    <button class="dt-btn" id="dt-dash" data-tip="Dashed Line" onclick="toggleDash()">- -</button>
-                    <div class="dt-sep"></div>
-                    <button class="dt-btn" id="dt-erase" data-tip="Eraser"     onclick="selectTool('erase')" style="font-size:11px">✕</button>
-                    <button class="dt-btn" data-tip="Clear All"                 onclick="clearAllDrawings()" style="color:var(--red);font-size:11px">🗑</button>
-                </div>
-                <div class="chart-main">
-                    <!-- Exchange selector -->
-                    <div class="exch-sel-row">
-                        <button class="exch-sel-btn active" data-exch="binance" data-type="perp" onclick="selectExchange('binance','perp',this)">Binance<span>PERP</span></button>
-                        <button class="exch-sel-btn" data-exch="binance" data-type="spot" onclick="selectExchange('binance','spot',this)">Binance<span>Spot</span></button>
-                        <div class="exch-sel-sep"></div>
-                        <button class="exch-sel-btn" data-exch="bybit" data-type="perp" onclick="selectExchange('bybit','perp',this)">Bybit<span>PERP</span></button>
-                        <button class="exch-sel-btn" data-exch="bybit" data-type="spot" onclick="selectExchange('bybit','spot',this)">Bybit<span>Spot</span></button>
-                        <div class="exch-sel-sep"></div>
-                        <button class="exch-sel-btn" data-exch="kucoin" data-type="perp" onclick="selectExchange('kucoin','perp',this)">KuCoin<span>PERP</span></button>
-                        <button class="exch-sel-btn" data-exch="kucoin" data-type="spot" onclick="selectExchange('kucoin','spot',this)">KuCoin<span>Spot</span></button>
-                        <div class="exch-sel-sep"></div>
-                        <button class="exch-sel-btn" data-exch="bitget" data-type="perp" onclick="selectExchange('bitget','perp',this)">Bitget<span>PERP</span></button>
-                        <button class="exch-sel-btn" data-exch="bitget" data-type="spot" onclick="selectExchange('bitget','spot',this)">Bitget<span>Spot</span></button>
-                        <div class="exch-sel-sep"></div>
-                        <button class="exch-sel-btn" data-exch="gate" data-type="perp" onclick="selectExchange('gate','perp',this)">Gate<span>PERP</span></button>
-                        <button class="exch-sel-btn" data-exch="gate" data-type="spot" onclick="selectExchange('gate','spot',this)">Gate<span>Spot</span></button>
-                    </div>
-                    <div class="chart-toolbar">
-                        <button class="tf-btn" onclick="setTF(this,'1m')">1m</button>
-                        <button class="tf-btn" onclick="setTF(this,'5m')">5m</button>
-                        <button class="tf-btn active" onclick="setTF(this,'15m')">15m</button>
-                        <button class="tf-btn" onclick="setTF(this,'1h')">1h</button>
-                        <button class="tf-btn" onclick="setTF(this,'4h')">4h</button>
-                        <button class="tf-btn" onclick="setTF(this,'1d')">1D</button>
-                        <div class="tb-sep"></div>
-                        <div id="chart-ohlc"></div>
-                    </div>
-                    <div class="chart-wrapper">
-                        <div id="chart-container"></div>
-                        <canvas id="draw-canvas"></canvas>
-                    </div>
-                </div>
-            </div>
+            <!-- ─── 4 OB+CHART GROUPS ─── -->
+            <div class="ob-chart-scroll">
 
-        </div><!-- /.main -->
+                <!-- GROUP 1: Primary -->
+                <div class="ob-chart-group">
+                    <!-- Primary Order Book (all original IDs) -->
+                    <div class="orderbook">
+                        <div class="panel-hdr">
+                            <span>ORDER BOOK</span>
+                            <div class="ob-hdr-btns">
+                                <button class="ob-icon-btn" onclick="obRefresh()" title="Обновить">↺</button>
+                                <button class="ob-icon-btn" onclick="toggleOBSettings()" title="Настройки">⚙</button>
+                            </div>
+                        </div>
+                        <div class="ob-settings-popup" id="ob-settings-popup">
+                            <div class="obs-row">
+                                <div class="obs-label">Заполнение строки при USD (полная заливка)</div>
+                                <input class="obs-input" id="obs-fill" type="number" value="10000" onchange="obSettings.fillUSD=+this.value">
+                            </div>
+                            <div class="obs-row">
+                                <div class="obs-label">Крупный объем USD 1 → желтый</div>
+                                <input class="obs-input" id="obs-t1" type="number" value="2500" onchange="obSettings.largeUSD1=+this.value">
+                            </div>
+                            <div class="obs-row">
+                                <div class="obs-label">Крупный объем USD 2 → фиолетовый</div>
+                                <input class="obs-input" id="obs-t2" type="number" value="5000" onchange="obSettings.largeUSD2=+this.value">
+                            </div>
+                            <button class="obs-close" onclick="toggleOBSettings()">Применить</button>
+                        </div>
+                        <div class="ob-lev-popup" id="ob-lev-popup">
+                            <div class="ob-lev-row">
+                                <div class="ob-lev-label">Плечо</div>
+                                <div class="ob-lev-val" id="ob-lev-val">20</div>
+                                <input class="ob-lev-slider" type="range" id="ob-lev-slider" min="1" max="125" value="20" oninput="obLevChange(this.value)">
+                            </div>
+                            <div class="ob-lev-info">
+                                <div class="ob-lev-info-item">Макс. плечо: <span id="ob-max-lev">125</span></div>
+                                <div class="ob-lev-info-item">Макс. позиция: <span id="ob-max-pos">100K USD</span></div>
+                            </div>
+                            <button class="ob-lev-close" onclick="obLevConfirm()">Применить</button>
+                        </div>
+                        <div class="vp-ctx-menu" id="vp-ctx-menu">
+                            <div class="vp-ctx-item" data-ms="0"        onclick="setVPPeriod(0)">Maximize</div>
+                            <div class="vp-ctx-item" data-ms="30000"    onclick="setVPPeriod(30000)">30s</div>
+                            <div class="vp-ctx-item" data-ms="60000"    onclick="setVPPeriod(60000)">1m</div>
+                            <div class="vp-ctx-item active" data-ms="300000" onclick="setVPPeriod(300000)">5m</div>
+                            <div class="vp-ctx-item" data-ms="600000"   onclick="setVPPeriod(600000)">10m</div>
+                            <div class="vp-ctx-item" data-ms="900000"   onclick="setVPPeriod(900000)">15m</div>
+                            <div class="vp-ctx-item" data-ms="1800000"  onclick="setVPPeriod(1800000)">30m</div>
+                            <div class="vp-ctx-item" data-ms="3600000"  onclick="setVPPeriod(3600000)">1h</div>
+                            <div class="vp-ctx-item" data-ms="86400000" onclick="setVPPeriod(86400000)">1d</div>
+                        </div>
+                        <div class="ob-panels">
+                            <div id="ob-pct-float" class="ob-pct-float"></div>
+                            <div class="ob-vp-wrap" id="ob-vp-wrap" oncontextmenu="showVPCtxMenu(event)" onwheel="vpScroll(event)">
+                                <div class="ob-vp-scroll">
+                                    <div class="ob-vp-cols" id="ob-vp-cols"></div>
+                                </div>
+                                <div class="ob-vp-footer" id="ob-vp-footer"></div>
+                            </div>
+                            <div class="ob-book">
+                                <div class="ob-scroll" id="ob-scroll">
+                                    <div class="ob-asks" id="ob-asks"></div>
+                                    <div class="ob-bids" id="ob-bids"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ob-control">
+                            <div class="ob-ctrl-top">
+                                <button class="ob-lev-btn" id="ob-lev-btn" ondblclick="toggleLevPopup()">20X</button>
+                                <div class="ob-pings" id="ob-pings">
+                                    <span class="ob-ping-val none">—</span>
+                                    <span class="ob-ping-val none">—</span>
+                                    <span class="ob-ping-val none">—</span>
+                                </div>
+                            </div>
+                            <div class="ob-presets" id="ob-presets"></div>
+                        </div>
+                    </div><!-- /.orderbook primary -->
+                    <!-- Chart Mini 1 (full controls) -->
+                    <div class="chart-mini">
+                        <div class="chart-mini-top">
+                            <div class="exch-sel-row">
+                                <button class="exch-sel-btn active" data-exch="binance" data-type="perp" onclick="selectExchange('binance','perp',this)">Binance<span>PERP</span></button>
+                                <button class="exch-sel-btn" data-exch="binance" data-type="spot" onclick="selectExchange('binance','spot',this)">Binance<span>Spot</span></button>
+                                <div class="exch-sel-sep"></div>
+                                <button class="exch-sel-btn" data-exch="bybit" data-type="perp" onclick="selectExchange('bybit','perp',this)">Bybit<span>PERP</span></button>
+                                <button class="exch-sel-btn" data-exch="bybit" data-type="spot" onclick="selectExchange('bybit','spot',this)">Bybit<span>Spot</span></button>
+                                <div class="exch-sel-sep"></div>
+                                <button class="exch-sel-btn" data-exch="kucoin" data-type="perp" onclick="selectExchange('kucoin','perp',this)">KuCoin<span>PERP</span></button>
+                                <button class="exch-sel-btn" data-exch="kucoin" data-type="spot" onclick="selectExchange('kucoin','spot',this)">KuCoin<span>Spot</span></button>
+                                <div class="exch-sel-sep"></div>
+                                <button class="exch-sel-btn" data-exch="bitget" data-type="perp" onclick="selectExchange('bitget','perp',this)">Bitget<span>PERP</span></button>
+                                <button class="exch-sel-btn" data-exch="bitget" data-type="spot" onclick="selectExchange('bitget','spot',this)">Bitget<span>Spot</span></button>
+                                <div class="exch-sel-sep"></div>
+                                <button class="exch-sel-btn" data-exch="gate" data-type="perp" onclick="selectExchange('gate','perp',this)">Gate<span>PERP</span></button>
+                                <button class="exch-sel-btn" data-exch="gate" data-type="spot" onclick="selectExchange('gate','spot',this)">Gate<span>Spot</span></button>
+                            </div>
+                            <div class="chart-toolbar">
+                                <button class="tf-btn" onclick="setTF(this,'1m')">1m</button>
+                                <button class="tf-btn" onclick="setTF(this,'5m')">5m</button>
+                                <button class="tf-btn active" onclick="setTF(this,'15m')">15m</button>
+                                <button class="tf-btn" onclick="setTF(this,'1h')">1h</button>
+                                <button class="tf-btn" onclick="setTF(this,'4h')">4h</button>
+                                <button class="tf-btn" onclick="setTF(this,'1d')">1D</button>
+                                <div class="tb-sep"></div>
+                                <div id="chart-ohlc"></div>
+                            </div>
+                        </div>
+                        <div class="chart-mini-body">
+                            <div class="draw-sidebar">
+                                <button class="dt-btn active" id="dt-cursor" data-tip="Cursor (Esc)" onclick="selectTool('cursor')">↖</button>
+                                <div class="dt-sep"></div>
+                                <button class="dt-btn" id="dt-line"    data-tip="Trend Line"      onclick="selectTool('line')">╱</button>
+                                <button class="dt-btn" id="dt-extline" data-tip="Extended Line"   onclick="selectTool('extline')">↔</button>
+                                <button class="dt-btn" id="dt-ray"     data-tip="Ray"             onclick="selectTool('ray')">→</button>
+                                <button class="dt-btn" id="dt-hline"   data-tip="Horizontal Line" onclick="selectTool('hline')">─</button>
+                                <button class="dt-btn" id="dt-vline"   data-tip="Vertical Line"   onclick="selectTool('vline')">│</button>
+                                <div class="dt-sep"></div>
+                                <button class="dt-btn" id="dt-rect"    data-tip="Rectangle"       onclick="selectTool('rect')">▭</button>
+                                <button class="dt-btn" id="dt-fib"     data-tip="Fibonacci"       onclick="selectTool('fib')">ℱ</button>
+                                <div class="dt-sep"></div>
+                                <button class="dt-btn" id="dt-text"    data-tip="Text Label"      onclick="selectTool('text')">T</button>
+                                <div class="dt-sep"></div>
+                                <button class="dt-btn" data-tip="Line Color" onclick="document.getElementById('draw-color-input').click()" style="padding:0">
+                                    <span class="color-swatch" id="color-swatch" style="background:#d9ad70"></span>
+                                </button>
+                                <input type="color" id="draw-color-input" value="#d9ad70" oninput="setDrawColor(this.value)" style="display:none">
+                                <button class="dt-btn" id="dt-dash" data-tip="Dashed Line" onclick="toggleDash()">- -</button>
+                                <div class="dt-sep"></div>
+                                <button class="dt-btn" id="dt-erase" data-tip="Eraser"     onclick="selectTool('erase')" style="font-size:11px">✕</button>
+                                <button class="dt-btn" data-tip="Clear All"                 onclick="clearAllDrawings()" style="color:var(--red);font-size:11px">🗑</button>
+                            </div>
+                            <div class="chart-wrapper">
+                                <div id="chart-container"></div>
+                                <canvas id="draw-canvas"></canvas>
+                            </div>
+                        </div>
+                    </div><!-- /.chart-mini -->
+                </div><!-- /.ob-chart-group 1 -->
 
-        <!-- ═══ TASKS PANEL ═══ -->
+                <!-- GROUP 2: Clone -->
+                <div class="ob-chart-group">
+                    <div class="orderbook">
+                        <div class="panel-hdr">
+                            <span>ORDER BOOK</span>
+                        </div>
+                        <div class="ob-panels">
+                            <div class="ob-vp-wrap">
+                                <div class="ob-vp-scroll">
+                                    <div class="ob-vp-cols" id="ob-vp-cols-2"></div>
+                                </div>
+                                <div class="ob-vp-footer" id="ob-vp-footer-2"></div>
+                            </div>
+                            <div class="ob-book">
+                                <div class="ob-scroll" id="ob-scroll-2">
+                                    <div class="ob-asks" id="ob-asks-2"></div>
+                                    <div class="ob-bids" id="ob-bids-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- /.orderbook clone 2 -->
+                    <div class="chart-mini-clone">
+                        <div class="chart-wrapper">
+                            <div id="chart-container-2"></div>
+                        </div>
+                    </div>
+                </div><!-- /.ob-chart-group 2 -->
+
+                <!-- GROUP 3: Clone -->
+                <div class="ob-chart-group">
+                    <div class="orderbook">
+                        <div class="panel-hdr">
+                            <span>ORDER BOOK</span>
+                        </div>
+                        <div class="ob-panels">
+                            <div class="ob-vp-wrap">
+                                <div class="ob-vp-scroll">
+                                    <div class="ob-vp-cols" id="ob-vp-cols-3"></div>
+                                </div>
+                                <div class="ob-vp-footer" id="ob-vp-footer-3"></div>
+                            </div>
+                            <div class="ob-book">
+                                <div class="ob-scroll" id="ob-scroll-3">
+                                    <div class="ob-asks" id="ob-asks-3"></div>
+                                    <div class="ob-bids" id="ob-bids-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- /.orderbook clone 3 -->
+                    <div class="chart-mini-clone">
+                        <div class="chart-wrapper">
+                            <div id="chart-container-3"></div>
+                        </div>
+                    </div>
+                </div><!-- /.ob-chart-group 3 -->
+
+                <!-- GROUP 4: Clone -->
+                <div class="ob-chart-group">
+                    <div class="orderbook">
+                        <div class="panel-hdr">
+                            <span>ORDER BOOK</span>
+                        </div>
+                        <div class="ob-panels">
+                            <div class="ob-vp-wrap">
+                                <div class="ob-vp-scroll">
+                                    <div class="ob-vp-cols" id="ob-vp-cols-4"></div>
+                                </div>
+                                <div class="ob-vp-footer" id="ob-vp-footer-4"></div>
+                            </div>
+                            <div class="ob-book">
+                                <div class="ob-scroll" id="ob-scroll-4">
+                                    <div class="ob-asks" id="ob-asks-4"></div>
+                                    <div class="ob-bids" id="ob-bids-4"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- /.orderbook clone 4 -->
+                    <div class="chart-mini-clone">
+                        <div class="chart-wrapper">
+                            <div id="chart-container-4"></div>
+                        </div>
+                    </div>
+                </div><!-- /.ob-chart-group 4 -->
+
+            </div><!-- /.ob-chart-scroll -->
+        </div><!-- /.ob-chart-viewport -->
+
+        <!-- ═══ TASKS PANEL (below fold) ═══ -->
         <div class="tasks-panel">
             <div class="tasks-hdr-top">
                 <span class="tasks-title">Tasks</span>
@@ -1393,85 +1654,6 @@
                 </table>
             </div>
         </div>
-
-        </div><!-- /.center-col -->
-
-        <!-- ─── ORDER BOOK ─── -->
-        <div class="orderbook">
-            <div class="panel-hdr">
-                <span>ORDER BOOK</span>
-                <div class="ob-hdr-btns">
-                    <button class="ob-icon-btn" onclick="obRefresh()" title="Обновить">↺</button>
-                    <button class="ob-icon-btn" onclick="toggleOBSettings()" title="Настройки">⚙</button>
-                </div>
-            </div>
-            <div class="ob-settings-popup" id="ob-settings-popup">
-                <div class="obs-row">
-                    <div class="obs-label">Заполнение строки при USD (полная заливка)</div>
-                    <input class="obs-input" id="obs-fill" type="number" value="10000" onchange="obSettings.fillUSD=+this.value">
-                </div>
-                <div class="obs-row">
-                    <div class="obs-label">Крупный объем USD 1 → желтый</div>
-                    <input class="obs-input" id="obs-t1" type="number" value="2500" onchange="obSettings.largeUSD1=+this.value">
-                </div>
-                <div class="obs-row">
-                    <div class="obs-label">Крупный объем USD 2 → фиолетовый</div>
-                    <input class="obs-input" id="obs-t2" type="number" value="5000" onchange="obSettings.largeUSD2=+this.value">
-                </div>
-                <button class="obs-close" onclick="toggleOBSettings()">Применить</button>
-            </div>
-            <div class="ob-lev-popup" id="ob-lev-popup">
-                <div class="ob-lev-row">
-                    <div class="ob-lev-label">Плечо</div>
-                    <div class="ob-lev-val" id="ob-lev-val">20</div>
-                    <input class="ob-lev-slider" type="range" id="ob-lev-slider" min="1" max="125" value="20" oninput="obLevChange(this.value)">
-                </div>
-                <div class="ob-lev-info">
-                    <div class="ob-lev-info-item">Макс. плечо: <span id="ob-max-lev">125</span></div>
-                    <div class="ob-lev-info-item">Макс. позиция: <span id="ob-max-pos">100K USD</span></div>
-                </div>
-                <button class="ob-lev-close" onclick="obLevConfirm()">Применить</button>
-            </div>
-            <div class="vp-ctx-menu" id="vp-ctx-menu">
-                <div class="vp-ctx-item" data-ms="0"        onclick="setVPPeriod(0)">Maximize</div>
-                <div class="vp-ctx-item" data-ms="30000"    onclick="setVPPeriod(30000)">30s</div>
-                <div class="vp-ctx-item" data-ms="60000"    onclick="setVPPeriod(60000)">1m</div>
-                <div class="vp-ctx-item active" data-ms="300000" onclick="setVPPeriod(300000)">5m</div>
-                <div class="vp-ctx-item" data-ms="600000"   onclick="setVPPeriod(600000)">10m</div>
-                <div class="vp-ctx-item" data-ms="900000"   onclick="setVPPeriod(900000)">15m</div>
-                <div class="vp-ctx-item" data-ms="1800000"  onclick="setVPPeriod(1800000)">30m</div>
-                <div class="vp-ctx-item" data-ms="3600000"  onclick="setVPPeriod(3600000)">1h</div>
-                <div class="vp-ctx-item" data-ms="86400000" onclick="setVPPeriod(86400000)">1d</div>
-            </div>
-            <div class="ob-panels">
-                <div id="ob-pct-float" class="ob-pct-float"></div>
-                <div class="ob-vp-wrap" id="ob-vp-wrap" oncontextmenu="showVPCtxMenu(event)" onwheel="vpScroll(event)">
-                    <div class="ob-vp-scroll">
-                        <div class="ob-vp-cols" id="ob-vp-cols"></div>
-                    </div>
-                    <div class="ob-vp-footer" id="ob-vp-footer"></div>
-                </div>
-                <div class="ob-book">
-                    <div class="ob-scroll" id="ob-scroll">
-                        <div class="ob-asks" id="ob-asks"></div>
-                        <div class="ob-bids" id="ob-bids"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="ob-control">
-                <div class="ob-ctrl-top">
-                    <button class="ob-lev-btn" id="ob-lev-btn" ondblclick="toggleLevPopup()">20X</button>
-                    <div class="ob-pings" id="ob-pings">
-                        <span class="ob-ping-val none">—</span>
-                        <span class="ob-ping-val none">—</span>
-                        <span class="ob-ping-val none">—</span>
-                    </div>
-                </div>
-                <div class="ob-presets" id="ob-presets"></div>
-            </div>
-        </div><!-- /.orderbook -->
-
-        </div><!-- /.main-inner -->
 
     </div><!-- /.main-content -->
 
@@ -1904,6 +2086,7 @@ function applyChartTheme(light) {
         rightPriceScale: { borderColor: border },
         timeScale:       { borderColor: border },
     });
+    cloneCharts.forEach(c => c && c.applyOptions({ layout: { background: { color: bg }, textColor: text }, grid: { vertLines: { color: grid }, horzLines: { color: grid } }, rightPriceScale: { borderColor: border }, timeScale: { borderColor: border } }));
 }
 
 function toggleTheme() {
@@ -1981,6 +2164,31 @@ const volSeries = chart.addHistogramSeries({
 });
 chart.priceScale('vol').applyOptions({ scaleMargins: { top: 0.85, bottom: 0 } });
 
+// ── Clone charts (groups 2-4) ──
+const makeCloneChart = (id) => {
+    const el = document.getElementById(id);
+    if (!el) return null;
+    const c = LightweightCharts.createChart(el, {
+        autoSize: true,
+        layout: { background: { color: '#0d1117' }, textColor: '#8b949e' },
+        grid: { vertLines: { color: '#1c2128' }, horzLines: { color: '#1c2128' } },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+        rightPriceScale: { borderColor: '#30363d' },
+        timeScale: { borderColor: '#30363d', timeVisible: true, secondsVisible: false },
+        handleScroll: { mouseWheel: true, pressedMouseMove: true },
+        handleScale: { mouseWheel: true, pinch: true },
+    });
+    return c;
+};
+const chart2 = makeCloneChart('chart-container-2');
+const chart3 = makeCloneChart('chart-container-3');
+const chart4 = makeCloneChart('chart-container-4');
+const cloneCharts = [chart2, chart3, chart4].filter(Boolean);
+const addCloneCandles = c => c ? c.addCandlestickSeries({ upColor:'#5bba89', downColor:'#cd4141', borderUpColor:'#5bba89', borderDownColor:'#cd4141', wickUpColor:'#5bba89', wickDownColor:'#cd4141' }) : null;
+const cloneCandles = [chart2, chart3, chart4].map(c => c ? addCloneCandles(c) : null);
+const addCloneVol = c => c ? c.addHistogramSeries({ priceScaleId:'vol', scaleMargins:{top:0.85,bottom:0} }) : null;
+const cloneVols = [chart2, chart3, chart4].map(c => c ? addCloneVol(c) : null);
+
 chart.subscribeCrosshairMove(p => {
     if (!p.seriesData.size) return;
     const d = p.seriesData.get(candles);
@@ -2044,6 +2252,8 @@ const WS_CBS = {
         candles.update({ time, open, high, low, close });
         volSeries.update({ time, value: vol||0,
             color: close >= open ? '#34d39930' : '#f8717130' });
+        cloneCandles.forEach(s => s && s.update({ time, open, high, low, close }));
+        cloneVols.forEach(s => s && s.update({ time, value: vol||0, color: close >= open ? '#34d39930' : '#f8717130' }));
         updatePriceDisplay();
         vpRecord(close, vol||0, close >= open);
     }
@@ -2348,11 +2558,17 @@ async function loadChart(sym, interval) {
         lastBarTime  = cData[cData.length-1].time;
         lastOpen     = cData[cData.length-1].open;
         chart.timeScale().fitContent();
+        cloneCandles.forEach(s => s && s.setData(cData));
+        cloneVols.forEach(s => s && s.setData(vData));
+        cloneCharts.forEach(c => c && c.timeScale().fitContent());
     } catch(e) {
         console.error(`${id} REST error:`, e);
         const fb = generateCandles(currentPrice||100, 200, tfInterval);
         candles.setData(fb.cData);
         volSeries.setData(fb.vData);
+        cloneCandles.forEach(s => s && s.setData(fb.cData));
+        cloneVols.forEach(s => s && s.setData(fb.vData));
+        cloneCharts.forEach(c => c && c.timeScale().fitContent());
     }
 
     clearInProgress();
@@ -2928,6 +3144,20 @@ function renderRealOB(displayAsks, displayBids) {
     asksEl.innerHTML = displayAsks.map((r, i) => rowHtml(r, 'ask-row', i === displayAsks.length - 1)).join('');
     bidsEl.innerHTML = displayBids.map((r, i) => rowHtml(r, 'bid-row', i === 0)).join('');
 
+    // Sync OB clones
+    ['2','3','4'].forEach(n => {
+        const a = document.getElementById('ob-asks-' + n);
+        const b = document.getElementById('ob-bids-' + n);
+        if (a) a.innerHTML = asksEl.innerHTML;
+        if (b) b.innerHTML = bidsEl.innerHTML;
+    });
+    if (!obNeedCenter) {
+        ['2','3','4'].forEach(n => {
+            const s = document.getElementById('ob-scroll-' + n);
+            if (s) s.scrollTop = scrollEl.scrollTop;
+        });
+    }
+
     if (obNeedCenter) {
         requestAnimationFrame(() => {
             scrollEl.scrollTop = asksEl.offsetHeight - scrollEl.clientHeight / 2;
@@ -3004,6 +3234,12 @@ function renderVPCols(displayAsks, displayBids) {
 
     document.getElementById('ob-vp-cols').innerHTML   = colsHtml;
     document.getElementById('ob-vp-footer').innerHTML = footerHtml;
+    ['2','3','4'].forEach(n => {
+        const c = document.getElementById('ob-vp-cols-' + n);
+        const f = document.getElementById('ob-vp-footer-' + n);
+        if (c) c.innerHTML = colsHtml;
+        if (f) f.innerHTML = footerHtml;
+    });
     syncVPScroll();
 }
 
@@ -3510,6 +3746,12 @@ function syncVPScroll() {
     const scrollEl = document.getElementById('ob-scroll');
     const cols     = document.getElementById('ob-vp-cols');
     if (scrollEl && cols) cols.style.transform = `translateY(-${scrollEl.scrollTop}px)`;
+    // Sync clone VP cols too
+    ['2','3','4'].forEach(n => {
+        const s = document.getElementById('ob-scroll-' + n);
+        const c = document.getElementById('ob-vp-cols-' + n);
+        if (s && c) c.style.transform = `translateY(-${s.scrollTop}px)`;
+    });
 }
 
 function setupOBHover() {
@@ -3518,6 +3760,12 @@ function setupOBHover() {
     const obBook   = document.querySelector('.ob-book');
     if (!scrollEl || !float || !obBook) return;
     scrollEl.addEventListener('scroll', syncVPScroll);
+    // Sync clone scroll → VP col transform
+    ['2','3','4'].forEach(n => {
+        const s = document.getElementById('ob-scroll-' + n);
+        const c = document.getElementById('ob-vp-cols-' + n);
+        if (s && c) s.addEventListener('scroll', () => { c.style.transform = `translateY(-${s.scrollTop}px)`; });
+    });
     scrollEl.addEventListener('mouseover', function(e) {
         const row = e.target.closest('.ob-row');
         if (!row) return;
