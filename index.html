@@ -3275,8 +3275,10 @@ function showPage(p) {
     document.getElementById('projects-page').classList.toggle('hidden', p !== 'projects');
     document.getElementById('project-create-page').classList.toggle('hidden', p !== 'project-create');
     document.getElementById('project-detail-page').classList.toggle('hidden', p !== 'project-detail');
-    document.getElementById('ptab-trading').classList.toggle('active', isMain);
-    document.getElementById('ptab-analytics').classList.toggle('active', p === 'analytics');
+    const ptabT = document.getElementById('ptab-trading');
+    if (ptabT) ptabT.classList.toggle('active', isMain);
+    const ptabA = document.getElementById('ptab-analytics');
+    if (ptabA) ptabA.classList.toggle('active', p === 'analytics');
     document.querySelectorAll('.sb-item').forEach(el => el.classList.remove('active'));
     const sbSel = p === 'analytics' ? '[onclick*="analytics"]'
                 : ['projects','project-create','project-detail'].includes(p) ? '[onclick*="projects"]'
