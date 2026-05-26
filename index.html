@@ -1606,6 +1606,14 @@
                             <option value="Kucoin">Kucoin</option>
                         </select>
                     </div>
+                    <div class="pairs-form-group">
+                        <label class="proj-form-label">Type</label>
+                        <select class="proj-form-input pairs-exch-select" id="pair-type">
+                            <option value=""></option>
+                            <option value="Spot">Spot</option>
+                            <option value="Perpetual">Perpetual</option>
+                        </select>
+                    </div>
                     <button class="pairs-link-btn" onclick="addPair()">Link pair to project</button>
                 </div>
                 <table class="proj-table">
@@ -1614,6 +1622,7 @@
                             <th>#</th>
                             <th>CODE</th>
                             <th>EXCHANGE</th>
+                            <th>TYPE</th>
                             <th>LAST PRICE</th>
                             <th></th>
                         </tr>
@@ -3481,15 +3490,17 @@ async function fetchPrice(symbol, exchange) {
 function addPair() {
     const symbol   = document.getElementById('pair-symbol').value.trim().toUpperCase();
     const exchange = document.getElementById('pair-exchange').value;
-    if (!symbol || !exchange || !symbol.includes('/')) return;
+    const type     = document.getElementById('pair-type').value;
+    if (!symbol || !exchange || !type || !symbol.includes('/')) return;
     const pr = projectsList.find(x => x.id === currentProjectId);
     if (!pr) return;
     if (!pr.pairs) pr.pairs = [];
-    if (pr.pairs.find(p => p.symbol === symbol && p.exchange === exchange)) return;
-    pr.pairs.push({ id: _pairIdSeq++, symbol, exchange });
+    if (pr.pairs.find(p => p.symbol === symbol && p.exchange === exchange && p.type === type)) return;
+    pr.pairs.push({ id: _pairIdSeq++, symbol, exchange, type });
     localStorage.setItem('ndb_projects', JSON.stringify(projectsList));
     document.getElementById('pair-symbol').value = '';
     document.getElementById('pair-exchange').value = '';
+    document.getElementById('pair-type').value = '';
     renderPairsTab();
 }
 
@@ -3517,6 +3528,7 @@ function renderPairsTab() {
             <td>${p.id}</td>
             <td>${p.symbol}</td>
             <td>${p.exchange}</td>
+            <td>${p.type || '—'}</td>
             <td class="pairs-price loading" id="price-${p.id}">...</td>
             <td class="proj-actions">
                 <button class="proj-icon-btn danger" onclick="deletePair(${p.id})" title="Delete">✕</button>
