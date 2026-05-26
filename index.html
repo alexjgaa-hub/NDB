@@ -3032,19 +3032,6 @@ function renderRealOB(displayAsks, displayBids) {
     asksEl.innerHTML = displayAsks.map((r, i) => rowHtml(r, 'ask-row', i === displayAsks.length - 1)).join('');
     bidsEl.innerHTML = displayBids.map((r, i) => rowHtml(r, 'bid-row', i === 0)).join('');
 
-    // Sync OB clones
-    ['2','3','4'].forEach(n => {
-        const a = document.getElementById('ob-asks-' + n);
-        const b = document.getElementById('ob-bids-' + n);
-        if (a) a.innerHTML = asksEl.innerHTML;
-        if (b) b.innerHTML = bidsEl.innerHTML;
-    });
-    if (!obNeedCenter) {
-        ['2','3','4'].forEach(n => {
-            const s = document.getElementById('ob-scroll-' + n);
-            if (s) s.scrollTop = scrollEl.scrollTop;
-        });
-    }
 
     if (obNeedCenter) {
         requestAnimationFrame(() => {
@@ -3999,39 +3986,77 @@ function selectOBPair(pairId) {
     closeOBPairPickerBtn();
 }
 
+// Render asks/bids into any OB slot using the same HTML as renderRealOB
+function _renderOBRowsIntoSlot(slot, displayAsks, displayBids) {
+    const sfx    = slot === 1 ? '' : '-' + slot;
+    const asksEl = document.getElementById('ob-asks' + sfx);
+    const bidsEl = document.getElementById('ob-bids' + sfx);
+    const scrollEl = document.getElementById('ob-scroll' + sfx);
+    if (!asksEl || !bidsEl) return;
+
+    const { fillUSD, largeUSD1, largeUSD2 } = obSettings;
+    const bestAsk = displayAsks.length ? displayAsks[displayAsks.length - 1].price : 0;
+    const bestBid = displayBids.length ? displayBids[0].price : 0;
+
+    function rowHtml(r, cls, isBest) {
+        const usdVal = r.price * r.size;
+        const lc = usdVal >= largeUSD2 ? ' ob-large-2' : usdVal >= largeUSD1 ? ' ob-large-1' : '';
+        const bc = isBest ? (cls === 'ask-row' ? ' best-ask' : ' best-bid') : '';
+        const barW = Math.min(100, usdVal / fillUSD * 100).toFixed(1);
+        const refPrice = cls === 'ask-row' ? bestAsk : bestBid;
+        const pctDist  = refPrice > 0 ? Math.abs((r.price - refPrice) / refPrice * 100) : 0;
+        const pctStr   = pctDist < 0.001 ? '—' : pctDist.toFixed(2) + '%';
+        return `<div class="ob-row ${cls}${lc}${bc}">
+            <span class="ob-pct">${pctStr}</span>
+            <span class="ob-vol">${fmtK(usdVal)}</span>
+            <span class="ob-spacer"></span>
+            <span class="ob-price">${fmt(r.price)}</span>
+            <div class="ob-bar" style="width:${barW}%"></div>
+        </div>`;
+    }
+
+    asksEl.innerHTML = displayAsks.map((r, i) => rowHtml(r, 'ask-row', i === displayAsks.length - 1)).join('');
+    bidsEl.innerHTML = displayBids.map((r, i) => rowHtml(r, 'bid-row', i === 0)).join('');
+
+    if (obNeedCenter && slot === 1) {
+        requestAnimationFrame(() => { if (scrollEl) scrollEl.scrollTop = asksEl.offsetHeight - scrollEl.clientHeight / 2; });
+    }
+}
+
 function _connectCloneOBWS(slot, pair, base, qt) {
     if (obSlots[slot].ws) { try { obSlots[slot].ws.close(); } catch(e){} obSlots[slot].ws = null; }
     const sym    = (base + (qt || 'USDT')).toLowerCase();
     const symUp  = sym.toUpperCase();
     const exch   = pair.exchange.toLowerCase();
     const isPerp = (pair.type || '').toLowerCase() === 'perpetual';
-    const asksEl = document.getElementById(`ob-asks-${slot}`);
-    const bidsEl = document.getElementById(`ob-bids-${slot}`);
-
-    function renderClone(asks, bids) {
-        if (!asksEl || !bidsEl) return;
-        const price = (asks[0]?.price || bids[0]?.price || 0);
-        asksEl.innerHTML = asks.slice(0,20).map(r =>
-            `<div class="ob-row ask"><span class="ob-price">${fmt(r.price)}</span><span class="ob-size">${r.size.toFixed(3)}</span></div>`
-        ).join('');
-        bidsEl.innerHTML = bids.slice(0,20).map(r =>
-            `<div class="ob-row bid"><span class="ob-price">${fmt(r.price)}</span><span class="ob-size">${r.size.toFixed(3)}</span></div>`
-        ).join('');
-    }
 
     function parseEntries(arr) {
         return (arr||[]).map(([p,q])=>({price:+p,size:+q})).filter(r=>r.size>0);
     }
 
+    function onData(rawAsks, rawBids) {
+        const asks = parseEntries(rawAsks).sort((a,b)=>a.price-b.price);
+        const bids = parseEntries(rawBids).sort((a,b)=>b.price-a.price);
+        _renderOBRowsIntoSlot(slot, [...asks].reverse(), bids);
+    }
+
     let ws;
     if (exch === 'binance') {
-        const wsBase = isPerp ? 'wss://fstream.binance.com' : 'wss://stream.binance.com:9443';
-        ws = new WebSocket(`${wsBase}/ws/${sym}@depth20@100ms`);
-        ws.onmessage = e => {
-            const d = JSON.parse(e.data);
-            renderClone(parseEntries(d.a||d.asks).sort((a,b)=>a.price-b.price),
-                        parseEntries(d.b||d.bids).sort((a,b)=>b.price-a.price));
-        };
+        // Futures: combined stream (data.a/data.b); Spot: direct stream (bids/asks)
+        if (isPerp) {
+            ws = new WebSocket(`wss://fstream.binance.com/stream?streams=${sym}@depth20@100ms`);
+            ws.onmessage = e => {
+                const msg = JSON.parse(e.data);
+                const d   = msg.data || msg;
+                onData(d.a || [], d.b || []);
+            };
+        } else {
+            ws = new WebSocket(`wss://stream.binance.com:9443/ws/${sym}@depth20@100ms`);
+            ws.onmessage = e => {
+                const d = JSON.parse(e.data);
+                onData(d.asks || [], d.bids || []);
+            };
+        }
     } else if (exch === 'bybit') {
         const cat = isPerp ? 'linear' : 'spot';
         ws = new WebSocket(`wss://stream.bybit.com/v5/public/${cat}`);
@@ -4039,12 +4064,10 @@ function _connectCloneOBWS(slot, pair, base, qt) {
         ws.onmessage = e => {
             const msg = JSON.parse(e.data);
             if (!msg.data) return;
-            renderClone(parseEntries(msg.data.a).sort((a,b)=>a.price-b.price),
-                        parseEntries(msg.data.b).sort((a,b)=>b.price-a.price));
+            onData(msg.data.a || [], msg.data.b || []);
         };
     } else {
-        // REST snapshot for other exchanges (no live WS)
-        _fetchCloneOBSnapshot(slot, pair, symUp, renderClone);
+        _fetchCloneOBSnapshot(slot, pair, symUp, onData);
         return;
     }
     ws.onerror = e => console.error(`ob-slot${slot} WS error`, e);
@@ -4052,30 +4075,26 @@ function _connectCloneOBWS(slot, pair, base, qt) {
     obSlots[slot].ws = ws;
 }
 
-async function _fetchCloneOBSnapshot(slot, pair, symUp, renderFn) {
+async function _fetchCloneOBSnapshot(slot, pair, symUp, onDataFn) {
     try {
         const exch = pair.exchange.toLowerCase();
-        let asks = [], bids = [];
+        let rawAsks = [], rawBids = [];
         if (exch === 'gate') {
             const base = symUp.replace('USDT','');
             const d = await fetch(`https://api.gateio.ws/api/v4/spot/order_book?currency_pair=${base}_USDT&limit=20`).then(r=>r.json());
-            asks = (d.asks||[]).map(([p,q])=>({price:+p,size:+q}));
-            bids = (d.bids||[]).map(([p,q])=>({price:+p,size:+q}));
+            rawAsks = d.asks || []; rawBids = d.bids || [];
         } else if (exch === 'mexc') {
             const d = await fetch(`https://api.mexc.com/api/v3/depth?symbol=${symUp}&limit=20`).then(r=>r.json());
-            asks = (d.asks||[]).map(([p,q])=>({price:+p,size:+q}));
-            bids = (d.bids||[]).map(([p,q])=>({price:+p,size:+q}));
+            rawAsks = d.asks || []; rawBids = d.bids || [];
         } else if (exch === 'bitget') {
             const d = await fetch(`https://api.bitget.com/api/v2/spot/market/orderbook?symbol=${symUp}&limit=20`).then(r=>r.json());
-            asks = (d.data?.asks||[]).map(([p,q])=>({price:+p,size:+q}));
-            bids = (d.data?.bids||[]).map(([p,q])=>({price:+p,size:+q}));
+            rawAsks = d.data?.asks || []; rawBids = d.data?.bids || [];
         } else if (exch === 'kucoin') {
             const base = symUp.replace('USDT','');
             const d = await fetch(`https://api.kucoin.com/api/v1/market/orderbook/level2_20?symbol=${base}-USDT`).then(r=>r.json());
-            asks = (d.data?.asks||[]).map(([p,q])=>({price:+p,size:+q}));
-            bids = (d.data?.bids||[]).map(([p,q])=>({price:+p,size:+q}));
+            rawAsks = d.data?.asks || []; rawBids = d.data?.bids || [];
         }
-        if (asks.length || bids.length) renderFn(asks, bids);
+        if (rawAsks.length || rawBids.length) onDataFn(rawAsks, rawBids);
     } catch(e) { console.error('clone OB snapshot error', e); }
 }
 
