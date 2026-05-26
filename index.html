@@ -922,6 +922,15 @@
         .proj-info-label { font-size:11px; font-weight:600; color:var(--muted); letter-spacing:0.4px; text-transform:uppercase; }
         .proj-info-value { font-size:13px; color:var(--text); font-weight:500; min-height:18px; }
         .proj-tab-empty { color:var(--muted); font-size:13px; padding:16px 0; }
+        /* Pairs tab */
+        .pairs-form { display:flex; align-items:flex-end; gap:12px; margin-bottom:20px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:14px 16px; flex-wrap:wrap; }
+        .pairs-form-group { display:flex; flex-direction:column; gap:5px; }
+        .pairs-sym-input { width:200px; }
+        .pairs-exch-select { width:180px; }
+        .pairs-link-btn { padding:8px 18px; border:none; border-radius:6px; background:#34d399; color:#0b0f17; font-family:var(--font); font-size:12px; font-weight:700; cursor:pointer; transition:opacity 0.15s; white-space:nowrap; margin-top:19px; }
+        .pairs-link-btn:hover { opacity:0.82; }
+        .pairs-price { font-weight:500; }
+        .pairs-price.loading { color:var(--muted); font-style:italic; }
 
         /* ── APP BODY ── */
         .app-body { display: flex; flex: 1; overflow: hidden; min-height: 0; }
@@ -1579,7 +1588,40 @@
                 </div>
             </div>
             <div class="proj-tab-content hidden" id="proj-tab-accounts"><div class="proj-tab-empty">No accounts</div></div>
-            <div class="proj-tab-content hidden" id="proj-tab-pairs"><div class="proj-tab-empty">No pairs</div></div>
+            <div class="proj-tab-content hidden" id="proj-tab-pairs">
+                <div class="pairs-form">
+                    <div class="pairs-form-group">
+                        <label class="proj-form-label">Symbol</label>
+                        <input class="proj-form-input pairs-sym-input" id="pair-symbol" type="text" placeholder="X...X/Y...Y" autocomplete="off">
+                    </div>
+                    <div class="pairs-form-group">
+                        <label class="proj-form-label">Exchange</label>
+                        <select class="proj-form-input pairs-exch-select" id="pair-exchange">
+                            <option value=""></option>
+                            <option value="Binance">Binance</option>
+                            <option value="Bybit">Bybit</option>
+                            <option value="Bitget">Bitget</option>
+                            <option value="Gate">Gate</option>
+                            <option value="Mexc">Mexc</option>
+                            <option value="Kucoin">Kucoin</option>
+                        </select>
+                    </div>
+                    <button class="pairs-link-btn" onclick="addPair()">Link pair to project</button>
+                </div>
+                <table class="proj-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>CODE</th>
+                            <th>EXCHANGE</th>
+                            <th>LAST PRICE</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="pairs-tbody"></tbody>
+                </table>
+                <div class="proj-tab-empty hidden" id="pairs-empty">No pairs linked yet</div>
+            </div>
             <div class="proj-tab-content hidden" id="proj-tab-users"><div class="proj-tab-empty">No users</div></div>
             <div class="proj-tab-content hidden" id="proj-tab-logs"><div class="proj-tab-empty">No logs</div></div>
             <div class="proj-tab-content hidden" id="proj-tab-social"><div class="proj-tab-empty">No social data</div></div>
@@ -3363,6 +3405,130 @@ function switchProjTab(btn, tabName) {
     btn.classList.add('active');
     document.querySelectorAll('.proj-tab-content').forEach(c => c.classList.add('hidden'));
     document.getElementById('proj-tab-' + tabName).classList.remove('hidden');
+    if (tabName === 'pairs') renderPairsTab();
+}
+
+// ── PAIRS ──
+let _pairIdSeq = (() => {
+    let max = 0;
+    projectsList.forEach(pr => (pr.pairs || []).forEach(p => { if (p.id > max) max = p.id; }));
+    return max + 1;
+})();
+
+function _symFormat(symbol, exchange) {
+    const [base, quote] = symbol.split('/');
+    if (!base || !quote) return null;
+    switch(exchange) {
+        case 'Gate':   return { pair: `${base}_${quote}` };
+        case 'Kucoin': return { pair: `${base}-${quote}` };
+        default:       return { pair: `${base}${quote}` };
+    }
+}
+
+async function fetchPrice(symbol, exchange) {
+    const fmt = _symFormat(symbol, exchange);
+    if (!fmt) return '—';
+    const { pair } = fmt;
+    try {
+        let url, price;
+        switch(exchange) {
+            case 'Binance': {
+                const r = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${pair}`);
+                const d = await r.json();
+                price = d.price;
+                break;
+            }
+            case 'Bybit': {
+                const r = await fetch(`https://api.bybit.com/v5/market/tickers?category=spot&symbol=${pair}`);
+                const d = await r.json();
+                price = d?.result?.list?.[0]?.lastPrice;
+                break;
+            }
+            case 'Bitget': {
+                const r = await fetch(`https://api.bitget.com/api/v2/spot/market/tickers?symbol=${pair}`);
+                const d = await r.json();
+                price = d?.data?.[0]?.lastPr;
+                break;
+            }
+            case 'Gate': {
+                const r = await fetch(`https://api.gateio.ws/api/v4/spot/tickers?currency_pair=${pair}`);
+                const d = await r.json();
+                price = d?.[0]?.last;
+                break;
+            }
+            case 'Mexc': {
+                const r = await fetch(`https://api.mexc.com/api/v3/ticker/price?symbol=${pair}`);
+                const d = await r.json();
+                price = d.price;
+                break;
+            }
+            case 'Kucoin': {
+                const r = await fetch(`https://api.kucoin.com/api/v1/market/stats?symbol=${pair}`);
+                const d = await r.json();
+                price = d?.data?.last;
+                break;
+            }
+        }
+        const n = parseFloat(price);
+        if (!price || isNaN(n)) return '—';
+        if (n >= 1000) return n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+        if (n >= 1)    return n.toFixed(4);
+        if (n >= 0.01) return n.toFixed(6);
+        return n.toFixed(8);
+    } catch(e) { return '—'; }
+}
+
+function addPair() {
+    const symbol   = document.getElementById('pair-symbol').value.trim().toUpperCase();
+    const exchange = document.getElementById('pair-exchange').value;
+    if (!symbol || !exchange || !symbol.includes('/')) return;
+    const pr = projectsList.find(x => x.id === currentProjectId);
+    if (!pr) return;
+    if (!pr.pairs) pr.pairs = [];
+    if (pr.pairs.find(p => p.symbol === symbol && p.exchange === exchange)) return;
+    pr.pairs.push({ id: _pairIdSeq++, symbol, exchange });
+    localStorage.setItem('ndb_projects', JSON.stringify(projectsList));
+    document.getElementById('pair-symbol').value = '';
+    document.getElementById('pair-exchange').value = '';
+    renderPairsTab();
+}
+
+function deletePair(pairId) {
+    const pr = projectsList.find(x => x.id === currentProjectId);
+    if (!pr) return;
+    pr.pairs = (pr.pairs || []).filter(p => p.id !== pairId);
+    localStorage.setItem('ndb_projects', JSON.stringify(projectsList));
+    renderPairsTab();
+}
+
+function renderPairsTab() {
+    const pr    = projectsList.find(x => x.id === currentProjectId);
+    const pairs = pr?.pairs || [];
+    const tbody = document.getElementById('pairs-tbody');
+    const empty = document.getElementById('pairs-empty');
+    if (!pairs.length) {
+        tbody.innerHTML = '';
+        if (empty) empty.classList.remove('hidden');
+        return;
+    }
+    if (empty) empty.classList.add('hidden');
+    tbody.innerHTML = pairs.map(p => `
+        <tr>
+            <td>${p.id}</td>
+            <td>${p.symbol}</td>
+            <td>${p.exchange}</td>
+            <td class="pairs-price loading" id="price-${p.id}">...</td>
+            <td class="proj-actions">
+                <button class="proj-icon-btn danger" onclick="deletePair(${p.id})" title="Delete">✕</button>
+            </td>
+        </tr>
+    `).join('');
+    pairs.forEach(p => {
+        fetchPrice(p.symbol, p.exchange).then(price => {
+            const el = document.getElementById('price-' + p.id);
+            if (el) { el.textContent = price; el.classList.remove('loading'); }
+        });
+    });
 }
 
 function setAnTF(tf, btn) {
