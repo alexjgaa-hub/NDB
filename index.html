@@ -869,6 +869,60 @@
         .ab-body > div { position:absolute; inset:0; }
         .ab-body canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
 
+        /* ── PROJECTS PAGES ── */
+        .projects-page { flex:1; display:flex; flex-direction:column; background:var(--surface2); overflow:auto; min-height:0; }
+        .projects-page.hidden { display:none; }
+        .projects-hdr { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); flex-shrink:0; }
+        .projects-title { font-size:20px; font-weight:700; color:var(--text); }
+        .projects-breadcrumb { font-size:13px; color:var(--muted); }
+        .projects-breadcrumb span { color:var(--text); font-weight:600; }
+        .btn-create-project { padding:7px 16px; border:none; border-radius:6px; background:var(--text); color:var(--bg); font-family:var(--font); font-size:12px; font-weight:600; cursor:pointer; transition:opacity 0.15s; }
+        .btn-create-project:hover { opacity:0.85; }
+        .projects-table-wrap { flex:1; padding:20px 24px; overflow:auto; }
+        .proj-table { width:100%; border-collapse:collapse; font-size:13px; }
+        .proj-table th { text-align:left; padding:8px 12px; border-bottom:1px solid var(--border); color:var(--muted); font-size:11px; font-weight:600; letter-spacing:0.5px; white-space:nowrap; }
+        .proj-table td { padding:10px 12px; border-bottom:1px solid var(--border); color:var(--text); }
+        .proj-table tbody tr:hover { background:var(--surface); }
+        .proj-link { color:var(--blue); cursor:pointer; text-decoration:none; font-weight:500; }
+        .proj-link:hover { text-decoration:underline; }
+        .proj-actions { white-space:nowrap; }
+        .proj-icon-btn { width:26px; height:26px; border:1px solid var(--border); border-radius:5px; background:transparent; color:var(--muted); cursor:pointer; font-size:12px; display:inline-flex; align-items:center; justify-content:center; margin-left:4px; transition:all 0.15s; }
+        .proj-icon-btn:hover { color:var(--text); border-color:var(--muted); }
+        .proj-icon-btn.danger:hover { color:var(--red); border-color:var(--red); }
+        .projects-empty { padding:48px; text-align:center; color:var(--muted); font-size:13px; }
+        /* Create form */
+        .proj-form-wrap { flex:1; display:flex; justify-content:center; padding:32px 24px; overflow:auto; }
+        .proj-form-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:28px 32px; width:100%; max-width:900px; align-self:flex-start; }
+        .proj-form-row { display:flex; gap:20px; margin-bottom:20px; }
+        .proj-form-field { flex:1; display:flex; flex-direction:column; gap:6px; }
+        .proj-form-field.full { flex:1 0 100%; }
+        .proj-form-label { font-size:12px; font-weight:600; color:var(--muted); letter-spacing:0.3px; }
+        .proj-form-input { padding:8px 12px; border:1px solid var(--border); border-radius:6px; background:var(--surface2); color:var(--text); font-family:var(--font); font-size:13px; outline:none; transition:border-color 0.15s; }
+        .proj-form-input:focus { border-color:var(--blue); }
+        .proj-form-input::placeholder { color:var(--muted); }
+        select.proj-form-input option { background:var(--surface); color:var(--text); }
+        .proj-form-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:24px; padding-top:20px; border-top:1px solid var(--border); }
+        .proj-btn-cancel { padding:7px 18px; border:1px solid var(--border); border-radius:6px; background:transparent; color:var(--muted); font-family:var(--font); font-size:12px; font-weight:600; cursor:pointer; }
+        .proj-btn-cancel:hover { color:var(--text); border-color:var(--muted); }
+        .proj-btn-create { padding:7px 18px; border:none; border-radius:6px; background:var(--text); color:var(--bg); font-family:var(--font); font-size:12px; font-weight:600; cursor:pointer; transition:opacity 0.15s; }
+        .proj-btn-create:hover { opacity:0.85; }
+        /* Detail page */
+        .proj-detail-wrap { flex:1; display:flex; justify-content:center; padding:32px 24px; overflow:auto; }
+        .proj-settings-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; width:100%; max-width:900px; align-self:flex-start; overflow:hidden; }
+        .proj-settings-hdr { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); }
+        .proj-settings-title { font-size:15px; font-weight:700; color:var(--text); }
+        .proj-tabs { display:flex; border-bottom:1px solid var(--border); padding:0 20px; gap:0; }
+        .proj-tab { padding:10px 16px; border:none; border-bottom:2px solid transparent; background:transparent; color:var(--muted); font-family:var(--font); font-size:13px; font-weight:500; cursor:pointer; transition:all 0.15s; margin-bottom:-1px; }
+        .proj-tab:hover:not(.active) { color:var(--text); }
+        .proj-tab.active { color:var(--text); border-bottom-color:var(--blue); font-weight:600; }
+        .proj-tab-content { padding:24px; }
+        .proj-tab-content.hidden { display:none; }
+        .proj-info-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+        .proj-info-block { display:flex; flex-direction:column; gap:4px; }
+        .proj-info-label { font-size:11px; font-weight:600; color:var(--muted); letter-spacing:0.4px; text-transform:uppercase; }
+        .proj-info-value { font-size:13px; color:var(--text); font-weight:500; min-height:18px; }
+        .proj-tab-empty { color:var(--muted); font-size:13px; padding:16px 0; }
+
         /* ── APP BODY ── */
         .app-body { display: flex; flex: 1; overflow: hidden; min-height: 0; }
 
@@ -1099,7 +1153,7 @@
             <div class="sb-logo-text">Fibonacci<span>MARKET MAKER</span></div>
         </div>
         <div class="sb-nav">
-            <div class="sb-item"><span class="sb-icon"></span>Projects</div>
+            <div class="sb-item" onclick="showPage('projects')"><span class="sb-icon"></span>Projects</div>
             <div class="sb-item"><span class="sb-icon"></span>Performance</div>
             <div class="sb-divider"></div>
             <div class="sb-section">
@@ -1333,18 +1387,6 @@
 
         </div><!-- /.main-inner -->
 
-        <!-- ═══ ANALYTICS PAGE ═══ -->
-        <div class="analytics-page" id="analytics-page" style="display:none">
-            <div class="analytics-hdr">
-                <span class="analytics-title">Analytics</span>
-            </div>
-            <div class="analytics-placeholder">
-                <div class="analytics-empty-icon">📊</div>
-                <div class="analytics-empty-title">Analytics — в разработке</div>
-                <div class="analytics-empty-sub">Здесь будут графики и статистика по стратегиям</div>
-            </div>
-        </div>
-
     </div><!-- /.main-content -->
 
 </div><!-- /.app-body -->
@@ -1426,6 +1468,122 @@
                 </span>
             </div>
             <div class="ab-body"><canvas id="an-obheat-canvas"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ PROJECTS LIST PAGE ═══ -->
+<div class="projects-page hidden" id="projects-page">
+    <div class="projects-hdr">
+        <span class="projects-title">Projects</span>
+        <button class="btn-create-project" onclick="showPage('project-create')">Create project</button>
+    </div>
+    <div class="projects-table-wrap">
+        <table class="proj-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>NAME</th>
+                    <th>CODE</th>
+                    <th>TYPE</th>
+                    <th>CURRENCIES</th>
+                    <th>CREATED AT</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="projects-tbody"></tbody>
+        </table>
+        <div class="projects-empty hidden" id="projects-empty">No projects yet. Click "Create project" to add one.</div>
+    </div>
+</div>
+
+<!-- ═══ PROJECT CREATE PAGE ═══ -->
+<div class="projects-page hidden" id="project-create-page">
+    <div class="projects-hdr">
+        <span class="projects-breadcrumb">Projects / <span>Create</span></span>
+    </div>
+    <div class="proj-form-wrap">
+        <div class="proj-form-card">
+            <div class="proj-form-row">
+                <div class="proj-form-field">
+                    <label class="proj-form-label">Title</label>
+                    <input class="proj-form-input" id="pf-title" type="text" placeholder="">
+                </div>
+                <div class="proj-form-field">
+                    <label class="proj-form-label">Code</label>
+                    <input class="proj-form-input" id="pf-code" type="text" placeholder="">
+                </div>
+                <div class="proj-form-field">
+                    <label class="proj-form-label">Type</label>
+                    <select class="proj-form-input" id="pf-type">
+                        <option value="">Select project type</option>
+                        <option value="Perpetual Husl">Perpetual Husl</option>
+                        <option value="Market Making">Market Making</option>
+                    </select>
+                </div>
+            </div>
+            <div class="proj-form-row">
+                <div class="proj-form-field">
+                    <label class="proj-form-label">Currencies</label>
+                    <input class="proj-form-input" id="pf-currencies" type="text" placeholder="">
+                </div>
+            </div>
+            <div class="proj-form-actions">
+                <button class="proj-btn-cancel" onclick="showPage('projects')">Cancel</button>
+                <button class="proj-btn-create" onclick="createProject()">Create Project</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ PROJECT DETAIL PAGE ═══ -->
+<div class="projects-page hidden" id="project-detail-page">
+    <div class="projects-hdr">
+        <span class="projects-breadcrumb">Projects / <span id="pd-breadcrumb-name"></span></span>
+    </div>
+    <div class="proj-detail-wrap">
+        <div class="proj-settings-card">
+            <div class="proj-settings-hdr">
+                <span class="proj-settings-title" id="pd-title"></span>
+                <div>
+                    <button class="proj-icon-btn danger" onclick="deleteProject(currentProjectId);showPage('projects')" title="Delete">✕</button>
+                </div>
+            </div>
+            <div class="proj-tabs">
+                <button class="proj-tab active" id="ptab-info" onclick="switchProjTab(this,'info')">Info</button>
+                <button class="proj-tab" onclick="switchProjTab(this,'accounts')">Accounts</button>
+                <button class="proj-tab" onclick="switchProjTab(this,'pairs')">Pairs</button>
+                <button class="proj-tab" onclick="switchProjTab(this,'users')">Users</button>
+                <button class="proj-tab" onclick="switchProjTab(this,'logs')">Logs</button>
+                <button class="proj-tab" onclick="switchProjTab(this,'social')">Social</button>
+                <button class="proj-tab" onclick="switchProjTab(this,'charge')">Charge</button>
+            </div>
+            <div class="proj-tab-content" id="proj-tab-info">
+                <div class="proj-info-grid">
+                    <div class="proj-info-block">
+                        <div class="proj-info-label">Title</div>
+                        <div class="proj-info-value" id="pd-info-title"></div>
+                    </div>
+                    <div class="proj-info-block">
+                        <div class="proj-info-label">Code</div>
+                        <div class="proj-info-value" id="pd-info-code"></div>
+                    </div>
+                    <div class="proj-info-block">
+                        <div class="proj-info-label">Type</div>
+                        <div class="proj-info-value" id="pd-info-type"></div>
+                    </div>
+                    <div class="proj-info-block">
+                        <div class="proj-info-label">Currencies</div>
+                        <div class="proj-info-value" id="pd-info-currencies"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="proj-tab-content hidden" id="proj-tab-accounts"><div class="proj-tab-empty">No accounts</div></div>
+            <div class="proj-tab-content hidden" id="proj-tab-pairs"><div class="proj-tab-empty">No pairs</div></div>
+            <div class="proj-tab-content hidden" id="proj-tab-users"><div class="proj-tab-empty">No users</div></div>
+            <div class="proj-tab-content hidden" id="proj-tab-logs"><div class="proj-tab-empty">No logs</div></div>
+            <div class="proj-tab-content hidden" id="proj-tab-social"><div class="proj-tab-empty">No social data</div></div>
+            <div class="proj-tab-content hidden" id="proj-tab-charge"><div class="proj-tab-empty">No charge data</div></div>
         </div>
     </div>
 </div>
@@ -2974,21 +3132,6 @@ function setupOBHover() {
 }
 
 // ══ SIDEBAR ══
-function showPage(name) {
-    const mainInner = document.querySelector('.main-inner');
-    const analyticsPage = document.getElementById('analytics-page');
-    document.querySelectorAll('.sb-item').forEach(el => el.classList.remove('active'));
-    if (name === 'analytics') {
-        mainInner.style.display = 'none';
-        analyticsPage.style.display = 'flex';
-        document.querySelector('.sb-item[onclick*="analytics"]').classList.add('active');
-    } else {
-        mainInner.style.display = '';
-        analyticsPage.style.display = 'none';
-        document.querySelector('.sb-item[onclick*="trading"]').classList.add('active');
-    }
-}
-
 function toggleSbStats() {
     const sub = document.getElementById('sb-stats-sub');
     const arrow = document.getElementById('sb-stats-arrow');
@@ -3124,18 +3267,102 @@ let liqWS        = null;
 const anCharts   = {};
 
 function showPage(p) {
-    const toAn = p === 'analytics';
-    // support both old (.main/.bot-panel) and new (.app-body/.tasks-panel) layout
-    document.querySelectorAll('.app-body, .main, .bot-panel, .tasks-panel').forEach(el => el.classList.toggle('an-hidden', toAn));
-    document.getElementById('analytics-page').classList.toggle('hidden', !toAn);
-    document.getElementById('ptab-trading').classList.toggle('active', !toAn);
-    document.getElementById('ptab-analytics').classList.toggle('active', toAn);
-    anActive = toAn;
-    if (toAn) {
+    const altPages = ['analytics', 'projects', 'project-create', 'project-detail'];
+    const isMain = !altPages.includes(p);
+    document.querySelectorAll('.app-body, .main, .bot-panel, .tasks-panel')
+        .forEach(el => el.classList.toggle('an-hidden', !isMain));
+    document.getElementById('analytics-page').classList.toggle('hidden', p !== 'analytics');
+    document.getElementById('projects-page').classList.toggle('hidden', p !== 'projects');
+    document.getElementById('project-create-page').classList.toggle('hidden', p !== 'project-create');
+    document.getElementById('project-detail-page').classList.toggle('hidden', p !== 'project-detail');
+    const ptabT = document.getElementById('ptab-trading');
+    if (ptabT) ptabT.classList.toggle('active', isMain);
+    const ptabA = document.getElementById('ptab-analytics');
+    if (ptabA) ptabA.classList.toggle('active', p === 'analytics');
+    document.querySelectorAll('.sb-item').forEach(el => el.classList.remove('active'));
+    const sbSel = p === 'analytics' ? '[onclick*="analytics"]'
+                : ['projects','project-create','project-detail'].includes(p) ? '[onclick*="projects"]'
+                : '[onclick*="trading"]';
+    const sbEl = document.querySelector('.sb-item' + sbSel);
+    if (sbEl) sbEl.classList.add('active');
+    anActive = (p === 'analytics');
+    if (p === 'analytics') {
         document.getElementById('an-pair-label').textContent = currentSym + '/USDT';
         if (!anInited) { anInited = true; _initAnCharts(); }
         refreshAnalytics();
     }
+    if (p === 'projects') renderProjectsList();
+}
+
+// ══ PROJECTS ══
+let projectsList = JSON.parse(localStorage.getItem('ndb_projects') || '[]');
+let currentProjectId = null;
+let _projIdSeq = projectsList.length ? Math.max(...projectsList.map(pr => pr.id)) + 1 : 1;
+
+function renderProjectsList() {
+    const tbody = document.getElementById('projects-tbody');
+    const empty = document.getElementById('projects-empty');
+    if (!projectsList.length) {
+        tbody.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+    }
+    empty.classList.add('hidden');
+    tbody.innerHTML = projectsList.map(pr => `
+        <tr>
+            <td>${pr.id}</td>
+            <td><a class="proj-link" onclick="openProject(${pr.id})">${pr.title}</a></td>
+            <td>${pr.code}</td>
+            <td>${pr.type}</td>
+            <td>${pr.currencies || ''}</td>
+            <td>${pr.createdAt}</td>
+            <td class="proj-actions">
+                <button class="proj-icon-btn danger" onclick="deleteProject(${pr.id})" title="Delete">✕</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function createProject() {
+    const title = document.getElementById('pf-title').value.trim();
+    const code  = document.getElementById('pf-code').value.trim();
+    const type  = document.getElementById('pf-type').value;
+    const curr  = document.getElementById('pf-currencies').value.trim();
+    if (!title || !code || !type) return;
+    const now = new Date();
+    const d = `${now.getDate().toString().padStart(2,'0')}.${(now.getMonth()+1).toString().padStart(2,'0')}.${now.getFullYear()}`;
+    projectsList.push({ id: _projIdSeq++, title, code, type, currencies: curr, createdAt: d });
+    localStorage.setItem('ndb_projects', JSON.stringify(projectsList));
+    ['pf-title','pf-code','pf-currencies'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('pf-type').value = '';
+    showPage('projects');
+}
+
+function openProject(id) {
+    const pr = projectsList.find(x => x.id === id);
+    if (!pr) return;
+    currentProjectId = id;
+    document.getElementById('pd-breadcrumb-name').textContent = pr.title;
+    document.getElementById('pd-title').textContent = pr.title + ' Settings';
+    document.getElementById('pd-info-title').textContent = pr.title;
+    document.getElementById('pd-info-code').textContent = pr.code;
+    document.getElementById('pd-info-type').textContent = pr.type;
+    document.getElementById('pd-info-currencies').textContent = pr.currencies || '—';
+    switchProjTab(document.getElementById('ptab-info'), 'info');
+    showPage('project-detail');
+}
+
+function deleteProject(id) {
+    projectsList = projectsList.filter(pr => pr.id !== id);
+    localStorage.setItem('ndb_projects', JSON.stringify(projectsList));
+    renderProjectsList();
+}
+
+function switchProjTab(btn, tabName) {
+    document.querySelectorAll('.proj-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.proj-tab-content').forEach(c => c.classList.add('hidden'));
+    document.getElementById('proj-tab-' + tabName).classList.remove('hidden');
 }
 
 function setAnTF(tf, btn) {
