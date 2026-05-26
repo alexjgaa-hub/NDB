@@ -551,6 +551,25 @@
 
         .tb-sep { width: 1px; height: 16px; background: var(--border); margin: 0 4px; }
 
+        /* ── EXCHANGE SELECTOR ── */
+        .exch-sel-row {
+            display: flex; align-items: center; gap: 2px;
+            padding: 4px 10px; border-bottom: 1px solid var(--border);
+            flex-shrink: 0; overflow-x: auto; background: var(--surface);
+        }
+        .exch-sel-btn {
+            display: flex; flex-direction: column; align-items: center;
+            padding: 3px 10px; border: 1px solid var(--border); border-radius: 5px;
+            cursor: pointer; background: transparent; font-family: var(--font);
+            transition: all 0.12s; color: var(--muted); font-size: 11px;
+            font-weight: 600; gap: 1px; white-space: nowrap; line-height: 1.3;
+        }
+        .exch-sel-btn span { font-size: 9px; font-weight: 400; color: var(--muted); }
+        .exch-sel-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(217,173,112,0.08); }
+        .exch-sel-btn.active span { color: var(--gold); opacity: 0.8; }
+        .exch-sel-btn:hover:not(.active) { border-color: var(--muted); color: var(--text); }
+        .exch-sel-sep { width: 1px; height: 24px; background: var(--border); margin: 0 3px; flex-shrink: 0; }
+
         #chart-ohlc { margin-left: auto; color: var(--muted); font-size: 10px; }
 
         .chart-wrapper { flex: 1; position: relative; overflow: hidden; }
@@ -1294,6 +1313,23 @@
                     <button class="dt-btn" data-tip="Clear All"                 onclick="clearAllDrawings()" style="color:var(--red);font-size:11px">🗑</button>
                 </div>
                 <div class="chart-main">
+                    <!-- Exchange selector -->
+                    <div class="exch-sel-row">
+                        <button class="exch-sel-btn active" data-exch="binance" data-type="perp" onclick="selectExchange('binance','perp',this)">Binance<span>PERP</span></button>
+                        <button class="exch-sel-btn" data-exch="binance" data-type="spot" onclick="selectExchange('binance','spot',this)">Binance<span>Spot</span></button>
+                        <div class="exch-sel-sep"></div>
+                        <button class="exch-sel-btn" data-exch="bybit" data-type="perp" onclick="selectExchange('bybit','perp',this)">Bybit<span>PERP</span></button>
+                        <button class="exch-sel-btn" data-exch="bybit" data-type="spot" onclick="selectExchange('bybit','spot',this)">Bybit<span>Spot</span></button>
+                        <div class="exch-sel-sep"></div>
+                        <button class="exch-sel-btn" data-exch="kucoin" data-type="perp" onclick="selectExchange('kucoin','perp',this)">KuCoin<span>PERP</span></button>
+                        <button class="exch-sel-btn" data-exch="kucoin" data-type="spot" onclick="selectExchange('kucoin','spot',this)">KuCoin<span>Spot</span></button>
+                        <div class="exch-sel-sep"></div>
+                        <button class="exch-sel-btn" data-exch="bitget" data-type="perp" onclick="selectExchange('bitget','perp',this)">Bitget<span>PERP</span></button>
+                        <button class="exch-sel-btn" data-exch="bitget" data-type="spot" onclick="selectExchange('bitget','spot',this)">Bitget<span>Spot</span></button>
+                        <div class="exch-sel-sep"></div>
+                        <button class="exch-sel-btn" data-exch="gate" data-type="perp" onclick="selectExchange('gate','perp',this)">Gate<span>PERP</span></button>
+                        <button class="exch-sel-btn" data-exch="gate" data-type="spot" onclick="selectExchange('gate','spot',this)">Gate<span>Spot</span></button>
+                    </div>
                     <div class="chart-toolbar">
                         <button class="tf-btn" onclick="setTF(this,'1m')">1m</button>
                         <button class="tf-btn" onclick="setTF(this,'5m')">5m</button>
@@ -1888,17 +1924,20 @@ function toggleTheme() {
 // STATE
 // ══════════════════════════════════════════════════════════════════
 
-let currentPrice = 67234.50;
-let leverage     = 20;
-let pendingLev   = 20;
-let binanceWS      = null;
+let currentPrice   = 67234.50;
+let leverage       = 20;
+let pendingLev     = 20;
+let activeWS       = null;          // replaces binanceWS
+let binanceWS      = null;          // legacy alias
 let prevDepthAsks  = new Map();
 let prevDepthBids  = new Map();
-let realAsks     = [];
-let realBids     = [];
-let lastBarTime  = 0;
-let lastOpen     = currentPrice;
-let tfInterval   = 900;
+let realAsks       = [];
+let realBids       = [];
+let lastBarTime    = 0;
+let lastOpen       = currentPrice;
+let tfInterval     = 900;
+let currentExchange = 'binance';
+let currentType     = 'perp';
 
 // ══════════════════════════════════════════════════════════════════
 // DRAWING — declared early to avoid TDZ when loadChart fires
@@ -1980,36 +2019,348 @@ function generateCandles(basePrice, count, intervalSec) {
 const TF_MAP       = { '1m':60,'5m':300,'15m':900,'1h':3600,'4h':14400,'1d':86400 };
 const TF_LABEL_MAP = { 60:'1m',300:'5m',900:'15m',3600:'1h',14400:'4h',86400:'1d' };
 
+// ══════════════════════════════════════════════════════════════════
+// EXCHANGE ADAPTERS
+// ══════════════════════════════════════════════════════════════════
+
+const TF_BYBIT  = { 60:1,300:5,900:15,3600:60,14400:240,86400:'D' };
+const TF_KUCOIN = { 60:'1min',300:'5min',900:'15min',3600:'1hour',14400:'4hour',86400:'1day' };
+const TF_BITGET = { 60:'1m',300:'5m',900:'15m',3600:'1H',14400:'4H',86400:'1D' };
+const TF_GATE   = { 60:'1m',300:'5m',900:'15m',3600:'1h',14400:'4h',86400:'1d' };
+
+const symPlain = s => s.toUpperCase() + 'USDT';
+const symDash  = s => s.toUpperCase() + '-USDT';
+const symUnder = s => s.toUpperCase() + '_USDT';
+
+// Callbacks shared by all adapters
+const WS_CBS = {
+    onDepth(asks, bids) {
+        realAsks = asks.filter(r=>r.size>0).sort((a,b)=>a.price-b.price);
+        realBids = bids.filter(r=>r.size>0).sort((a,b)=>b.price-a.price);
+        renderRealOB([...realAsks].reverse(), realBids);
+    },
+    onKline({ time, open, high, low, close, vol }) {
+        currentPrice = close;
+        candles.update({ time, open, high, low, close });
+        volSeries.update({ time, value: vol||0,
+            color: close >= open ? '#34d39930' : '#f8717130' });
+        updatePriceDisplay();
+        vpRecord(close, vol||0, close >= open);
+    }
+};
+
+const ADAPTERS = {
+
+    'binance-perp': {
+        klineUrl: (sym, tf) => `https://fapi.binance.com/fapi/v1/klines?symbol=${symPlain(sym)}&interval=${TF_LABEL_MAP[tf]}&limit=500`,
+        klineNorm: r => Array.isArray(r) ? r.map(k=>({time:+k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4],vol:+k[5]})) : [],
+        wsConnect(sym, tf, cbs) {
+            const s = sym.toLowerCase()+'usdt', tl = TF_LABEL_MAP[tf];
+            const ws = new WebSocket(`wss://fstream.binance.com/stream?streams=${s}@depth20@100ms/${s}@kline_${tl}`);
+            ws.onmessage = e => {
+                const { stream, data } = JSON.parse(e.data);
+                if (stream?.includes('@depth20'))
+                    cbs.onDepth(data.a.map(([p,q])=>({price:+p,size:+q})), data.b.map(([p,q])=>({price:+p,size:+q})));
+                else if (stream?.includes('@kline_')) {
+                    const k = data.k;
+                    cbs.onKline({time:k.t/1000,open:+k.o,high:+k.h,low:+k.l,close:+k.c,vol:+k.v});
+                }
+            };
+            ws.onerror = e => console.error('binance-perp WS error', e);
+            return ws;
+        }
+    },
+
+    'binance-spot': {
+        klineUrl: (sym, tf) => `https://api.binance.com/api/v3/klines?symbol=${symPlain(sym)}&interval=${TF_LABEL_MAP[tf]}&limit=500`,
+        klineNorm: r => Array.isArray(r) ? r.map(k=>({time:+k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4],vol:+k[5]})) : [],
+        wsConnect(sym, tf, cbs) {
+            const s = sym.toLowerCase()+'usdt', tl = TF_LABEL_MAP[tf];
+            const ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${s}@depth20@100ms/${s}@kline_${tl}`);
+            ws.onmessage = e => {
+                const { stream, data } = JSON.parse(e.data);
+                if (stream?.includes('@depth20'))
+                    cbs.onDepth(data.a.map(([p,q])=>({price:+p,size:+q})), data.b.map(([p,q])=>({price:+p,size:+q})));
+                else if (stream?.includes('@kline_')) {
+                    const k = data.k;
+                    cbs.onKline({time:k.t/1000,open:+k.o,high:+k.h,low:+k.l,close:+k.c,vol:+k.v});
+                }
+            };
+            ws.onerror = e => console.error('binance-spot WS error', e);
+            return ws;
+        }
+    },
+
+    'bybit-perp': {
+        klineUrl: (sym, tf) => `https://api.bybit.com/v5/market/kline?category=linear&symbol=${symPlain(sym)}&interval=${TF_BYBIT[tf]}&limit=500`,
+        klineNorm: r => ((r.result?.list)||[]).slice().reverse().map(k=>({time:+k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4],vol:+k[5]})),
+        wsConnect(sym, tf, cbs) {
+            const ws = new WebSocket('wss://stream.bybit.com/v5/public/linear');
+            const S = symPlain(sym);
+            ws.onopen = () => ws.send(JSON.stringify({op:'subscribe',args:[`orderbook.20.${S}`,`kline.${TF_BYBIT[tf]}.${S}`]}));
+            ws.onmessage = e => {
+                const d = JSON.parse(e.data);
+                if (d.topic?.startsWith('orderbook')) {
+                    const od = d.data||{};
+                    cbs.onDepth((od.a||[]).map(([p,q])=>({price:+p,size:+q})),(od.b||[]).map(([p,q])=>({price:+p,size:+q})));
+                } else if (d.topic?.startsWith('kline')) {
+                    const k = d.data?.[0]; if(!k) return;
+                    cbs.onKline({time:+k.start/1000,open:+k.open,high:+k.high,low:+k.low,close:+k.close,vol:+k.volume});
+                }
+            };
+            const ping = setInterval(()=>ws.readyState===1&&ws.send(JSON.stringify({op:'ping'})),20000);
+            const _c = ws.close.bind(ws); ws.close = ()=>{clearInterval(ping);_c();};
+            return ws;
+        }
+    },
+
+    'bybit-spot': {
+        klineUrl: (sym, tf) => `https://api.bybit.com/v5/market/kline?category=spot&symbol=${symPlain(sym)}&interval=${TF_BYBIT[tf]}&limit=500`,
+        klineNorm: r => ((r.result?.list)||[]).slice().reverse().map(k=>({time:+k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4],vol:+k[5]})),
+        wsConnect(sym, tf, cbs) {
+            const ws = new WebSocket('wss://stream.bybit.com/v5/public/spot');
+            const S = symPlain(sym);
+            ws.onopen = () => ws.send(JSON.stringify({op:'subscribe',args:[`orderbook.20.${S}`,`kline.${TF_BYBIT[tf]}.${S}`]}));
+            ws.onmessage = e => {
+                const d = JSON.parse(e.data);
+                if (d.topic?.startsWith('orderbook')) {
+                    const od = d.data||{};
+                    cbs.onDepth((od.a||[]).map(([p,q])=>({price:+p,size:+q})),(od.b||[]).map(([p,q])=>({price:+p,size:+q})));
+                } else if (d.topic?.startsWith('kline')) {
+                    const k = d.data?.[0]; if(!k) return;
+                    cbs.onKline({time:+k.start/1000,open:+k.open,high:+k.high,low:+k.low,close:+k.close,vol:+k.volume});
+                }
+            };
+            const ping = setInterval(()=>ws.readyState===1&&ws.send(JSON.stringify({op:'ping'})),20000);
+            const _c = ws.close.bind(ws); ws.close = ()=>{clearInterval(ping);_c();};
+            return ws;
+        }
+    },
+
+    'kucoin-spot': {
+        klineUrl: (sym, tf) => {
+            const end = Math.floor(Date.now()/1000), start = end - 500*tf;
+            return `https://api.kucoin.com/api/v1/market/candles?type=${TF_KUCOIN[tf]}&symbol=${symDash(sym)}&startAt=${start}&endAt=${end}`;
+        },
+        // KuCoin candle: [time, open, close, high, low, vol, turnover]
+        klineNorm: r => ((r.data)||[]).slice().reverse().map(k=>({time:+k[0],open:+k[1],high:+k[3],low:+k[4],close:+k[2],vol:+k[5]})),
+        async wsConnect(sym, tf, cbs) {
+            try {
+                const t = await (await fetch('https://api.kucoin.com/api/v1/bullet-public',{method:'POST'})).json();
+                const { token, instanceServers } = t.data;
+                const ws = new WebSocket(`${instanceServers[0].endpoint}?token=${token}`);
+                const S = symDash(sym);
+                ws.onopen = () => {
+                    ws.send(JSON.stringify({id:1,type:'subscribe',topic:`/spotMarket/level2Depth50:${S}`,response:true}));
+                    ws.send(JSON.stringify({id:2,type:'subscribe',topic:`/market/candles:${S}_${TF_KUCOIN[tf]}`,response:true}));
+                };
+                ws.onmessage = e => {
+                    const d = JSON.parse(e.data);
+                    if (d.type==='pong'||d.type==='ack'||d.type==='welcome') return;
+                    if (d.subject==='level2') {
+                        const ch = d.data?.changes||{};
+                        cbs.onDepth((ch.asks||[]).map(([p,q])=>({price:+p,size:+q})),(ch.bids||[]).map(([p,q])=>({price:+p,size:+q})));
+                    } else if (d.subject==='trade.candles.update') {
+                        const k = d.data?.candles||[];
+                        cbs.onKline({time:+k[0],open:+k[1],high:+k[3],low:+k[4],close:+k[2],vol:+k[5]});
+                    }
+                };
+                const ping = setInterval(()=>ws.readyState===1&&ws.send(JSON.stringify({id:Date.now(),type:'ping'})),30000);
+                const _c = ws.close.bind(ws); ws.close=()=>{clearInterval(ping);_c();};
+                return ws;
+            } catch(e) { console.error('kucoin-spot WS error', e); return { close:()=>{} }; }
+        }
+    },
+
+    'kucoin-perp': {
+        klineUrl: (sym, tf) => {
+            const end = Date.now(), start = end - 500*tf*1000;
+            return `https://api-futures.kucoin.com/api/v1/kline/query?granularity=${tf/60}&symbol=${sym.toUpperCase()}USDTM&from=${start}&to=${end}`;
+        },
+        klineNorm: r => ((r.data)||[]).map(k=>({time:+k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4],vol:+k[5]})),
+        async wsConnect(sym, tf, cbs) {
+            try {
+                const t = await (await fetch('https://api-futures.kucoin.com/api/v1/bullet-public',{method:'POST'})).json();
+                const { token, instanceServers } = t.data;
+                const ws = new WebSocket(`${instanceServers[0].endpoint}?token=${token}`);
+                const S = sym.toUpperCase()+'USDTM';
+                ws.onopen = () => {
+                    ws.send(JSON.stringify({id:1,type:'subscribe',topic:`/contractMarket/level2Depth50:${S}`,response:true}));
+                    ws.send(JSON.stringify({id:2,type:'subscribe',topic:`/contractMarket/candle:${S}_${tf/60}`,response:true}));
+                };
+                ws.onmessage = e => {
+                    const d = JSON.parse(e.data);
+                    if (d.type==='pong'||d.type==='ack'||d.type==='welcome') return;
+                    if (d.subject==='level2') {
+                        const ch = d.data?.changes||{};
+                        cbs.onDepth((ch.asks||[]).map(([p,q])=>({price:+p,size:+q})),(ch.bids||[]).map(([p,q])=>({price:+p,size:+q})));
+                    } else if (d.subject==='candle.stick') {
+                        const k = d.data?.candles||[];
+                        cbs.onKline({time:+k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4],vol:+k[5]});
+                    }
+                };
+                const ping = setInterval(()=>ws.readyState===1&&ws.send(JSON.stringify({id:Date.now(),type:'ping'})),30000);
+                const _c = ws.close.bind(ws); ws.close=()=>{clearInterval(ping);_c();};
+                return ws;
+            } catch(e) { console.error('kucoin-perp WS error', e); return { close:()=>{} }; }
+        }
+    },
+
+    'bitget-spot': {
+        klineUrl: (sym, tf) => `https://api.bitget.com/api/v2/spot/market/candles?symbol=${symPlain(sym)}&granularity=${TF_BITGET[tf]}&limit=500`,
+        klineNorm: r => ((r.data)||[]).slice().reverse().map(k=>({time:+k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4],vol:+k[5]})),
+        wsConnect(sym, tf, cbs) {
+            const ws = new WebSocket('wss://ws.bitget.com/v2/ws/public');
+            const S = symPlain(sym);
+            ws.onopen = () => ws.send(JSON.stringify({op:'subscribe',args:[
+                {instType:'SPOT',channel:'books5',instId:S},
+                {instType:'SPOT',channel:`candle${TF_BITGET[tf]}`,instId:S}
+            ]}));
+            ws.onmessage = e => {
+                if (e.data==='pong') return;
+                const d = JSON.parse(e.data);
+                const ch = d.arg?.channel||'';
+                if (ch==='books5') {
+                    const od = d.data?.[0]||{};
+                    cbs.onDepth((od.asks||[]).map(([p,q])=>({price:+p,size:+q})),(od.bids||[]).map(([p,q])=>({price:+p,size:+q})));
+                } else if (ch.startsWith('candle')) {
+                    const k = d.data?.[0]; if(!k) return;
+                    cbs.onKline({time:+k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4],vol:+k[5]});
+                }
+            };
+            const ping = setInterval(()=>ws.readyState===1&&ws.send('ping'),25000);
+            const _c = ws.close.bind(ws); ws.close=()=>{clearInterval(ping);_c();};
+            return ws;
+        }
+    },
+
+    'bitget-perp': {
+        klineUrl: (sym, tf) => `https://api.bitget.com/api/v2/mix/market/candles?symbol=${symPlain(sym)}&productType=USDT-FUTURES&granularity=${TF_BITGET[tf]}&limit=500`,
+        klineNorm: r => ((r.data)||[]).slice().reverse().map(k=>({time:+k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4],vol:+k[5]})),
+        wsConnect(sym, tf, cbs) {
+            const ws = new WebSocket('wss://ws.bitget.com/v2/ws/public');
+            const S = symPlain(sym);
+            ws.onopen = () => ws.send(JSON.stringify({op:'subscribe',args:[
+                {instType:'USDT-FUTURES',channel:'books5',instId:S},
+                {instType:'USDT-FUTURES',channel:`candle${TF_BITGET[tf]}`,instId:S}
+            ]}));
+            ws.onmessage = e => {
+                if (e.data==='pong') return;
+                const d = JSON.parse(e.data);
+                const ch = d.arg?.channel||'';
+                if (ch==='books5') {
+                    const od = d.data?.[0]||{};
+                    cbs.onDepth((od.asks||[]).map(([p,q])=>({price:+p,size:+q})),(od.bids||[]).map(([p,q])=>({price:+p,size:+q})));
+                } else if (ch.startsWith('candle')) {
+                    const k = d.data?.[0]; if(!k) return;
+                    cbs.onKline({time:+k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4],vol:+k[5]});
+                }
+            };
+            const ping = setInterval(()=>ws.readyState===1&&ws.send('ping'),25000);
+            const _c = ws.close.bind(ws); ws.close=()=>{clearInterval(ping);_c();};
+            return ws;
+        }
+    },
+
+    'gate-spot': {
+        klineUrl: (sym, tf) => `https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair=${symUnder(sym)}&interval=${TF_GATE[tf]}&limit=500`,
+        klineNorm: r => (Array.isArray(r)?r:[]).map(k=>({time:+k.t,open:+k.o,high:+k.h,low:+k.l,close:+k.c,vol:+k.v})),
+        wsConnect(sym, tf, cbs) {
+            const ws = new WebSocket('wss://api.gateio.ws/ws/v4/');
+            const S = symUnder(sym), TF = TF_GATE[tf];
+            ws.onopen = () => {
+                const t = Math.floor(Date.now()/1000);
+                ws.send(JSON.stringify({time:t,channel:'spot.order_book',event:'subscribe',payload:[S,'20','100ms']}));
+                ws.send(JSON.stringify({time:t,channel:'spot.candlesticks',event:'subscribe',payload:[TF,S]}));
+            };
+            ws.onmessage = e => {
+                const d = JSON.parse(e.data);
+                if (d.channel==='spot.order_book'&&d.result) {
+                    cbs.onDepth((d.result.asks||[]).map(([p,q])=>({price:+p,size:+q})),(d.result.bids||[]).map(([p,q])=>({price:+p,size:+q})));
+                } else if (d.channel==='spot.candlesticks'&&d.result) {
+                    const k = d.result;
+                    cbs.onKline({time:+k.t,open:+k.o,high:+k.h,low:+k.l,close:+k.c,vol:+k.v});
+                }
+            };
+            const ping = setInterval(()=>ws.readyState===1&&ws.send(JSON.stringify({channel:'spot.ping',event:'',time:Math.floor(Date.now()/1000)})),10000);
+            const _c = ws.close.bind(ws); ws.close=()=>{clearInterval(ping);_c();};
+            return ws;
+        }
+    },
+
+    'gate-perp': {
+        klineUrl: (sym, tf) => `https://fx.gate.io/api/v4/futures/usdt/candlesticks?contract=${symUnder(sym)}&interval=${TF_GATE[tf]}&limit=500`,
+        klineNorm: r => (Array.isArray(r)?r:[]).map(k=>({time:+k.t,open:+k.o,high:+k.h,low:+k.l,close:+k.c,vol:+k.v})),
+        wsConnect(sym, tf, cbs) {
+            const ws = new WebSocket('wss://fx.gateio.ws/v4/ws/usdt');
+            const S = symUnder(sym), TF = TF_GATE[tf];
+            ws.onopen = () => {
+                const t = Math.floor(Date.now()/1000);
+                ws.send(JSON.stringify({time:t,channel:'futures.order_book',event:'subscribe',payload:[S,'20','100ms']}));
+                ws.send(JSON.stringify({time:t,channel:'futures.candlesticks',event:'subscribe',payload:[TF,S]}));
+            };
+            ws.onmessage = e => {
+                const d = JSON.parse(e.data);
+                if (d.channel==='futures.order_book'&&d.result) {
+                    cbs.onDepth((d.result.asks||[]).map(([p,q])=>({price:+p,size:+q})),(d.result.bids||[]).map(([p,q])=>({price:+p,size:+q})));
+                } else if (d.channel==='futures.candlesticks'&&d.result) {
+                    const k = d.result;
+                    cbs.onKline({time:+k.t,open:+k.o,high:+k.h,low:+k.l,close:+k.c,vol:+k.v});
+                }
+            };
+            const ping = setInterval(()=>ws.readyState===1&&ws.send(JSON.stringify({channel:'futures.ping',event:'',time:Math.floor(Date.now()/1000)})),10000);
+            const _c = ws.close.bind(ws); ws.close=()=>{clearInterval(ping);_c();};
+            return ws;
+        }
+    }
+};
+
+// ── Exchange selector ──────────────────────────────────────────────
+function selectExchange(exchange, type, el) {
+    currentExchange = exchange;
+    currentType     = type;
+    document.querySelectorAll('.exch-sel-btn').forEach(b => b.classList.remove('active'));
+    if (el) el.classList.add('active');
+    loadChart(currentSym, tfInterval);
+}
+
+// ── Generic loadChart ──────────────────────────────────────────────
 async function loadChart(sym, interval) {
     tfInterval = interval || 900;
-    const bnSym   = sym.toUpperCase() + 'USDT';
-    const tfLabel = TF_LABEL_MAP[tfInterval] || '15m';
+    const id      = `${currentExchange}-${currentType}`;
+    const adapter = ADAPTERS[id] || ADAPTERS['binance-perp'];
 
-    if (binanceWS) { binanceWS.close(); binanceWS = null; }
+    if (activeWS) { try { activeWS.close(); } catch(e){} activeWS = null; }
+    binanceWS = null;
     obNeedCenter = true;
 
     try {
-        const res = await fetch(
-            `https://fapi.binance.com/fapi/v1/klines?symbol=${bnSym}&interval=${tfLabel}&limit=500`
-        );
-        const raw = await res.json();
-        if (!Array.isArray(raw)) throw new Error('Bad response: ' + JSON.stringify(raw).slice(0,120));
-        const cData = raw.map(k => ({ time:k[0]/1000, open:+k[1], high:+k[2], low:+k[3], close:+k[4] }));
-        const vData = raw.map(k => ({ time:k[0]/1000, value:+k[5],
-            color: +k[4] >= +k[1] ? '#5bba8930' : '#cd414130' }));
+        const res  = await fetch(adapter.klineUrl(sym, tfInterval));
+        const raw  = await res.json();
+        const data = adapter.klineNorm(raw);
+        if (!data.length) throw new Error('empty');
+        const cData = data.map(k=>({time:k.time,open:k.open,high:k.high,low:k.low,close:k.close}));
+        const vData = data.map(k=>({time:k.time,value:k.vol||0,
+            color:k.close>=k.open?'#34d39930':'#f8717130'}));
         candles.setData(cData);
         volSeries.setData(vData);
-        currentPrice = cData[cData.length - 1].close;
-        lastBarTime  = cData[cData.length - 1].time;
-        lastOpen     = cData[cData.length - 1].open;
+        currentPrice = cData[cData.length-1].close;
+        lastBarTime  = cData[cData.length-1].time;
+        lastOpen     = cData[cData.length-1].open;
         chart.timeScale().fitContent();
     } catch(e) {
-        console.error('Binance REST error:', e);
+        console.error(`${id} REST error:`, e);
+        const fb = generateCandles(currentPrice||100, 200, tfInterval);
+        candles.setData(fb.cData);
+        volSeries.setData(fb.vData);
     }
 
     clearInProgress();
     redrawCanvas();
-    connectBinanceWS(bnSym.toLowerCase(), tfLabel);
+
+    const wsResult = adapter.wsConnect(sym, tfInterval, WS_CBS);
+    activeWS = (wsResult instanceof Promise) ? (await wsResult) : wsResult;
+    binanceWS = activeWS; // keep legacy alias working
 }
 
 function setTF(btn, tf) {
@@ -2654,45 +3005,6 @@ function renderVPCols(displayAsks, displayBids) {
     document.getElementById('ob-vp-cols').innerHTML   = colsHtml;
     document.getElementById('ob-vp-footer').innerHTML = footerHtml;
     syncVPScroll();
-}
-
-// ══════════════════════════════════════════════════════════════════
-// BINANCE WEBSOCKET
-// ══════════════════════════════════════════════════════════════════
-
-function connectBinanceWS(symLow, tfLabel) {
-    const streams = [
-        `${symLow}@depth20@100ms`,
-        `${symLow}@kline_${tfLabel}`
-    ].join('/');
-
-    binanceWS = new WebSocket(`wss://fstream.binance.com/stream?streams=${streams}`);
-
-    binanceWS.onmessage = (e) => {
-        const msg    = JSON.parse(e.data);
-        const stream = msg.stream || '';
-        const data   = msg.data;
-        if (stream.includes('@depth20'))     onDepthMsg(data);
-        else if (stream.includes('@kline_')) onKlineMsg(data);
-    };
-
-    binanceWS.onerror = (e) => console.error('Binance WS error', e);
-    binanceWS.onclose = ()  => console.log('Binance WS closed');
-}
-
-function onDepthMsg(data) {
-    realBids = (data.b || []).map(([p,q]) => ({ price:+p, size:+q })).filter(r=>r.size>0);
-    realAsks = (data.a || []).map(([p,q]) => ({ price:+p, size:+q })).filter(r=>r.size>0);
-    renderRealOB([...realAsks].reverse(), realBids);
-}
-
-function onKlineMsg(data) {
-    const k = data.k;
-    currentPrice = +k.c;
-    candles.update({ time:k.t/1000, open:+k.o, high:+k.h, low:+k.l, close:+k.c });
-    volSeries.update({ time:k.t/1000, value:+k.v,
-        color: +k.c >= +k.o ? '#5bba8930' : '#cd414130' });
-    updatePriceDisplay();
 }
 
 function onAggTradeMsg(data) {
