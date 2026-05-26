@@ -932,6 +932,18 @@
         .pairs-price { font-weight:500; }
         .pairs-price.loading { color:var(--muted); font-style:italic; }
 
+        /* ── PAGE LAYOUT ── */
+        .page-layout { display:flex; flex:1; overflow:hidden; min-height:0; }
+        .page-content { display:flex; flex:1; flex-direction:column; overflow:hidden; min-height:0; }
+        .sb-toggle-btn {
+            width:14px; flex-shrink:0; border:none; padding:0; cursor:pointer;
+            background:var(--sidebar-bg); border-right:1px solid var(--sidebar-border);
+            color:var(--sidebar-muted); font-size:16px; line-height:1;
+            display:flex; align-items:center; justify-content:center;
+            transition:background 0.15s, color 0.15s;
+        }
+        .sb-toggle-btn:hover { background:var(--surface-muted); color:var(--sidebar-text); }
+
         /* ── APP BODY ── */
         .app-body { display: flex; flex: 1; overflow: hidden; min-height: 0; }
 
@@ -942,7 +954,9 @@
             border-right: 1px solid var(--sidebar-border);
             display: flex; flex-direction: column;
             overflow-y: auto; overflow-x: hidden;
+            transition: width 0.22s ease;
         }
+        .sidebar.collapsed { width: 0; overflow: hidden; }
         .sb-logo {
             padding: 14px 16px 12px;
             border-bottom: 1px solid var(--sidebar-border);
@@ -1153,37 +1167,39 @@
 </div>
 </div>
 
-<div class="app-body">
-
-    <!-- ─── SIDEBAR ─── -->
-    <div class="sidebar">
-        <div class="sb-logo">
-            <div class="sb-logo-icon">F</div>
-            <div class="sb-logo-text">Fibonacci<span>MARKET MAKER</span></div>
-        </div>
-        <div class="sb-nav">
-            <div class="sb-item" onclick="showPage('projects')"><span class="sb-icon"></span>Projects</div>
-            <div class="sb-item"><span class="sb-icon"></span>Performance</div>
-            <div class="sb-divider"></div>
-            <div class="sb-section">
-                <div class="sb-section-hdr">SOIL <span>▾</span></div>
-                <div class="sb-sub">
-                    <div class="sb-item active" onclick="showPage('trading')"><span class="sb-icon"></span>Trading Panel</div>
-                    <div class="sb-item"><span class="sb-icon"></span>Tasks</div>
-                    <div class="sb-item"><span class="sb-icon"></span>Arbitrage tasks</div>
-                    <div class="sb-item" onclick="showPage('analytics')"><span class="sb-icon"></span>Analytics</div>
-                    <div class="sb-item" id="sb-stats-hdr" onclick="toggleSbStats()"><span class="sb-icon"></span>Statistics <span id="sb-stats-arrow" style="margin-left:auto;font-size:10px">▾</span></div>
-                    <div class="sb-sub" id="sb-stats-sub" style="display:none">
-                        <div class="sb-item"><span class="sb-icon"></span>Liquidity</div>
-                        <div class="sb-item"><span class="sb-icon"></span>Principal MM</div>
-                        <div class="sb-item"><span class="sb-icon"></span>Volume</div>
-                        <div class="sb-item"><span class="sb-icon"></span>Arbitrage</div>
-                        <div class="sb-item"><span class="sb-icon"></span>PnL</div>
-                    </div>
+<div class="page-layout">
+<div class="sidebar" id="global-sidebar">
+    <div class="sb-logo">
+        <div class="sb-logo-icon">F</div>
+        <div class="sb-logo-text">Fibonacci<span>MARKET MAKER</span></div>
+    </div>
+    <div class="sb-nav">
+        <div class="sb-item" onclick="showPage('projects')"><span class="sb-icon"></span>Projects</div>
+        <div class="sb-item"><span class="sb-icon"></span>Performance</div>
+        <div class="sb-divider"></div>
+        <div class="sb-section">
+            <div class="sb-section-hdr">SOIL <span>▾</span></div>
+            <div class="sb-sub">
+                <div class="sb-item active" onclick="showPage('trading')"><span class="sb-icon"></span>Trading Panel</div>
+                <div class="sb-item"><span class="sb-icon"></span>Tasks</div>
+                <div class="sb-item"><span class="sb-icon"></span>Arbitrage tasks</div>
+                <div class="sb-item" onclick="showPage('analytics')"><span class="sb-icon"></span>Analytics</div>
+                <div class="sb-item" id="sb-stats-hdr" onclick="toggleSbStats()"><span class="sb-icon"></span>Statistics <span id="sb-stats-arrow" style="margin-left:auto;font-size:10px">▾</span></div>
+                <div class="sb-sub" id="sb-stats-sub" style="display:none">
+                    <div class="sb-item"><span class="sb-icon"></span>Liquidity</div>
+                    <div class="sb-item"><span class="sb-icon"></span>Principal MM</div>
+                    <div class="sb-item"><span class="sb-icon"></span>Volume</div>
+                    <div class="sb-item"><span class="sb-icon"></span>Arbitrage</div>
+                    <div class="sb-item"><span class="sb-icon"></span>PnL</div>
                 </div>
             </div>
         </div>
     </div>
+</div>
+<button class="sb-toggle-btn" id="sb-toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar">‹</button>
+<div class="page-content" id="page-content">
+
+<div class="app-body">
 
     <!-- ─── MAIN CONTENT ─── -->
     <div class="main-content">
@@ -1638,6 +1654,9 @@
         </div>
     </div>
 </div>
+
+</div><!-- /.page-content -->
+</div><!-- /.page-layout -->
 
 <!-- ═══ LEVERAGE MODAL ═══ -->
 <div class="overlay" id="lev-overlay" onclick="closeLevModal(event)">
@@ -3183,6 +3202,13 @@ function setupOBHover() {
 }
 
 // ══ SIDEBAR ══
+function toggleSidebar() {
+    const sb  = document.getElementById('global-sidebar');
+    const btn = document.getElementById('sb-toggle-btn');
+    sb.classList.toggle('collapsed');
+    btn.textContent = sb.classList.contains('collapsed') ? '›' : '‹';
+}
+
 function toggleSbStats() {
     const sub = document.getElementById('sb-stats-sub');
     const arrow = document.getElementById('sb-stats-arrow');
