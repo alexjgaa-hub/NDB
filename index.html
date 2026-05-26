@@ -1216,6 +1216,13 @@
             overflow: hidden;
             min-height: 0;
         }
+        .clone-chart-top {
+            flex-shrink: 0;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+        }
+        .clone-chart-top .chart-toolbar { padding: 3px 8px; }
+        .clone-ohlc { margin-left: auto; color: var(--muted); font-size: 10px; }
         .chart-mini-clone .chart-wrapper {
             flex: 1;
             position: relative;
@@ -1468,8 +1475,26 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="ob-control" id="ob-control-2">
+                            <div class="ob-ctrl-top">
+                                <button class="ob-lev-btn" id="ob-lev-btn-2" ondblclick="toggleLevPopup()">20X</button>
+                            </div>
+                            <div class="ob-presets" id="ob-presets-2"></div>
+                        </div>
                     </div><!-- /.orderbook clone 2 -->
                     <div class="chart-mini-clone">
+                        <div class="clone-chart-top">
+                            <div class="chart-toolbar">
+                                <button class="tf-btn" onclick="setCloneTF(2,this,'1m')">1m</button>
+                                <button class="tf-btn" onclick="setCloneTF(2,this,'5m')">5m</button>
+                                <button class="tf-btn active" onclick="setCloneTF(2,this,'15m')">15m</button>
+                                <button class="tf-btn" onclick="setCloneTF(2,this,'1h')">1h</button>
+                                <button class="tf-btn" onclick="setCloneTF(2,this,'4h')">4h</button>
+                                <button class="tf-btn" onclick="setCloneTF(2,this,'1d')">1D</button>
+                                <div class="tb-sep"></div>
+                                <div id="chart-ohlc-2" class="clone-ohlc"></div>
+                            </div>
+                        </div>
                         <div class="chart-wrapper">
                             <div id="chart-container-2"></div>
                         </div>
@@ -1496,8 +1521,26 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="ob-control" id="ob-control-3">
+                            <div class="ob-ctrl-top">
+                                <button class="ob-lev-btn" id="ob-lev-btn-3" ondblclick="toggleLevPopup()">20X</button>
+                            </div>
+                            <div class="ob-presets" id="ob-presets-3"></div>
+                        </div>
                     </div><!-- /.orderbook clone 3 -->
                     <div class="chart-mini-clone">
+                        <div class="clone-chart-top">
+                            <div class="chart-toolbar">
+                                <button class="tf-btn" onclick="setCloneTF(3,this,'1m')">1m</button>
+                                <button class="tf-btn" onclick="setCloneTF(3,this,'5m')">5m</button>
+                                <button class="tf-btn active" onclick="setCloneTF(3,this,'15m')">15m</button>
+                                <button class="tf-btn" onclick="setCloneTF(3,this,'1h')">1h</button>
+                                <button class="tf-btn" onclick="setCloneTF(3,this,'4h')">4h</button>
+                                <button class="tf-btn" onclick="setCloneTF(3,this,'1d')">1D</button>
+                                <div class="tb-sep"></div>
+                                <div id="chart-ohlc-3" class="clone-ohlc"></div>
+                            </div>
+                        </div>
                         <div class="chart-wrapper">
                             <div id="chart-container-3"></div>
                         </div>
@@ -1524,8 +1567,26 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="ob-control" id="ob-control-4">
+                            <div class="ob-ctrl-top">
+                                <button class="ob-lev-btn" id="ob-lev-btn-4" ondblclick="toggleLevPopup()">20X</button>
+                            </div>
+                            <div class="ob-presets" id="ob-presets-4"></div>
+                        </div>
                     </div><!-- /.orderbook clone 4 -->
                     <div class="chart-mini-clone">
+                        <div class="clone-chart-top">
+                            <div class="chart-toolbar">
+                                <button class="tf-btn" onclick="setCloneTF(4,this,'1m')">1m</button>
+                                <button class="tf-btn" onclick="setCloneTF(4,this,'5m')">5m</button>
+                                <button class="tf-btn active" onclick="setCloneTF(4,this,'15m')">15m</button>
+                                <button class="tf-btn" onclick="setCloneTF(4,this,'1h')">1h</button>
+                                <button class="tf-btn" onclick="setCloneTF(4,this,'4h')">4h</button>
+                                <button class="tf-btn" onclick="setCloneTF(4,this,'1d')">1D</button>
+                                <div class="tb-sep"></div>
+                                <div id="chart-ohlc-4" class="clone-ohlc"></div>
+                            </div>
+                        </div>
                         <div class="chart-wrapper">
                             <div id="chart-container-4"></div>
                         </div>
@@ -2858,13 +2919,14 @@ function obRefresh() {
 
 // ── Presets ──
 function renderPresets() {
-    document.getElementById('ob-presets').innerHTML = orderPresets.map((v, i) => {
+    const html = orderPresets.map((v, i) => {
         const lbl = v >= 1000 ? (v / 1000).toFixed(v % 1000 ? 1 : 0) + 'K' : String(v);
-        return `<button class="ob-preset-btn${i === activePresetIdx ? ' active' : ''}"
-            onclick="selectPreset(${i})"
-            ondblclick="editPreset(event,${i})"
-        >${lbl}</button>`;
+        return `<button class="ob-preset-btn${i === activePresetIdx ? ' active' : ''}" onclick="selectPreset(${i})" ondblclick="editPreset(event,${i})">${lbl}</button>`;
     }).join('');
+    [1, 2, 3, 4].forEach(s => {
+        const el = document.getElementById(s === 1 ? 'ob-presets' : `ob-presets-${s}`);
+        if (el) el.innerHTML = html;
+    });
 }
 
 function selectPreset(i) {
@@ -2963,23 +3025,33 @@ function vpRecord(price, size, isBuy) {
 }
 
 // ── Placed orders ──
-function placeOrder(price, side) {
+function placeOrder(price, side, slot) {
     const size = orderPresets[activePresetIdx];
-    placedOrders.push({ id: nextOrderId++, price: +price, size, side });
+    placedOrders.push({ id: nextOrderId++, price: +price, size, side, slot: slot || 1 });
     setTimeout(() => addPing(Math.round(120 + Math.random() * 330)), 40);
-    if (realAsks.length || realBids.length)
-        renderRealOB([...realAsks].reverse(), realBids);
+    _refreshSlotOB(slot || 1);
 }
 
 function cancelOrder(id) {
+    const o = placedOrders.find(o => o.id === id);
     placedOrders = placedOrders.filter(o => o.id !== id);
-    if (realAsks.length || realBids.length)
-        renderRealOB([...realAsks].reverse(), realBids);
+    if (o) _refreshSlotOB(o.slot || 1);
 }
-function cancelOrdersAtPrice(price) {
+function cancelOrdersAtPrice(price, slot) {
     placedOrders = placedOrders.filter(o => o.price !== price);
-    if (realAsks.length || realBids.length)
-        renderRealOB([...realAsks].reverse(), realBids);
+    _refreshSlotOB(slot || 1);
+}
+
+function _refreshSlotOB(slot) {
+    if (slot === 1) {
+        if (realAsks.length || realBids.length) renderRealOB([...realAsks].reverse(), realBids);
+    } else {
+        const book = obSlotBook[slot];
+        if (!book) return;
+        const asks = [...book.asks.entries()].map(([p,q])=>({price:+p,size:q})).sort((a,b)=>a.price-b.price).slice(0,20);
+        const bids = [...book.bids.entries()].map(([p,q])=>({price:+p,size:q})).sort((a,b)=>b.price-a.price).slice(0,20);
+        if (asks.length || bids.length) _renderOBRowsIntoSlot(slot, [...asks].reverse(), bids);
+    }
 }
 
 // ── OB rendering ──
@@ -3965,13 +4037,16 @@ function selectOBPair(pairId) {
         hdr.classList.add(isPerp ? 'ob-hdr-perp' : 'ob-hdr-spot');
     }
 
+    // Show/hide leverage button based on pair type
+    const levBtn = document.getElementById(slot === 1 ? 'ob-lev-btn' : `ob-lev-btn-${slot}`);
+    if (levBtn) levBtn.style.display = isPerp ? '' : 'none';
+
     if (slot === 1) {
         // Primary slot — use adapter system (handles both OB + chart 1)
         obSelectedPair   = pair;
         currentSym       = base;
         currentExchange  = pair.exchange.toLowerCase();
         currentType      = isPerp ? 'perp' : 'spot';
-        // Sync exchange selector button
         document.querySelectorAll('.exch-sel-btn').forEach(b => {
             b.classList.toggle('active',
                 b.dataset.exch === currentExchange && b.dataset.type === currentType);
@@ -3984,6 +4059,51 @@ function selectOBPair(pairId) {
     }
 
     closeOBPairPickerBtn();
+}
+
+function setCloneTF(slot, btn, tfStr) {
+    const toolbar = btn.closest('.chart-toolbar');
+    if (toolbar) toolbar.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const pair = obSlots[slot]?.pair;
+    if (!pair) return;
+
+    const newTf  = TF_MAP[tfStr];
+    obSlots[slot].tf = newTf;
+    const isPerp = (pair.type || '').toLowerCase() === 'perpetual';
+    const [base] = pair.symbol.split('/');
+    const ci     = slot - 2;
+
+    if (obSlots[slot].chartWS) { try { obSlots[slot].chartWS.close(); } catch(e){} obSlots[slot].chartWS = null; }
+
+    const adapter = ADAPTERS[`${pair.exchange.toLowerCase()}-${isPerp ? 'perp' : 'spot'}`];
+    if (!adapter) return;
+
+    fetch(adapter.klineUrl(base, newTf))
+        .then(r => r.json())
+        .then(raw => {
+            const data  = adapter.klineNorm(raw);
+            if (!data.length) return;
+            const cData = data.map(k => ({ time:k.time, open:k.open, high:k.high, low:k.low, close:k.close }));
+            const vData = data.map(k => ({ time:k.time, value:k.vol||0, color:k.close>=k.open?'#34d39930':'#f8717130' }));
+            if (cloneCandles[ci]) { cloneCandles[ci].setData(cData); }
+            if (cloneVols[ci])    { cloneVols[ci].setData(vData); }
+            if (cloneCharts[ci])  { cloneCharts[ci].timeScale().fitContent(); }
+        })
+        .catch(() => {});
+
+    const chartCBS = {
+        onDepth() {},
+        onKline({ time, open, high, low, close, vol }) {
+            if (cloneCandles[ci]) cloneCandles[ci].update({ time, open, high, low, close });
+            if (cloneVols[ci])    cloneVols[ci].update({ time, value:vol||0, color:close>=open?'#34d39930':'#f8717130' });
+            const ohlcEl = document.getElementById(`chart-ohlc-${slot}`);
+            if (ohlcEl) ohlcEl.textContent = `O ${fmt(open)}  H ${fmt(high)}  L ${fmt(low)}  C ${fmt(close)}`;
+        }
+    };
+    const r = adapter.wsConnect(base, newTf, chartCBS);
+    Promise.resolve(r).then(cws => { obSlots[slot].chartWS = cws; });
 }
 
 // Render asks/bids into any OB slot using the same HTML as renderRealOB
@@ -4006,10 +4126,20 @@ function _renderOBRowsIntoSlot(slot, displayAsks, displayBids) {
         const refPrice = cls === 'ask-row' ? bestAsk : bestBid;
         const pctDist  = refPrice > 0 ? Math.abs((r.price - refPrice) / refPrice * 100) : 0;
         const pctStr   = pctDist < 0.001 ? '—' : pctDist.toFixed(2) + '%';
-        return `<div class="ob-row ${cls}${lc}${bc}">
+        const ordersAtPrice = placedOrders.filter(o => o.price === r.price);
+        let badge = '';
+        if (ordersAtPrice.length > 0) {
+            const total = ordersAtPrice.reduce((s, o) => s + o.size, 0);
+            const side  = ordersAtPrice[0].side;
+            badge = `<span class="ob-order-badge${side === 'buy' ? ' ob-order-buy' : ' ob-order-sell'}"><span>${fmtK(total)}</span><span class="ob-order-x" onclick="event.stopPropagation();cancelOrdersAtPrice(${r.price},${slot})">×</span></span>`;
+        }
+        return `<div class="ob-row ${cls}${lc}${bc}"
+            onclick="placeOrder(${r.price},'buy',${slot})"
+            oncontextmenu="event.preventDefault();placeOrder(${r.price},'sell',${slot})">
             <span class="ob-pct">${pctStr}</span>
             <span class="ob-vol">${fmtK(usdVal)}</span>
             <span class="ob-spacer"></span>
+            ${badge}
             <span class="ob-price">${fmt(r.price)}</span>
             <div class="ob-bar" style="width:${barW}%"></div>
         </div>`;
@@ -4067,6 +4197,8 @@ function _connectCloneOBWS(slot, pair, base, qt) {
             onKline({ time, open, high, low, close, vol }) {
                 if (cloneCandles[ci]) cloneCandles[ci].update({ time, open, high, low, close });
                 if (cloneVols[ci])    cloneVols[ci].update({ time, value:vol||0, color:close>=open?'#34d39930':'#f8717130' });
+                const ohlcEl = document.getElementById(`chart-ohlc-${slot}`);
+                if (ohlcEl) ohlcEl.textContent = `O ${fmt(open)}  H ${fmt(high)}  L ${fmt(low)}  C ${fmt(close)}`;
             }
         };
         const chartWSResult = adapter.wsConnect(base, tfInterval, chartCBS);
