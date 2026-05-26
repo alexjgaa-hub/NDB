@@ -1405,22 +1405,6 @@
                     <!-- Chart Mini 1 (full controls) -->
                     <div class="chart-mini">
                         <div class="chart-mini-top">
-                            <div class="exch-sel-row">
-                                <button class="exch-sel-btn active" data-exch="binance" data-type="perp" onclick="selectExchange('binance','perp',this)">Binance<span>PERP</span></button>
-                                <button class="exch-sel-btn" data-exch="binance" data-type="spot" onclick="selectExchange('binance','spot',this)">Binance<span>Spot</span></button>
-                                <div class="exch-sel-sep"></div>
-                                <button class="exch-sel-btn" data-exch="bybit" data-type="perp" onclick="selectExchange('bybit','perp',this)">Bybit<span>PERP</span></button>
-                                <button class="exch-sel-btn" data-exch="bybit" data-type="spot" onclick="selectExchange('bybit','spot',this)">Bybit<span>Spot</span></button>
-                                <div class="exch-sel-sep"></div>
-                                <button class="exch-sel-btn" data-exch="kucoin" data-type="perp" onclick="selectExchange('kucoin','perp',this)">KuCoin<span>PERP</span></button>
-                                <button class="exch-sel-btn" data-exch="kucoin" data-type="spot" onclick="selectExchange('kucoin','spot',this)">KuCoin<span>Spot</span></button>
-                                <div class="exch-sel-sep"></div>
-                                <button class="exch-sel-btn" data-exch="bitget" data-type="perp" onclick="selectExchange('bitget','perp',this)">Bitget<span>PERP</span></button>
-                                <button class="exch-sel-btn" data-exch="bitget" data-type="spot" onclick="selectExchange('bitget','spot',this)">Bitget<span>Spot</span></button>
-                                <div class="exch-sel-sep"></div>
-                                <button class="exch-sel-btn" data-exch="gate" data-type="perp" onclick="selectExchange('gate','perp',this)">Gate<span>PERP</span></button>
-                                <button class="exch-sel-btn" data-exch="gate" data-type="spot" onclick="selectExchange('gate','spot',this)">Gate<span>Spot</span></button>
-                            </div>
                             <div class="chart-toolbar">
                                 <button class="tf-btn" onclick="setTF(this,'1m')">1m</button>
                                 <button class="tf-btn" onclick="setTF(this,'5m')">5m</button>
@@ -2140,8 +2124,7 @@ const WS_CBS = {
         candles.update({ time, open, high, low, close });
         volSeries.update({ time, value: vol||0,
             color: close >= open ? '#34d39930' : '#f8717130' });
-        cloneCandles.forEach(s => s && s.update({ time, open, high, low, close }));
-        cloneVols.forEach(s => s && s.update({ time, value: vol||0, color: close >= open ? '#34d39930' : '#f8717130' }));
+        // clone charts are fed independently via _connectCloneOBWS — not synced here
         updatePriceDisplay();
         vpRecord(close, vol||0, close >= open);
     }
@@ -2178,7 +2161,8 @@ const ADAPTERS = {
             ws.onmessage = e => {
                 const { stream, data } = JSON.parse(e.data);
                 if (stream?.includes('@depth20'))
-                    cbs.onDepth(data.a.map(([p,q])=>({price:+p,size:+q})), data.b.map(([p,q])=>({price:+p,size:+q})));
+                    // Spot stream uses bids/asks fields (Futures uses a/b — different format)
+                    cbs.onDepth(data.asks.map(([p,q])=>({price:+p,size:+q})), data.bids.map(([p,q])=>({price:+p,size:+q})));
                 else if (stream?.includes('@kline_')) {
                     const k = data.k;
                     cbs.onKline({time:k.t/1000,open:+k.o,high:+k.h,low:+k.l,close:+k.c,vol:+k.v});
@@ -2195,12 +2179,20 @@ const ADAPTERS = {
         wsConnect(sym, tf, cbs) {
             const ws = new WebSocket('wss://stream.bybit.com/v5/public/linear');
             const S = symPlain(sym);
+            const book = { asks: new Map(), bids: new Map() };
             ws.onopen = () => ws.send(JSON.stringify({op:'subscribe',args:[`orderbook.20.${S}`,`kline.${TF_BYBIT[tf]}.${S}`]}));
             ws.onmessage = e => {
                 const d = JSON.parse(e.data);
+                if (d.op === 'subscribe' && d.success === false) { console.warn(`[bybit-perp] subscribe failed: ${d.ret_msg}`); return; }
                 if (d.topic?.startsWith('orderbook')) {
                     const od = d.data||{};
-                    cbs.onDepth((od.a||[]).map(([p,q])=>({price:+p,size:+q})),(od.b||[]).map(([p,q])=>({price:+p,size:+q})));
+                    if (d.type === 'snapshot') { book.asks.clear(); book.bids.clear(); }
+                    (od.a||[]).forEach(([p,q]) => { if (+q === 0) book.asks.delete(p); else book.asks.set(p, +q); });
+                    (od.b||[]).forEach(([p,q]) => { if (+q === 0) book.bids.delete(p); else book.bids.set(p, +q); });
+                    cbs.onDepth(
+                        [...book.asks.entries()].map(([p,q])=>({price:+p,size:q})),
+                        [...book.bids.entries()].map(([p,q])=>({price:+p,size:q}))
+                    );
                 } else if (d.topic?.startsWith('kline')) {
                     const k = d.data?.[0]; if(!k) return;
                     cbs.onKline({time:+k.start/1000,open:+k.open,high:+k.high,low:+k.low,close:+k.close,vol:+k.volume});
@@ -2218,12 +2210,20 @@ const ADAPTERS = {
         wsConnect(sym, tf, cbs) {
             const ws = new WebSocket('wss://stream.bybit.com/v5/public/spot');
             const S = symPlain(sym);
+            const book = { asks: new Map(), bids: new Map() };
             ws.onopen = () => ws.send(JSON.stringify({op:'subscribe',args:[`orderbook.20.${S}`,`kline.${TF_BYBIT[tf]}.${S}`]}));
             ws.onmessage = e => {
                 const d = JSON.parse(e.data);
+                if (d.op === 'subscribe' && d.success === false) { console.warn(`[bybit-spot] subscribe failed: ${d.ret_msg}`); return; }
                 if (d.topic?.startsWith('orderbook')) {
                     const od = d.data||{};
-                    cbs.onDepth((od.a||[]).map(([p,q])=>({price:+p,size:+q})),(od.b||[]).map(([p,q])=>({price:+p,size:+q})));
+                    if (d.type === 'snapshot') { book.asks.clear(); book.bids.clear(); }
+                    (od.a||[]).forEach(([p,q]) => { if (+q === 0) book.asks.delete(p); else book.asks.set(p, +q); });
+                    (od.b||[]).forEach(([p,q]) => { if (+q === 0) book.bids.delete(p); else book.bids.set(p, +q); });
+                    cbs.onDepth(
+                        [...book.asks.entries()].map(([p,q])=>({price:+p,size:q})),
+                        [...book.bids.entries()].map(([p,q])=>({price:+p,size:q}))
+                    );
                 } else if (d.topic?.startsWith('kline')) {
                     const k = d.data?.[0]; if(!k) return;
                     cbs.onKline({time:+k.start/1000,open:+k.open,high:+k.high,low:+k.low,close:+k.close,vol:+k.volume});
@@ -2423,6 +2423,8 @@ function selectExchange(exchange, type, el) {
 }
 
 // ── Generic loadChart ──────────────────────────────────────────────
+let obNeedCenter = true; // declared here so loadChart can reference it on first call
+
 async function loadChart(sym, interval) {
     tfInterval = interval || 900;
     const id      = `${currentExchange}-${currentType}`;
@@ -2447,17 +2449,11 @@ async function loadChart(sym, interval) {
         lastBarTime  = cData[cData.length-1].time;
         lastOpen     = cData[cData.length-1].open;
         chart.timeScale().fitContent();
-        cloneCandles.forEach(s => s && s.setData(cData));
-        cloneVols.forEach(s => s && s.setData(vData));
-        cloneCharts.forEach(c => c && c.timeScale().fitContent());
     } catch(e) {
         console.error(`${id} REST error:`, e);
         const fb = generateCandles(currentPrice||100, 200, tfInterval);
         candles.setData(fb.cData);
         volSeries.setData(fb.vData);
-        cloneCandles.forEach(s => s && s.setData(fb.cData));
-        cloneVols.forEach(s => s && s.setData(fb.vData));
-        cloneCharts.forEach(c => c && c.timeScale().fitContent());
     }
 
     clearInProgress();
@@ -2823,7 +2819,6 @@ let orderPings = [];
 // ── OB leverage ──
 let obLeverage   = 20;
 let obLevPending = 20;
-let obNeedCenter = true;
 
 // ── Helpers ──
 function fmtK(v) {
@@ -3901,8 +3896,14 @@ function showPage(p) {
 // ══ ORDERBOOK PAIR PICKER ══
 
 let _obPickerSlot = 1; // which OB slot (1-4) the picker was opened for
-// per-slot state: { pair, ws }
-const obSlots = { 2: { ws: null }, 3: { ws: null }, 4: { ws: null } };
+// per-slot state: { pair, ws, chartWS }
+const obSlots = { 2: { ws: null, chartWS: null }, 3: { ws: null, chartWS: null }, 4: { ws: null, chartWS: null } };
+// per-slot live orderbook state (for snapshot+delta exchanges like Bybit)
+const obSlotBook = {
+    2: { asks: new Map(), bids: new Map() },
+    3: { asks: new Map(), bids: new Map() },
+    4: { asks: new Map(), bids: new Map() }
+};
 
 function openOBPairPicker(slot) {
     _obPickerSlot = slot || 1;
@@ -4025,36 +4026,68 @@ function _renderOBRowsIntoSlot(slot, displayAsks, displayBids) {
 
 function _connectCloneOBWS(slot, pair, base, qt) {
     if (obSlots[slot].ws) { try { obSlots[slot].ws.close(); } catch(e){} obSlots[slot].ws = null; }
+    if (obSlots[slot].chartWS) { try { obSlots[slot].chartWS.close(); } catch(e){} obSlots[slot].chartWS = null; }
+    obSlotBook[slot] = { asks: new Map(), bids: new Map() };
+
     const sym    = (base + (qt || 'USDT')).toLowerCase();
     const symUp  = sym.toUpperCase();
     const exch   = pair.exchange.toLowerCase();
     const isPerp = (pair.type || '').toLowerCase() === 'perpetual';
+    const ci     = slot - 2; // chart index: slot 2→0, 3→1, 4→2
 
-    function parseEntries(arr) {
-        return (arr||[]).map(([p,q])=>({price:+p,size:+q})).filter(r=>r.size>0);
+    // Apply OB update: type='snapshot' clears book first, type='delta' merges
+    function applyOBBook(type, rawA, rawB) {
+        const book = obSlotBook[slot];
+        if (type === 'snapshot') { book.asks.clear(); book.bids.clear(); }
+        (rawA || []).forEach(([p,q]) => { if (+q === 0) book.asks.delete(p); else book.asks.set(p, +q); });
+        (rawB || []).forEach(([p,q]) => { if (+q === 0) book.bids.delete(p); else book.bids.set(p, +q); });
+        const asks = [...book.asks.entries()].map(([p,q])=>({price:+p,size:q})).sort((a,b)=>a.price-b.price).slice(0,20);
+        const bids = [...book.bids.entries()].map(([p,q])=>({price:+p,size:q})).sort((a,b)=>b.price-a.price).slice(0,20);
+        _renderOBRowsIntoSlot(slot, [...asks].reverse(), bids);
     }
 
-    function onData(rawAsks, rawBids) {
-        const asks = parseEntries(rawAsks).sort((a,b)=>a.price-b.price);
-        const bids = parseEntries(rawBids).sort((a,b)=>b.price-a.price);
-        _renderOBRowsIntoSlot(slot, [...asks].reverse(), bids);
+    // Connect chart data (REST history + WS klines) via the exchange adapter
+    const adapterId = `${exch}-${isPerp ? 'perp' : 'spot'}`;
+    const adapter   = ADAPTERS[adapterId];
+    if (adapter) {
+        fetch(adapter.klineUrl(base, tfInterval))
+            .then(r => r.json())
+            .then(raw => {
+                const data  = adapter.klineNorm(raw);
+                if (!data.length) return;
+                const cData = data.map(k => ({ time:k.time, open:k.open, high:k.high, low:k.low, close:k.close }));
+                const vData = data.map(k => ({ time:k.time, value:k.vol||0, color:k.close>=k.open?'#34d39930':'#f8717130' }));
+                if (cloneCandles[ci]) { cloneCandles[ci].setData(cData); }
+                if (cloneVols[ci])    { cloneVols[ci].setData(vData); }
+                if (cloneCharts[ci])  { cloneCharts[ci].timeScale().fitContent(); }
+            })
+            .catch(() => {});
+
+        const chartCBS = {
+            onDepth() {},
+            onKline({ time, open, high, low, close, vol }) {
+                if (cloneCandles[ci]) cloneCandles[ci].update({ time, open, high, low, close });
+                if (cloneVols[ci])    cloneVols[ci].update({ time, value:vol||0, color:close>=open?'#34d39930':'#f8717130' });
+            }
+        };
+        const chartWSResult = adapter.wsConnect(base, tfInterval, chartCBS);
+        Promise.resolve(chartWSResult).then(cws => { obSlots[slot].chartWS = cws; });
     }
 
     let ws;
     if (exch === 'binance') {
-        // Futures: combined stream (data.a/data.b); Spot: direct stream (bids/asks)
         if (isPerp) {
             ws = new WebSocket(`wss://fstream.binance.com/stream?streams=${sym}@depth20@100ms`);
             ws.onmessage = e => {
                 const msg = JSON.parse(e.data);
                 const d   = msg.data || msg;
-                onData(d.a || [], d.b || []);
+                applyOBBook('snapshot', d.a || [], d.b || []);
             };
         } else {
             ws = new WebSocket(`wss://stream.binance.com:9443/ws/${sym}@depth20@100ms`);
             ws.onmessage = e => {
                 const d = JSON.parse(e.data);
-                onData(d.asks || [], d.bids || []);
+                applyOBBook('snapshot', d.asks || [], d.bids || []);
             };
         }
     } else if (exch === 'bybit') {
@@ -4063,11 +4096,18 @@ function _connectCloneOBWS(slot, pair, base, qt) {
         ws.onopen = () => ws.send(JSON.stringify({op:'subscribe',args:[`orderbook.20.${symUp}`]}));
         ws.onmessage = e => {
             const msg = JSON.parse(e.data);
-            if (!msg.data) return;
-            onData(msg.data.a || [], msg.data.b || []);
+            if (msg.op === 'subscribe' && msg.success === false) {
+                console.warn(`[OB slot${slot}] Bybit subscribe failed: ${msg.ret_msg} (symbol: ${symUp})`);
+                return;
+            }
+            if (!msg.data || !msg.topic) return;
+            // Bybit sends snapshot first, then delta increments — maintain book state
+            applyOBBook(msg.type || 'delta', msg.data.a || [], msg.data.b || []);
         };
     } else {
-        _fetchCloneOBSnapshot(slot, pair, symUp, onData);
+        _fetchCloneOBSnapshot(slot, pair, symUp, (rawAsks, rawBids) => {
+            applyOBBook('snapshot', rawAsks, rawBids);
+        });
         return;
     }
     ws.onerror = e => console.error(`ob-slot${slot} WS error`, e);
@@ -4621,8 +4661,7 @@ setInterval(() => {
     renderBots();
     const total = bots.reduce((s,b) => s + b.pnl, 0) + 4230;
     const el = document.getElementById('total-pnl');
-    el.textContent = fmtD(total);
-    el.style.color = total >= 0 ? 'var(--green)' : 'var(--red)';
+    if (el) { el.textContent = fmtD(total); el.style.color = total >= 0 ? 'var(--green)' : 'var(--red)'; }
 }, 1000);
 </script>
 
