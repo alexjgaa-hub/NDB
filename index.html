@@ -2180,15 +2180,10 @@ const ADAPTERS = {
             const ws = new WebSocket('wss://stream.bybit.com/v5/public/linear');
             const S = symPlain(sym);
             const book = { asks: new Map(), bids: new Map() };
-            ws.onopen = () => ws.send(JSON.stringify({op:'subscribe',args:[`orderbook.20.${S}`,`kline.${TF_BYBIT[tf]}.${S}`]}));
+            ws.onopen = () => ws.send(JSON.stringify({op:'subscribe',args:[`orderbook.50.${S}`,`kline.${TF_BYBIT[tf]}.${S}`]}));
             ws.onmessage = e => {
                 const d = JSON.parse(e.data);
-                if (d.op === 'subscribe' && d.success === false) {
-                    console.warn(`[bybit-perp] subscribe failed: ${d.ret_msg}`);
-                    const lbl = document.getElementById('ob-pair-label-1');
-                    if (lbl) lbl.textContent += ' — not on Bybit';
-                    return;
-                }
+                if (d.op === 'subscribe' && d.success === false) { console.warn(`[bybit-perp] subscribe failed: ${d.ret_msg}`); return; }
                 if (d.topic?.startsWith('orderbook')) {
                     const od = d.data||{};
                     if (d.type === 'snapshot') { book.asks.clear(); book.bids.clear(); }
@@ -2216,15 +2211,10 @@ const ADAPTERS = {
             const ws = new WebSocket('wss://stream.bybit.com/v5/public/spot');
             const S = symPlain(sym);
             const book = { asks: new Map(), bids: new Map() };
-            ws.onopen = () => ws.send(JSON.stringify({op:'subscribe',args:[`orderbook.20.${S}`,`kline.${TF_BYBIT[tf]}.${S}`]}));
+            ws.onopen = () => ws.send(JSON.stringify({op:'subscribe',args:[`orderbook.50.${S}`,`kline.${TF_BYBIT[tf]}.${S}`]}));
             ws.onmessage = e => {
                 const d = JSON.parse(e.data);
-                if (d.op === 'subscribe' && d.success === false) {
-                    console.warn(`[bybit-spot] subscribe failed: ${d.ret_msg}`);
-                    const lbl = document.getElementById('ob-pair-label-1');
-                    if (lbl) lbl.textContent += ' — not on Bybit';
-                    return;
-                }
+                if (d.op === 'subscribe' && d.success === false) { console.warn(`[bybit-spot] subscribe failed: ${d.ret_msg}`); return; }
                 if (d.topic?.startsWith('orderbook')) {
                     const od = d.data||{};
                     if (d.type === 'snapshot') { book.asks.clear(); book.bids.clear(); }
@@ -4102,13 +4092,11 @@ function _connectCloneOBWS(slot, pair, base, qt) {
     } else if (exch === 'bybit') {
         const cat = isPerp ? 'linear' : 'spot';
         ws = new WebSocket(`wss://stream.bybit.com/v5/public/${cat}`);
-        ws.onopen = () => ws.send(JSON.stringify({op:'subscribe',args:[`orderbook.20.${symUp}`]}));
+        ws.onopen = () => ws.send(JSON.stringify({op:'subscribe',args:[`orderbook.50.${symUp}`]}));
         ws.onmessage = e => {
             const msg = JSON.parse(e.data);
             if (msg.op === 'subscribe' && msg.success === false) {
                 console.warn(`[OB slot${slot}] Bybit subscribe failed: ${msg.ret_msg} (symbol: ${symUp})`);
-                const lbl = document.getElementById(`ob-pair-label-${slot}`);
-                if (lbl) lbl.textContent += ' — not on Bybit';
                 return;
             }
             if (!msg.data || !msg.topic) return;
