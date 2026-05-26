@@ -757,6 +757,25 @@
         ::-webkit-scrollbar-track { background:transparent; }
         ::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
 
+        /* ── ANALYTICS PAGE ── */
+        .analytics-page {
+            flex: 1; display: flex; flex-direction: column;
+            background: var(--surface2); overflow: auto;
+        }
+        .analytics-hdr {
+            padding: 16px 24px; border-bottom: 1px solid var(--border);
+            background: var(--surface); flex-shrink: 0;
+        }
+        .analytics-title { font-size: 15px; font-weight: 700; color: var(--text); }
+        .analytics-placeholder {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 12px;
+            color: var(--muted);
+        }
+        .analytics-empty-icon { font-size: 48px; opacity: 0.4; }
+        .analytics-empty-title { font-size: 16px; font-weight: 600; color: var(--text); }
+        .analytics-empty-sub { font-size: 12px; }
+
         /* ── CLUSTER CONTROLS BAR ── */
         .cluster-ctrl {
             padding: 4px 10px; border-bottom: 1px solid var(--border);
@@ -1064,42 +1083,11 @@
         </div>
     </div>
 
-    <span id="header-price" style="font-size:14px;font-weight:bold">$67,234.50</span>
-    <span id="header-change" style="font-size:11px;color:var(--green)">+2.14%</span>
-
-    <div class="v-div"></div>
-
-    <div class="exchange-tabs">
-        <div class="exchange-tab active" onclick="switchExchange(this,'Binance')">Binance</div>
-        <div class="exchange-tab" onclick="switchExchange(this,'Bybit')">Bybit</div>
-        <div class="exchange-tab" onclick="switchExchange(this,'OKX')">OKX</div>
-        <div class="exchange-tab" onclick="switchExchange(this,'HyperLiquid')">HyperLiquid</div>
-    </div>
-
-    <div class="v-div"></div>
-
-    <span style="color:var(--muted);font-size:10px">LEVERAGE</span>
-    <button class="leverage-btn" id="lev-btn" onclick="openLevModal()">20×</button>
-
     <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">☀</button>
 
     <div class="v-div"></div>
     <a href="analytics.html" style="padding:4px 14px;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:12px;font-weight:500;text-decoration:none;transition:all 0.15s" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Analytics →</a>
-
-    <div class="header-right">
-        <div class="stat-block">
-            <span class="stat-label">BALANCE</span>
-            <span class="stat-value">$124,820.45</span>
-        </div>
-        <div class="stat-block">
-            <span class="stat-label">MARGIN USED</span>
-            <span class="stat-value" style="color:var(--yellow)">$8,411.25</span>
-        </div>
-        <div class="stat-block">
-            <span class="stat-label">24H PNL</span>
-            <span class="stat-value" id="total-pnl" style="color:var(--green)">+$4,570.20</span>
-        </div>
-    </div>
+</div>
 </div>
 
 <div class="app-body">
@@ -1113,17 +1101,14 @@
         <div class="sb-nav">
             <div class="sb-item"><span class="sb-icon"></span>Projects</div>
             <div class="sb-item"><span class="sb-icon"></span>Performance</div>
-            <div class="sb-item"><span class="sb-icon"></span>Users</div>
-            <div class="sb-item"><span class="sb-icon"></span>Users subscriptions</div>
-            <div class="sb-item"><span class="sb-icon"></span>Telegram logins</div>
             <div class="sb-divider"></div>
             <div class="sb-section">
                 <div class="sb-section-hdr">SOIL <span>▾</span></div>
                 <div class="sb-sub">
-                    <div class="sb-item"><span class="sb-icon"></span>Summary</div>
-                    <div class="sb-item active"><span class="sb-icon"></span>Trading Panel</div>
+                    <div class="sb-item active" onclick="showPage('trading')"><span class="sb-icon"></span>Trading Panel</div>
                     <div class="sb-item"><span class="sb-icon"></span>Tasks</div>
                     <div class="sb-item"><span class="sb-icon"></span>Arbitrage tasks</div>
+                    <div class="sb-item" onclick="showPage('analytics')"><span class="sb-icon"></span>Analytics</div>
                     <div class="sb-item" id="sb-stats-hdr" onclick="toggleSbStats()"><span class="sb-icon"></span>Statistics <span id="sb-stats-arrow" style="margin-left:auto;font-size:10px">▾</span></div>
                     <div class="sb-sub" id="sb-stats-sub" style="display:none">
                         <div class="sb-item"><span class="sb-icon"></span>Liquidity</div>
@@ -1140,57 +1125,6 @@
     <!-- ─── MAIN CONTENT ─── -->
     <div class="main-content">
 
-        <!-- Exchange stats -->
-        <div class="exchange-stats">
-            <div class="exch-card">
-                <canvas class="exch-donut" id="donut-binance" width="52" height="52"></canvas>
-                <div class="exch-info">
-                    <div class="exch-name">Binance</div>
-                    <div class="exch-balances">
-                        <div class="exch-row"><span class="exch-dot" style="background:#306eb2"></span><span class="exch-sym">FOLKS</span><span class="exch-val">0</span></div>
-                        <div class="exch-row"><span class="exch-dot" style="background:#d9ad70"></span><span class="exch-sym">USDT</span><span class="exch-val">29,713</span></div>
-                    </div>
-                    <div class="exch-used">
-                        <div class="exch-used-label">Used</div>
-                        <div class="exch-row"><span class="exch-dot" style="background:#306eb2"></span><span class="exch-sym">FOLKS</span><span class="exch-val">0</span></div>
-                        <div class="exch-row"><span class="exch-dot" style="background:#d9ad70"></span><span class="exch-sym">USDT</span><span class="exch-val">0</span></div>
-                    </div>
-                </div>
-                <span class="exch-arrow">›</span>
-            </div>
-            <div class="exch-card">
-                <canvas class="exch-donut" id="donut-bitmart" width="52" height="52"></canvas>
-                <div class="exch-info">
-                    <div class="exch-name">BitMart</div>
-                    <div class="exch-balances">
-                        <div class="exch-row"><span class="exch-dot" style="background:#306eb2"></span><span class="exch-sym">SOIL</span><span class="exch-val">54,694</span></div>
-                        <div class="exch-row"><span class="exch-dot" style="background:#d9ad70"></span><span class="exch-sym">USDT</span><span class="exch-val">4,297.3</span></div>
-                    </div>
-                    <div class="exch-used">
-                        <div class="exch-used-label">Used</div>
-                        <div class="exch-row"><span class="exch-dot" style="background:#306eb2"></span><span class="exch-sym">SOIL</span><span class="exch-val">1,200</span></div>
-                        <div class="exch-row"><span class="exch-dot" style="background:#d9ad70"></span><span class="exch-sym">USDT</span><span class="exch-val">850</span></div>
-                    </div>
-                </div>
-                <span class="exch-arrow">›</span>
-            </div>
-            <div class="exch-card">
-                <canvas class="exch-donut" id="donut-gateio" width="52" height="52"></canvas>
-                <div class="exch-info">
-                    <div class="exch-name">Gate.io</div>
-                    <div class="exch-balances">
-                        <div class="exch-row"><span class="exch-dot" style="background:#306eb2"></span><span class="exch-sym">SOIL</span><span class="exch-val">122,635</span></div>
-                        <div class="exch-row"><span class="exch-dot" style="background:#d9ad70"></span><span class="exch-sym">USDT</span><span class="exch-val">4,787</span></div>
-                    </div>
-                    <div class="exch-used">
-                        <div class="exch-used-label">Used</div>
-                        <div class="exch-row"><span class="exch-dot" style="background:#306eb2"></span><span class="exch-sym">SOIL</span><span class="exch-val">5,400</span></div>
-                        <div class="exch-row"><span class="exch-dot" style="background:#d9ad70"></span><span class="exch-sym">USDT</span><span class="exch-val">320</span></div>
-                    </div>
-                </div>
-                <span class="exch-arrow">›</span>
-            </div>
-        </div>
 
         <div class="main-inner">
         <div class="center-col">
@@ -1398,6 +1332,18 @@
         </div><!-- /.orderbook -->
 
         </div><!-- /.main-inner -->
+
+        <!-- ═══ ANALYTICS PAGE ═══ -->
+        <div class="analytics-page" id="analytics-page" style="display:none">
+            <div class="analytics-hdr">
+                <span class="analytics-title">Analytics</span>
+            </div>
+            <div class="analytics-placeholder">
+                <div class="analytics-empty-icon">📊</div>
+                <div class="analytics-empty-title">Analytics — в разработке</div>
+                <div class="analytics-empty-sub">Здесь будут графики и статистика по стратегиям</div>
+            </div>
+        </div>
 
     </div><!-- /.main-content -->
 
@@ -3028,6 +2974,21 @@ function setupOBHover() {
 }
 
 // ══ SIDEBAR ══
+function showPage(name) {
+    const mainInner = document.querySelector('.main-inner');
+    const analyticsPage = document.getElementById('analytics-page');
+    document.querySelectorAll('.sb-item').forEach(el => el.classList.remove('active'));
+    if (name === 'analytics') {
+        mainInner.style.display = 'none';
+        analyticsPage.style.display = 'flex';
+        document.querySelector('.sb-item[onclick*="analytics"]').classList.add('active');
+    } else {
+        mainInner.style.display = '';
+        analyticsPage.style.display = 'none';
+        document.querySelector('.sb-item[onclick*="trading"]').classList.add('active');
+    }
+}
+
 function toggleSbStats() {
     const sub = document.getElementById('sb-stats-sub');
     const arrow = document.getElementById('sb-stats-arrow');
