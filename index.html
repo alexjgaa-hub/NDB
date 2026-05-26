@@ -988,6 +988,22 @@
         }
         .sb-section-hdr:hover { color: var(--sidebar-text); }
         .sb-sub .sb-item { font-size: 12px; padding: 6px 16px 6px 20px; }
+        /* ── PROJECT PICKER ── */
+        .sb-proj-picker { display:flex; align-items:center; justify-content:space-between; padding:8px 16px 6px; cursor:pointer; user-select:none; transition:background 0.12s; }
+        .sb-proj-picker:hover { background:rgba(255,255,255,0.04); }
+        .sb-proj-name { color:var(--sidebar-text); font-size:13px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
+        .sb-proj-arrow { font-size:10px; color:var(--sidebar-muted); transition:transform 0.15s; flex-shrink:0; margin-left:6px; }
+        .sb-proj-arrow.open { transform:rotate(180deg); }
+        .sb-proj-dropdown { border-top:1px solid var(--sidebar-border); border-bottom:1px solid var(--sidebar-border); }
+        .sb-proj-dropdown.hidden { display:none; }
+        .sb-proj-search-wrap { padding:8px 10px 4px; }
+        .sb-proj-search { width:100%; box-sizing:border-box; padding:5px 9px; border:1px solid var(--sidebar-border); border-radius:5px; background:rgba(255,255,255,0.06); color:var(--sidebar-text); font-family:var(--font); font-size:12px; outline:none; }
+        .sb-proj-search::placeholder { color:var(--sidebar-muted); }
+        .sb-proj-list { max-height:220px; overflow-y:auto; padding:4px 0 6px; }
+        .sb-proj-option { padding:7px 16px; font-size:13px; color:var(--sidebar-muted); cursor:pointer; transition:color 0.1s, background 0.1s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .sb-proj-option:hover { color:var(--sidebar-text); background:rgba(255,255,255,0.04); }
+        .sb-proj-option.selected { color:var(--sidebar-text); font-weight:600; }
+        .sb-proj-empty { padding:10px 16px; font-size:12px; color:var(--sidebar-muted); }
 
         /* ── MAIN CONTENT ── */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
@@ -1178,7 +1194,16 @@
         <div class="sb-item"><span class="sb-icon"></span>Performance</div>
         <div class="sb-divider"></div>
         <div class="sb-section">
-            <div class="sb-section-hdr">SOIL <span>▾</span></div>
+            <div class="sb-proj-picker" id="sb-proj-picker" onclick="toggleProjPicker(event)">
+                <span class="sb-proj-name" id="sb-proj-name">Select project</span>
+                <span class="sb-proj-arrow" id="sb-proj-arrow">▾</span>
+            </div>
+            <div class="sb-proj-dropdown hidden" id="sb-proj-dropdown" onclick="event.stopPropagation()">
+                <div class="sb-proj-search-wrap">
+                    <input class="sb-proj-search" id="sb-proj-search" type="text" placeholder="Search projects..." oninput="filterProjList(this.value)" autocomplete="off">
+                </div>
+                <div class="sb-proj-list" id="sb-proj-list"></div>
+            </div>
             <div class="sb-sub">
                 <div class="sb-item active" onclick="showPage('trading')"><span class="sb-icon"></span>Trading Panel</div>
                 <div class="sb-item"><span class="sb-icon"></span>Tasks</div>
@@ -3209,6 +3234,69 @@ function toggleSidebar() {
     btn.textContent = sb.classList.contains('collapsed') ? '›' : '‹';
 }
 
+// ── PROJECT PICKER ──
+let currentProject = null;
+function _initProjPicker() {
+    const savedId = parseInt(localStorage.getItem('ndb_current_project'));
+    if (savedId) {
+        const pr = projectsList.find(p => p.id === savedId);
+        if (pr) { currentProject = pr; const el = document.getElementById('sb-proj-name'); if (el) el.textContent = pr.title; }
+    }
+}
+
+function toggleProjPicker(e) {
+    e.stopPropagation();
+    const dd    = document.getElementById('sb-proj-dropdown');
+    const arrow = document.getElementById('sb-proj-arrow');
+    const isOpen = !dd.classList.contains('hidden');
+    if (isOpen) {
+        dd.classList.add('hidden');
+        arrow.classList.remove('open');
+    } else {
+        _renderProjList('');
+        dd.classList.remove('hidden');
+        arrow.classList.add('open');
+        const inp = document.getElementById('sb-proj-search');
+        inp.value = '';
+        setTimeout(() => inp.focus(), 50);
+    }
+}
+
+function _renderProjList(filter) {
+    const list = document.getElementById('sb-proj-list');
+    const q = filter.toLowerCase();
+    const filtered = projectsList.filter(p => p.title.toLowerCase().includes(q));
+    if (!filtered.length) {
+        list.innerHTML = '<div class="sb-proj-empty">No projects</div>';
+        return;
+    }
+    list.innerHTML = filtered.map(p => `
+        <div class="sb-proj-option${currentProject?.id === p.id ? ' selected' : ''}" onclick="selectProject(${p.id})">${p.title}</div>
+    `).join('');
+}
+
+function filterProjList(val) { _renderProjList(val); }
+
+function selectProject(id) {
+    const pr = projectsList.find(p => p.id === id);
+    if (!pr) return;
+    currentProject = pr;
+    localStorage.setItem('ndb_current_project', id);
+    document.getElementById('sb-proj-name').textContent = pr.title;
+    document.getElementById('sb-proj-dropdown').classList.add('hidden');
+    document.getElementById('sb-proj-arrow').classList.remove('open');
+    showPage('trading');
+}
+
+document.addEventListener('click', function() {
+    const dd = document.getElementById('sb-proj-dropdown');
+    if (dd && !dd.classList.contains('hidden')) {
+        dd.classList.add('hidden');
+        const arrow = document.getElementById('sb-proj-arrow');
+        if (arrow) arrow.classList.remove('open');
+    }
+});
+
 function toggleSbStats() {
     const sub = document.getElementById('sb-stats-sub');
     const arrow = document.getElementById('sb-stats-arrow');
@@ -3375,6 +3463,7 @@ function showPage(p) {
 let projectsList = JSON.parse(localStorage.getItem('ndb_projects') || '[]');
 let currentProjectId = null;
 let _projIdSeq = projectsList.length ? Math.max(...projectsList.map(pr => pr.id)) + 1 : 1;
+_initProjPicker();
 
 function renderProjectsList() {
     const tbody = document.getElementById('projects-tbody');
