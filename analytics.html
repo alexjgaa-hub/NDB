@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fibonacci MM — Analytics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg:      #0d1117;
+            --surface: #131c2e;
+            --surface2:#0f1623;
+            --border:  #1f2a3d;
+            --green:   #5bba89;
+            --red:     #cd4141;
+            --gold:    #d9ad70;
+            --text:    #e5edf6;
+            --muted:   #8594a8;
+            --font:    'Figtree', ui-sans-serif, system-ui, sans-serif;
+        }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 13px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            height: 48px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 14px;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        .logo { color: var(--gold); font-weight: 700; font-size: 14px; letter-spacing: 1px; white-space: nowrap; display: flex; flex-direction: column; line-height: 1.2; }
+        .logo span { font-size: 10px; font-weight: 500; opacity: 0.75; letter-spacing: 1.5px; }
+        .v-div { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--muted);
+            font-size: 12px;
+            font-family: var(--font);
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.15s;
+            cursor: pointer;
+            background: transparent;
+        }
+        .back-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+        .page-label { font-size: 13px; font-weight: 600; color: var(--text); letter-spacing: 0.3px; }
+
+        /* Pair selector */
+        .pair-sel {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .pair-sel-label { color: var(--muted); font-size: 10px; letter-spacing: 0.5px; }
+        .pair-input {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 5px;
+            outline: none;
+            width: 120px;
+            text-transform: uppercase;
+        }
+        .pair-input:focus { border-color: var(--gold); }
+        .pair-go {
+            padding: 4px 10px;
+            background: rgba(217,173,112,0.12);
+            border: 1px solid var(--gold);
+            border-radius: 5px;
+            color: var(--gold);
+            font-size: 12px;
+            font-family: var(--font);
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .pair-go:hover { background: rgba(217,173,112,0.22); }
+
+        /* Current price in header */
+        .hdr-price { font-size: 14px; font-weight: 700; margin-left: 4px; }
+
+        /* ── TF BAR ── */
+        .an-tf-bar {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 7px 14px;
+            flex-shrink: 0;
+        }
+        .atf-label { color: var(--muted); font-size: 10px; letter-spacing: 0.5px; margin-right: 4px; }
+        .atf-btn {
+            padding: 3px 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: transparent;
+            color: var(--muted);
+            font-family: var(--font);
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .atf-btn:hover:not(.active) { color: var(--text); border-color: var(--muted); }
+        .atf-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(217,173,112,0.1); }
+        .atf-refresh {
+            padding: 3px 9px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: transparent;
+            color: var(--muted);
+            font-size: 13px;
+            cursor: pointer;
+            margin-left: 6px;
+        }
+        .atf-refresh:hover { color: var(--text); }
+        .atf-status { margin-left: auto; font-size: 11px; color: var(--muted); }
+
+        /* ── GRID ── */
+        .an-scroll { flex: 1; overflow-y: auto; padding: 12px; }
+        .an-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        .an-block {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 260px;
+        }
+        .an-block.wide { grid-column: 1 / -1; height: 300px; }
+
+        .ab-hdr {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.6px;
+            color: var(--muted);
+            flex-shrink: 0;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .ab-val { color: var(--text); font-size: 13px; font-weight: 700; }
+        .ab-dpos { color: var(--green); font-size: 10px; }
+        .ab-dneg { color: var(--red); font-size: 10px; }
+        .ab-legend { margin-left: auto; display: flex; gap: 8px; align-items: center; font-size: 10px; color: var(--muted); flex-shrink: 0; }
+        .ab-leg { display: flex; align-items: center; gap: 3px; }
+        .ab-leg i { width: 12px; height: 2px; display: inline-block; border-radius: 1px; }
+
+        .ab-body { flex: 1; position: relative; min-height: 0; overflow: hidden; }
+        .ab-body > div { position: absolute; inset: 0; }
+        .ab-body canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="logo">FIBONACCI<span>MARKET MAKER</span></div>
+    <div class="v-div"></div>
+    <a class="back-btn" href="index.html">← Trading</a>
+    <div class="v-div"></div>
+    <span class="page-label">Analytics</span>
+    <div class="v-div"></div>
+    <div class="pair-sel">
+        <span class="pair-sel-label">PAIR</span>
+        <input class="pair-input" id="pair-input" type="text" value="BTC" placeholder="BTC" onkeydown="if(event.key==='Enter')loadPair()">
+        <button class="pair-go" onclick="loadPair()">Go</button>
+    </div>
+    <span class="hdr-price" id="hdr-price">—</span>
+</div>
+
+<!-- TF BAR -->
+<div class="an-tf-bar">
+    <span class="atf-label">TF</span>
+    <button class="atf-btn" onclick="setTF('5m',this)">5m</button>
+    <button class="atf-btn" onclick="setTF('15m',this)">15m</button>
+    <button class="atf-btn active" onclick="setTF('1h',this)">1h</button>
+    <button class="atf-btn" onclick="setTF('4h',this)">4h</button>
+    <button class="atf-btn" onclick="setTF('1d',this)">1D</button>
+    <button class="atf-refresh" onclick="refreshAll()" title="Refresh">↺</button>
+    <span class="atf-status" id="atf-status">—</span>
+</div>
+
+<!-- GRID -->
+<div class="an-scroll">
+    <div class="an-grid">
+
+        <!-- Open Interest -->
+        <div class="an-block">
+            <div class="ab-hdr">
+                OPEN INTEREST
+                <span class="ab-val" id="oi-val"></span>
+                <span id="oi-chg"></span>
+                <span class="ab-legend"><span class="ab-leg"><i style="background:#5bba89"></i> OI $</span></span>
+            </div>
+            <div class="ab-body"><div id="chart-oi"></div></div>
+        </div>
+
+        <!-- CVD -->
+        <div class="an-block">
+            <div class="ab-hdr">
+                CVD
+                <span class="ab-val" id="cvd-val"></span>
+                <span class="ab-legend">
+                    <span class="ab-leg"><i style="background:#5bba89"></i> Buy</span>
+                    <span class="ab-leg"><i style="background:#cd4141"></i> Sell</span>
+                    <span class="ab-leg"><i style="background:#d9ad70"></i> Cumul</span>
+                </span>
+            </div>
+            <div class="ab-body"><div id="chart-cvd"></div></div>
+        </div>
+
+        <!-- Long/Short -->
+        <div class="an-block">
+            <div class="ab-hdr">
+                LONG / SHORT RATIO
+                <span class="ab-val" id="ls-val"></span>
+                <span class="ab-legend">
+                    <span class="ab-leg"><i style="background:#d9ad70"></i> Top Acct</span>
+                    <span class="ab-leg"><i style="background:#5bba89"></i> Top Pos</span>
+                    <span class="ab-leg"><i style="background:#8594a8"></i> Global</span>
+                </span>
+            </div>
+            <div class="ab-body"><div id="chart-ls"></div></div>
+        </div>
+
+        <!-- Liquidations -->
+        <div class="an-block">
+            <div class="ab-hdr">
+                LIQUIDATIONS
+                <span class="ab-val" id="liq-val"></span>
+                <span class="ab-legend">
+                    <span class="ab-leg"><i style="background:#cd4141"></i> Long liq</span>
+                    <span class="ab-leg"><i style="background:#5bba89"></i> Short liq</span>
+                </span>
+            </div>
+            <div class="ab-body"><canvas id="liq-canvas"></canvas></div>
+        </div>
+
+        <!-- OB Heatmap -->
+        <div class="an-block wide">
+            <div class="ab-hdr">
+                ORDER BOOK HEATMAP
+                <span style="font-weight:400;font-size:10px;margin-left:2px" id="heat-info">— connecting…</span>
+                <span class="ab-legend">
+                    <span class="ab-leg"><i style="background:#5bba89"></i> Bids</span>
+                    <span class="ab-leg"><i style="background:#cd4141"></i> Asks</span>
+                </span>
+            </div>
+            <div class="ab-body"><canvas id="heat-canvas"></canvas></div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+<script>
+// ── State ─────────────────────────────────────────────────────────
+let sym   = 'BTCUSDT';
+let tf    = '1h';
+let price = 0;
+
+const liqEvents = [];
+const heatBuf   = [];
+const HEAT_MAX  = 600;
+
+let depthWS = null;
+let liqWS   = null;
+let heatTimer = null;
+
+const charts = {};
+let liqCvs, heatCvs;
+let inited = false;
+
+// ── Init ──────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+    initCharts();
+    loadPair();
+    startPriceTicker();
+});
+
+function loadPair() {
+    const raw = document.getElementById('pair-input').value.trim().toUpperCase();
+    sym = raw.replace('USDT','') + 'USDT';
+    document.getElementById('pair-input').value = sym.replace('USDT','');
+    document.getElementById('atf-status').textContent = sym;
+    refreshAll();
+    reconnectWS();
+}
+
+function setTF(t, btn) {
+    tf = t;
+    document.querySelectorAll('.atf-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    refreshAll();
+}
+
+function refreshAll() {
+    loadOI();
+    loadCVD();
+    loadLS();
+}
+
+// ── Lightweight Charts init ───────────────────────────────────────
+function initCharts() {
+    if (inited) return;
+    inited = true;
+
+    const theme = {
+        autoSize: true,
+        layout: { background: { color: 'transparent' }, textColor: '#8594a8' },
+        grid: { vertLines: { color: '#1f2a3d' }, horzLines: { color: '#1f2a3d' } },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+        rightPriceScale: { borderColor: '#1f2a3d' },
+        timeScale: { borderColor: '#1f2a3d', timeVisible: true, secondsVisible: false },
+    };
+
+    const oiC = LightweightCharts.createChart(document.getElementById('chart-oi'), theme);
+    charts.oi = { chart: oiC, line: oiC.addLineSeries({ color: '#5bba89', lineWidth: 2, priceLineVisible: false }) };
+
+    const cvdC = LightweightCharts.createChart(document.getElementById('chart-cvd'), theme);
+    cvdC.applyOptions({ leftPriceScale: { visible: true, borderColor: '#1f2a3d' } });
+    charts.cvd = {
+        chart: cvdC,
+        hist: cvdC.addHistogramSeries({ priceLineVisible: false, lastValueVisible: false }),
+        line: cvdC.addLineSeries({ color: '#d9ad70', lineWidth: 1, priceScaleId: 'left', priceLineVisible: false, lastValueVisible: false }),
+    };
+
+    const lsC = LightweightCharts.createChart(document.getElementById('chart-ls'), theme);
+    charts.ls = {
+        chart: lsC,
+        acct:   lsC.addLineSeries({ color: '#d9ad70', lineWidth: 2, priceLineVisible: false }),
+        pos:    lsC.addLineSeries({ color: '#5bba89', lineWidth: 2, priceLineVisible: false }),
+        global: lsC.addLineSeries({ color: '#8594a8', lineWidth: 1, priceLineVisible: false }),
+    };
+
+    liqCvs  = document.getElementById('liq-canvas');
+    heatCvs = document.getElementById('heat-canvas');
+
+    const sizeCanvas = (cvs, fn) => {
+        const p = cvs.parentElement;
+        const resize = () => { cvs.width = p.offsetWidth; cvs.height = p.offsetHeight; fn(); };
+        resize();
+        new ResizeObserver(resize).observe(p);
+    };
+    sizeCanvas(liqCvs,  renderLiq);
+    sizeCanvas(heatCvs, renderHeat);
+}
+
+// ── REST: Open Interest ───────────────────────────────────────────
+async function loadOI() {
+    try {
+        const r = await fetch(`https://fapi.binance.com/fapi/v1/openInterestHist?symbol=${sym}&period=${tf}&limit=288`);
+        const d = await r.json();
+        if (!Array.isArray(d) || !d.length) return;
+        charts.oi.line.setData(d.map(x => ({ time: Math.floor(x.timestamp/1000), value: +x.sumOpenInterestValue })));
+        charts.oi.chart.timeScale().fitContent();
+        const last = d[d.length-1], prev = d[d.length-2];
+        document.getElementById('oi-val').textContent = fmtB(+last.sumOpenInterestValue);
+        if (prev) {
+            const pct = ((+last.sumOpenInterestValue / +prev.sumOpenInterestValue) - 1) * 100;
+            const el = document.getElementById('oi-chg');
+            el.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+            el.className = pct >= 0 ? 'ab-dpos' : 'ab-dneg';
+        }
+    } catch {}
+}
+
+// ── REST: CVD ─────────────────────────────────────────────────────
+async function loadCVD() {
+    try {
+        const r = await fetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${sym}&interval=${tf}&limit=288`);
+        const d = await r.json();
+        if (!Array.isArray(d) || !d.length) return;
+        let cum = 0;
+        const hist = [], line = [];
+        d.forEach(k => {
+            const t = Math.floor(k[0]/1000), vol = +k[5], buy = +k[9];
+            const delta = 2*buy - vol;
+            cum += delta;
+            hist.push({ time: t, value: delta, color: delta >= 0 ? 'rgba(91,186,137,0.75)' : 'rgba(205,65,65,0.75)' });
+            line.push({ time: t, value: cum });
+        });
+        charts.cvd.hist.setData(hist);
+        charts.cvd.line.setData(line);
+        charts.cvd.chart.timeScale().fitContent();
+        const last = line[line.length-1].value;
+        const el = document.getElementById('cvd-val');
+        el.textContent = (last >= 0 ? '+' : '') + fmtK(Math.abs(last));
+        el.style.color = last >= 0 ? 'var(--green)' : 'var(--red)';
+    } catch {}
+}
+
+// ── REST: Long/Short ──────────────────────────────────────────────
+async function loadLS() {
+    const toS = (arr, key) => arr.map(d => ({ time: Math.floor(d.timestamp/1000), value: +d[key] }));
+    try {
+        const [rA, rP, rG] = await Promise.all([
+            fetch(`https://fapi.binance.com/fapi/v1/topLongShortAccountRatio?symbol=${sym}&period=${tf}&limit=288`),
+            fetch(`https://fapi.binance.com/fapi/v1/topLongShortPositionRatio?symbol=${sym}&period=${tf}&limit=288`),
+            fetch(`https://fapi.binance.com/fapi/v1/globalLongShortAccountRatio?symbol=${sym}&period=${tf}&limit=288`),
+        ]);
+        const [dA, dP, dG] = await Promise.all([rA.json(), rP.json(), rG.json()]);
+        if (Array.isArray(dA) && dA.length) {
+            charts.ls.acct.setData(toS(dA, 'longShortRatio'));
+            const last = dA[dA.length-1];
+            const el = document.getElementById('ls-val');
+            el.textContent = (+last.longShortRatio).toFixed(2);
+            el.style.color = +last.longShortRatio >= 1 ? 'var(--green)' : 'var(--red)';
+        }
+        if (Array.isArray(dP) && dP.length) charts.ls.pos.setData(toS(dP, 'longShortRatio'));
+        if (Array.isArray(dG) && dG.length) charts.ls.global.setData(toS(dG, 'longShortRatio'));
+        charts.ls.chart.timeScale().fitContent();
+    } catch {}
+}
+
+// ── WebSocket: Price ticker ───────────────────────────────────────
+let tickerWS = null;
+function startPriceTicker() {
+    if (tickerWS) tickerWS.close();
+    const s = sym.toLowerCase();
+    tickerWS = new WebSocket(`wss://fstream.binance.com/ws/${s}@markPrice@1s`);
+    tickerWS.onmessage = e => {
+        const d = JSON.parse(e.data);
+        price = +d.p;
+        document.getElementById('hdr-price').textContent = '$' + fmtNum(price);
+    };
+}
+
+// ── WebSocket: OB depth (heatmap buffer) ─────────────────────────
+function startDepthWS() {
+    if (depthWS) depthWS.close();
+    const s = sym.toLowerCase();
+    depthWS = new WebSocket(`wss://fstream.binance.com/ws/${s}@depth20@100ms`);
+    depthWS.onmessage = e => {
+        const d = JSON.parse(e.data);
+        const asks = (d.a || []).map(r => ({ p: +r[0], s: +r[1] }));
+        const bids = (d.b || []).map(r => ({ p: +r[0], s: +r[1] }));
+        if (!heatTimer) {
+            heatTimer = setInterval(() => {
+                if (!asks.length) return;
+                heatBuf.push({ asks: asks.slice(0,20), bids: bids.slice(0,20) });
+                if (heatBuf.length > HEAT_MAX) heatBuf.shift();
+                const n = heatBuf.length;
+                document.getElementById('heat-info').textContent = `${n} snaps (~${Math.round(n/60)}m)`;
+                renderHeat();
+            }, 1000);
+        }
+    };
+}
+
+// ── WebSocket: Liquidations ───────────────────────────────────────
+function startLiqWS() {
+    if (liqWS) liqWS.close();
+    const s = sym.toLowerCase();
+    liqWS = new WebSocket(`wss://fstream.binance.com/ws/${s}@forceOrder`);
+    liqWS.onmessage = e => {
+        const o = JSON.parse(e.data).o;
+        if (!o) return;
+        const p = +o.ap, q = +o.l;
+        liqEvents.push({ price: p, usd: p*q, side: o.S === 'BUY' ? 'short' : 'long' });
+        if (liqEvents.length > 3000) liqEvents.shift();
+        const total = liqEvents.reduce((s,ev) => s + ev.usd, 0);
+        document.getElementById('liq-val').textContent = fmtB(total);
+        renderLiq();
+    };
+}
+
+function reconnectWS() {
+    heatBuf.length = 0;
+    liqEvents.length = 0;
+    if (heatTimer) { clearInterval(heatTimer); heatTimer = null; }
+    startDepthWS();
+    startLiqWS();
+    startPriceTicker();
+    document.getElementById('heat-info').textContent = '— connecting…';
+    document.getElementById('liq-val').textContent = '';
+    renderLiq();
+    renderHeat();
+}
+
+// ── Canvas: OB Heatmap ────────────────────────────────────────────
+function renderHeat() {
+    const cvs = heatCvs;
+    if (!cvs || !heatBuf.length) return;
+    const W = cvs.width, H = cvs.height;
+    if (!W || !H) return;
+    const ctx = cvs.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+
+    const N = heatBuf.length;
+    const colW = W / N;
+    let pMin = Infinity, pMax = -Infinity, maxS = 0;
+    heatBuf.forEach(s => {
+        [...s.asks, ...s.bids].forEach(r => {
+            if (r.p < pMin) pMin = r.p;
+            if (r.p > pMax) pMax = r.p;
+            if (r.s > maxS) maxS = r.s;
+        });
+    });
+    if (pMin === Infinity || !maxS) return;
+    const pRange = pMax - pMin || 1;
+    const logMax = Math.log1p(maxS);
+
+    heatBuf.forEach((snap, i) => {
+        const x = Math.floor(i * colW), w = Math.ceil(colW) + 1;
+        snap.bids.forEach(r => {
+            const y = H - ((r.p - pMin) / pRange) * H;
+            const a = (0.1 + 0.85 * Math.log1p(r.s) / logMax).toFixed(2);
+            ctx.fillStyle = `rgba(91,186,137,${a})`;
+            ctx.fillRect(x, y-1, w, 2);
+        });
+        snap.asks.forEach(r => {
+            const y = H - ((r.p - pMin) / pRange) * H;
+            const a = (0.1 + 0.85 * Math.log1p(r.s) / logMax).toFixed(2);
+            ctx.fillStyle = `rgba(205,65,65,${a})`;
+            ctx.fillRect(x, y-1, w, 2);
+        });
+    });
+
+    if (price) {
+        const y = H - ((price - pMin) / pRange) * H;
+        ctx.strokeStyle = '#d9ad70'; ctx.lineWidth = 1;
+        ctx.setLineDash([3,3]);
+        ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#d9ad70'; ctx.font = '10px monospace';
+        ctx.fillText(fmtNum(price), 4, y-3);
+    }
+
+    ctx.fillStyle = '#8594a8'; ctx.font = '9px monospace'; ctx.textAlign = 'right';
+    for (let i = 0; i <= 4; i++) {
+        const p = pMin + pRange * i / 4;
+        ctx.fillText(fmtNum(p), W-4, H - (i/4)*H - 2);
+    }
+    ctx.textAlign = 'left';
+}
+
+// ── Canvas: Liquidations ──────────────────────────────────────────
+function renderLiq() {
+    const cvs = liqCvs;
+    if (!cvs) return;
+    const W = cvs.width, H = cvs.height;
+    if (!W || !H) return;
+    const ctx = cvs.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+
+    if (!liqEvents.length) {
+        ctx.fillStyle = '#8594a8'; ctx.font = '11px Figtree,sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('Waiting for liquidation events…', W/2, H/2);
+        ctx.textAlign = 'left'; return;
+    }
+
+    const bs = price > 10000 ? 100 : price > 1000 ? 10 : price > 100 ? 1 : 0.1;
+    const buckets = new Map();
+    let pMin = Infinity, pMax = -Infinity;
+    liqEvents.forEach(ev => {
+        const k = Math.round(ev.price / bs) * bs;
+        if (!buckets.has(k)) buckets.set(k, { long:0, short:0 });
+        buckets.get(k)[ev.side] += ev.usd;
+        if (k < pMin) pMin = k; if (k > pMax) pMax = k;
+    });
+    if (pMin === Infinity) return;
+
+    const pad = (pMax - pMin) * 0.15 || bs * 5;
+    pMin -= pad; pMax += pad;
+    const pRange = pMax - pMin;
+    let maxVal = 0;
+    buckets.forEach(b => { if (b.long > maxVal) maxVal = b.long; if (b.short > maxVal) maxVal = b.short; });
+    if (!maxVal) return;
+
+    const barMax = W/2 - 54;
+    const rowH = Math.max(2, (bs / pRange) * H - 1);
+    buckets.forEach((b, p) => {
+        const y = H - ((p - pMin) / pRange) * H;
+        if (b.long > 0) {
+            const bw = (b.long / maxVal) * barMax;
+            ctx.fillStyle = `rgba(205,65,65,${(0.3 + 0.7*b.long/maxVal).toFixed(2)})`;
+            ctx.fillRect(W/2 - bw, y - rowH/2, bw, rowH);
+        }
+        if (b.short > 0) {
+            const bw = (b.short / maxVal) * barMax;
+            ctx.fillStyle = `rgba(91,186,137,${(0.3 + 0.7*b.short/maxVal).toFixed(2)})`;
+            ctx.fillRect(W/2, y - rowH/2, bw, rowH);
+        }
+    });
+
+    ctx.strokeStyle = '#1f2a3d'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(W/2, 0); ctx.lineTo(W/2, H); ctx.stroke();
+
+    if (price) {
+        const y = H - ((price - pMin) / pRange) * H;
+        ctx.strokeStyle = '#d9ad70'; ctx.setLineDash([3,3]);
+        ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#d9ad70'; ctx.font = '9px monospace';
+        ctx.fillText(fmtNum(price), W/2 + 4, y-2);
+    }
+
+    ctx.fillStyle = '#8594a8'; ctx.font = '9px monospace'; ctx.textAlign = 'right';
+    for (let i = 0; i <= 4; i++) {
+        const p = pMin + pRange * i / 4;
+        ctx.fillText(fmtNum(p), W-4, H - (i/4)*H - 2);
+    }
+    ctx.font = '9px Figtree,sans-serif';
+    ctx.fillStyle = '#cd4141'; ctx.textAlign = 'right';
+    ctx.fillText('Long liq ←', W/2-4, 13);
+    ctx.fillStyle = '#5bba89'; ctx.textAlign = 'left';
+    ctx.fillText('→ Short liq', W/2+4, 13);
+    ctx.textAlign = 'left';
+}
+
+// ── Helpers ───────────────────────────────────────────────────────
+function fmtNum(p) {
+    if (p >= 1000) return p.toFixed(2);
+    if (p >= 10)   return p.toFixed(3);
+    if (p >= 1)    return p.toFixed(4);
+    return p.toFixed(6);
+}
+function fmtK(v) {
+    if (v >= 1e6) return (v/1e6).toFixed(1) + 'M';
+    if (v >= 1e3) return (v/1e3).toFixed(1) + 'K';
+    return Math.round(v).toString();
+}
+function fmtB(n) {
+    if (n >= 1e9) return (n/1e9).toFixed(2) + 'B';
+    if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return (n/1e3).toFixed(0) + 'K';
+    return n.toFixed(0);
+}
+</script>
+</body>
+</html>
