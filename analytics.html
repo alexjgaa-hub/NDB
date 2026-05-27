@@ -544,9 +544,9 @@ async function loadCVD() {
 async function fetchLS_Binance(sym, tf) {
     const p = OI_TF.binance[tf] || tf;
     const [rA, rP, rG] = await Promise.all([
-        fetch(`https://fapi.binance.com/fapi/v1/topLongShortAccountRatio?symbol=${sym}&period=${p}&limit=200`),
-        fetch(`https://fapi.binance.com/fapi/v1/topLongShortPositionRatio?symbol=${sym}&period=${p}&limit=200`),
-        fetch(`https://fapi.binance.com/fapi/v1/globalLongShortAccountRatio?symbol=${sym}&period=${p}&limit=200`),
+        fetch(`https://fapi.binance.com/futures/data/topLongShortAccountRatio?symbol=${sym}&period=${p}&limit=200`),
+        fetch(`https://fapi.binance.com/futures/data/topLongShortPositionRatio?symbol=${sym}&period=${p}&limit=200`),
+        fetch(`https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=${sym}&period=${p}&limit=200`),
     ]);
     const [dA, dP, dG] = await Promise.all([rA.json(), rP.json(), rG.json()]);
     if (!Array.isArray(dA) || !dA.length) {
