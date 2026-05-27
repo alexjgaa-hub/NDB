@@ -202,6 +202,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); font-si
                 <span class="ab-leg"><i style="background:#d9ad70"></i> <span id="ls-leg-1">Binance</span></span>
                 <span class="ab-leg"><i style="background:#5bba89"></i> <span id="ls-leg-2">Bybit</span></span>
                 <span class="ab-leg"><i style="background:#8594a8"></i> <span id="ls-leg-3">OKX</span></span>
+                <span class="ab-leg"><i style="background:#58a6ff;opacity:.7"></i> Retail</span>
             </span>
         </div>
         <div class="ab-body"><div id="chart-ls"></div><div class="ab-empty" id="empty-ls" style="display:none">No data for this pair</div></div>
@@ -404,6 +405,7 @@ function initCharts() {
         acct:   lsC.addLineSeries({ color:'#d9ad70', lineWidth:2, priceLineVisible:false, title:'Top Acct' }),
         pos:    lsC.addLineSeries({ color:'#5bba89', lineWidth:2, priceLineVisible:false, title:'Top Pos' }),
         global: lsC.addLineSeries({ color:'#8594a8', lineWidth:1, priceLineVisible:false, title:'Global' }),
+        retail: lsC.addLineSeries({ color:'#58a6ff', lineWidth:1, lineStyle:2, priceLineVisible:false, title:'Retail' }),
     };
 
     // Liquidations time-series
@@ -595,30 +597,39 @@ async function loadLS() {
 
         if (!ok.length) { document.getElementById('empty-ls').style.display = ''; return; }
 
-        // Lines: acct=line1(gold), pos=line2(green), global=line3(muted)
-        // When Binance only: Top Acct / Top Pos / Global
-        // When ALL or other: one line per exchange
+        // Retail line: always Binance globalLongShortAccountRatio (non-top traders)
+        // Fetch separately if Binance not already in main results
+        let retailData = [];
+        const binanceResult = ok.find(e => e.exch === 'binance');
+        if (binanceResult) {
+            retailData = binanceResult.data.global || [];
+        } else {
+            try {
+                const rd = await fetchLS_Binance(sym, itf);
+                retailData = rd.global || [];
+            } catch(e) { console.warn('Retail (Binance Global) failed:', e.message); }
+        }
+        charts.ls.retail.setData(retailData);
+
+        // Main lines: one per exchange (top traders)
         if (exch === 'binance') {
             const d = ok[0].data;
             charts.ls.acct.setData(d.acct || []);
             charts.ls.pos.setData(d.pos || []);
-            charts.ls.global.setData(d.global || []);
+            charts.ls.global.setData([]);  // retail takes over global slot
             document.getElementById('ls-leg-1').textContent = 'Top Acct';
             document.getElementById('ls-leg-2').textContent = 'Top Pos';
-            document.getElementById('ls-leg-3').textContent = 'Global';
+            document.getElementById('ls-leg-3').textContent = '';
         } else {
-            // Each exchange gets one line
-            const lineKeys = ['acct','pos','global'];
-            const seriesKeys = ['acct','pos','global'];
             [0,1,2].forEach(i => {
                 const entry = ok[i];
-                const chartSeries = [charts.ls.acct, charts.ls.pos, charts.ls.global][i];
+                const series = [charts.ls.acct, charts.ls.pos, charts.ls.global][i];
                 if (entry) {
-                    chartSeries.setData(entry.data.acct || []);
-                    const label = entry.exch.charAt(0).toUpperCase() + entry.exch.slice(1);
-                    document.getElementById(`ls-leg-${i+1}`).textContent = label;
+                    series.setData(entry.data.acct || []);
+                    document.getElementById(`ls-leg-${i+1}`).textContent =
+                        entry.exch.charAt(0).toUpperCase() + entry.exch.slice(1);
                 } else {
-                    chartSeries.setData([]);
+                    series.setData([]);
                     document.getElementById(`ls-leg-${i+1}`).textContent = '';
                 }
             });
