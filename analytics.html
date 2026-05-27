@@ -78,6 +78,9 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); font-si
 .ab-body > div { position:absolute; inset:0; }
 .ab-body canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
 .ab-empty { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--muted); pointer-events:none; }
+.blk-controls { display:flex; gap:4px; align-items:center; flex-shrink:0; margin-left:6px; }
+.blk-sel { background:var(--surface2); border:1px solid var(--border); color:var(--muted); font-family:var(--font); font-size:10px; border-radius:3px; padding:2px 5px; cursor:pointer; outline:none; }
+.blk-sel:hover,.blk-sel:focus { border-color:var(--gold); color:var(--text); }
 </style>
 </head>
 <body>
@@ -140,6 +143,21 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); font-si
             OPEN INTEREST
             <span class="ab-val" id="oi-val"></span>
             <span id="oi-chg"></span>
+            <div class="blk-controls">
+                <select class="blk-sel" onchange="oiState.exchange=this.value;loadOI()">
+                    <option value="ALL">ALL</option>
+                    <option value="binance">Binance</option>
+                    <option value="bybit">Bybit</option>
+                    <option value="okx">OKX</option>
+                </select>
+                <select class="blk-sel" onchange="oiState.tf=this.value;loadOI()">
+                    <option value="5m">5m</option>
+                    <option value="15m">15m</option>
+                    <option value="1h" selected>1h</option>
+                    <option value="4h">4h</option>
+                    <option value="1d">1D</option>
+                </select>
+            </div>
             <span class="ab-legend">
                 <span class="ab-leg"><i style="background:#5bba89"></i> OI $</span>
                 <span class="ab-leg"><i style="background:#d9ad70;opacity:.6"></i> Price</span>
@@ -247,6 +265,16 @@ let catFilter  = 'ALL';
 let tf         = '1h';
 let livePrice  = 0;
 
+// Per-block state for OI
+const oiState = { exchange: 'ALL', tf: '1h' };
+
+// TF mappings per exchange for OI endpoints
+const OI_TF = {
+    binance: { '5m':'5m','15m':'15m','1h':'1h','4h':'4h','1d':'1d' },
+    bybit:   { '5m':'5min','15m':'15min','1h':'1h','4h':'4h','1d':'1d' },
+    okx:     { '5m':'5m','15m':'15m','1h':'1H','4h':'4H','1d':'1D' },
+};
+
 const liqBuckets = new Map(); // timeKey → {long, short}
 const heatBuf    = [];
 const HEAT_MAX   = 600;
@@ -312,7 +340,7 @@ function setTF(t, btn) {
     tf = t;
     document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    refreshAll();
+    loadCVD(); loadLS(); loadLiqHistory(); // OI has its own TF control
 }
 
 function refreshAll() { loadOI(); loadCVD(); loadLS(); loadLiqHistory(); }
@@ -380,29 +408,92 @@ function initCharts() {
     new ResizeObserver(sizeHeat).observe(hp);
 }
 
+// ── OI exchange adapters ──────────────────────────────────────────
+async function fetchOI_Binance(sym, tf) {
+    const r = await fetch(`https://fapi.binance.com/fapi/v1/openInterestHist?symbol=${sym}&period=${OI_TF.binance[tf]||tf}&limit=200`);
+    const d = await r.json();
+    if (!Array.isArray(d)) throw new Error('Binance: ' + JSON.stringify(d).slice(0,80));
+    return d.map(x => ({ time: Math.floor(+x.timestamp/1000), value: +x.sumOpenInterestValue }));
+}
+
+async function fetchOI_Bybit(sym, tf, priceMap) {
+    const r = await fetch(`https://api.bybit.com/v5/market/open-interest?category=linear&symbol=${sym}&intervalTime=${OI_TF.bybit[tf]||'1h'}&limit=200`);
+    const d = await r.json();
+    if (d.retCode !== 0) throw new Error('Bybit: ' + d.retMsg);
+    // openInterest is in base coin for linear — multiply by price
+    return (d.result?.list || []).reverse().map(x => {
+        const t = Math.floor(+x.timestamp/1000);
+        const p = priceMap[t] || livePrice || 1;
+        return { time: t, value: +x.openInterest * p };
+    });
+}
+
+async function fetchOI_OKX(sym, tf) {
+    const ccy = sym.replace('USDT','');
+    const r = await fetch(`https://www.okx.com/api/v5/rubik/stat/contracts/open-interest-volume?ccy=${ccy}&period=${OI_TF.okx[tf]||'1H'}&limit=200`);
+    const d = await r.json();
+    if (d.code !== '0') throw new Error('OKX: ' + d.msg);
+    // data: [[ts, oi_usd, vol], ...] newest first
+    return (d.data || []).reverse().map(x => ({ time: Math.floor(+x[0]/1000), value: +x[1] }));
+}
+
 // ── REST: OI + Price overlay ──────────────────────────────────────
 async function loadOI() {
     const sym = currentSym + 'USDT';
+    const itf = oiState.tf;
+    const exch = oiState.exchange;
     document.getElementById('empty-oi').style.display = 'none';
+
     try {
-        const [rOI, rK] = await Promise.all([
-            fetch(`https://fapi.binance.com/fapi/v1/openInterestHist?symbol=${sym}&period=${tf}&limit=288`),
-            fetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${sym}&interval=${tf}&limit=288`),
-        ]);
-        const [dOI, dK] = await Promise.all([rOI.json(), rK.json()]);
-        if (!Array.isArray(dOI) || !dOI.length) { document.getElementById('empty-oi').style.display = ''; return; }
-        charts.oi.oi.setData(dOI.map(d => ({ time: Math.floor(d.timestamp/1000), value: +d.sumOpenInterestValue })));
-        if (Array.isArray(dK)) charts.oi.price.setData(dK.map(k => ({ time: Math.floor(k[0]/1000), value: +k[4] })));
+        // Price klines from Binance as reference (for Bybit conversion + overlay)
+        const kr = await fetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${sym}&interval=${itf}&limit=200`);
+        const kData = await kr.json();
+        const priceMap = {};
+        if (Array.isArray(kData)) kData.forEach(k => { priceMap[Math.floor(k[0]/1000)] = +k[4]; });
+
+        const exchanges = exch === 'ALL' ? ['binance','bybit','okx'] : [exch];
+
+        const results = await Promise.allSettled(exchanges.map(e => {
+            if (e === 'binance') return fetchOI_Binance(sym, itf);
+            if (e === 'bybit')   return fetchOI_Bybit(sym, itf, priceMap);
+            if (e === 'okx')     return fetchOI_OKX(sym, itf);
+        }));
+
+        results.forEach((r, i) => {
+            if (r.status === 'rejected') console.warn(`OI ${exchanges[i]} failed:`, r.reason?.message || r.reason);
+        });
+
+        const series = results.filter(r => r.status === 'fulfilled').map(r => r.value);
+
+        if (!series.length || !series.some(s => s.length)) {
+            document.getElementById('empty-oi').style.display = '';
+            return;
+        }
+
+        // Aggregate: sum by timestamp across exchanges
+        const merged = new Map();
+        series.forEach(s => s.forEach(pt => {
+            merged.set(pt.time, (merged.get(pt.time) || 0) + pt.value);
+        }));
+        const oiData = Array.from(merged.entries()).sort(([a],[b]) => a-b).map(([time,value]) => ({time,value}));
+
+        charts.oi.oi.setData(oiData);
+        if (Array.isArray(kData) && kData.length)
+            charts.oi.price.setData(kData.map(k => ({ time: Math.floor(k[0]/1000), value: +k[4] })));
         charts.oi.chart.timeScale().fitContent();
-        const last = dOI[dOI.length-1], prev = dOI[dOI.length-2];
-        document.getElementById('oi-val').textContent = fmtB(+last.sumOpenInterestValue);
+
+        const last = oiData[oiData.length-1], prev = oiData[oiData.length-2];
+        document.getElementById('oi-val').textContent = fmtB(last.value);
         if (prev) {
-            const pct = ((+last.sumOpenInterestValue / +prev.sumOpenInterestValue) - 1) * 100;
+            const pct = (last.value/prev.value - 1)*100;
             const el = document.getElementById('oi-chg');
             el.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
             el.className = pct >= 0 ? 'ab-dpos' : 'ab-dneg';
         }
-    } catch { document.getElementById('empty-oi').style.display = ''; }
+    } catch(e) {
+        console.error('loadOI error:', e);
+        document.getElementById('empty-oi').style.display = '';
+    }
 }
 
 // ── REST: CVD ─────────────────────────────────────────────────────
