@@ -148,7 +148,6 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); font-si
                     <option value="ALL">ALL</option>
                     <option value="binance">Binance</option>
                     <option value="bybit">Bybit</option>
-                    <option value="okx">OKX</option>
                 </select>
                 <select class="blk-sel" onchange="oiState.tf=this.value;loadOI()">
                     <option value="5m">5m</option>
@@ -188,7 +187,6 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); font-si
                     <option value="ALL">ALL</option>
                     <option value="binance">Binance</option>
                     <option value="bybit">Bybit</option>
-                    <option value="okx">OKX</option>
                 </select>
                 <select class="blk-sel" onchange="lsState.tf=this.value;loadLS()">
                     <option value="5m">5m</option>
@@ -476,12 +474,11 @@ async function loadOI() {
         const priceMap = {};
         if (Array.isArray(kData)) kData.forEach(k => { priceMap[Math.floor(k[0]/1000)] = +k[4]; });
 
-        const exchanges = exch === 'ALL' ? ['binance','bybit','okx'] : [exch];
+        const exchanges = exch === 'ALL' ? ['binance','bybit'] : [exch];
 
         const results = await Promise.allSettled(exchanges.map(e => {
             if (e === 'binance') return fetchOI_Binance(sym, itf);
             if (e === 'bybit')   return fetchOI_Bybit(sym, itf, priceMap);
-            if (e === 'okx')     return fetchOI_OKX(sym, itf);
         }));
 
         results.forEach((r, i) => {
@@ -584,12 +581,11 @@ async function loadLS() {
     document.getElementById('empty-ls').style.display = 'none';
 
     try {
-        const exchanges = exch === 'ALL' ? ['binance','bybit','okx'] : [exch];
+        const exchanges = exch === 'ALL' ? ['binance','bybit'] : [exch];
 
         const results = await Promise.allSettled(exchanges.map(e => {
             if (e === 'binance') return fetchLS_Binance(sym, itf);
             if (e === 'bybit')   return fetchLS_Bybit(sym, itf);
-            if (e === 'okx')     return fetchLS_OKX(sym, itf);
         }));
 
         results.forEach((r, i) => {
@@ -611,8 +607,7 @@ async function loadLS() {
             charts.ls.ok.setData(byExch.okx     || []);
             document.getElementById('ls-legend').innerHTML =
                 `<span class="ab-leg"><i style="background:#d9ad70"></i> Binance</span>` +
-                `<span class="ab-leg"><i style="background:#5bba89"></i> Bybit</span>` +
-                `<span class="ab-leg"><i style="background:#8594a8"></i> OKX</span>`;
+                `<span class="ab-leg"><i style="background:#5bba89"></i> Bybit</span>`;
             // Header value: average last long% across available exchanges
             const lasts = Object.values(byExch).map(s => s[s.length-1]?.value).filter(Boolean);
             if (lasts.length) {
