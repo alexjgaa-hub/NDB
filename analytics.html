@@ -207,14 +207,33 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); font-si
 
     <div class="an-block">
         <div class="ab-hdr">
-            LIQUIDATIONS
+            LIQUIDATION LEVELS
             <span class="ab-val" id="liq-val"></span>
+            <div class="blk-controls">
+                <select class="blk-sel" onchange="liqState.exchange=this.value;loadLiqHeat()">
+                    <option value="ALL">ALL</option>
+                    <option value="binance">Binance</option>
+                    <option value="bybit">Bybit</option>
+                </select>
+                <select class="blk-sel" onchange="liqState.tf=this.value;loadLiqHeat()">
+                    <option value="5m">5m</option>
+                    <option value="15m">15m</option>
+                    <option value="1h" selected>1h</option>
+                    <option value="4h">4h</option>
+                    <option value="1d">1D</option>
+                </select>
+            </div>
             <span class="ab-legend">
-                <span class="ab-leg"><i style="background:#cd4141"></i> Long liq</span>
-                <span class="ab-leg"><i style="background:#5bba89"></i> Short liq</span>
+                <span class="ab-leg"><i style="background:#cd4141"></i> Long 5x</span>
+                <span class="ab-leg"><i style="background:#e08040"></i> Long 10x</span>
+                <span class="ab-leg"><i style="background:#5bba89"></i> Short 5x</span>
+                <span class="ab-leg"><i style="background:#58a6ff"></i> Short 10x</span>
             </span>
         </div>
-        <div class="ab-body"><div id="chart-liq"></div><div class="ab-empty" id="empty-liq">Waiting for events…</div></div>
+        <div class="ab-body">
+            <canvas id="liq-canvas"></canvas>
+            <div class="ab-empty" id="empty-liq">Loading…</div>
+        </div>
     </div>
 
     <div class="an-block wide">
@@ -279,8 +298,9 @@ let tf         = '1h';
 let livePrice  = 0;
 
 // Per-block state
-const oiState = { exchange: 'ALL', tf: '1h' };
-const lsState = { exchange: 'ALL', tf: '1h' };
+const oiState  = { exchange: 'ALL', tf: '1h' };
+const lsState  = { exchange: 'ALL', tf: '1h' };
+const liqState = { exchange: 'ALL', tf: '1h' };
 
 // TF mappings per exchange for OI endpoints
 const OI_TF = {
@@ -289,11 +309,10 @@ const OI_TF = {
     okx:     { '5m':'5m','15m':'15m','1h':'1H','4h':'4H','1d':'1D' },
 };
 
-const liqBuckets = new Map(); // timeKey → {long, short}
 const heatBuf    = [];
 const HEAT_MAX   = 600;
 
-let depthWS = null, liqWS = null, tickerWS = null, heatTimer = null;
+let depthWS = null, tickerWS = null, heatTimer = null;
 const charts = {};
 let heatCvs;
 
@@ -336,7 +355,6 @@ function selectPair(sym) {
     document.getElementById('pair-trigger').classList.remove('open');
     document.getElementById('hdr-price').textContent = '—';
     document.getElementById('hdr-chg').textContent = '';
-    resetLiqData();
     heatBuf.length = 0;
     if (heatTimer) { clearInterval(heatTimer); heatTimer = null; }
     document.getElementById('heat-info').textContent = '— session only';
@@ -354,10 +372,10 @@ function setTF(t, btn) {
     tf = t;
     document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    loadCVD(); loadLiqHistory(); // OI and L/S have their own TF controls
+    loadCVD(); loadLiqHeat(); // OI and L/S have their own TF controls
 }
 
-function refreshAll() { loadOI(); loadCVD(); loadLS(); loadLiqHistory(); }
+function refreshAll() { loadOI(); loadCVD(); loadLS(); loadLiqHeat(); }
 
 // ── Chart init ────────────────────────────────────────────────────
 function mkChart(id) {
@@ -413,15 +431,12 @@ function initCharts() {
         ok: lsC.addLineSeries({ color:'#8594a8', lineWidth:1, priceLineVisible:false, lastValueVisible:false }),
     };
 
-    // Liquidations time-series
-    const liqC = mkChart('chart-liq');
-    liqC.applyOptions({ leftPriceScale:{ visible:true, borderColor:'#1f2a3d' } });
-    charts.liq = {
-        chart: liqC,
-        short: liqC.addHistogramSeries({ color:'rgba(91,186,137,0.8)',  priceLineVisible:false, lastValueVisible:false, priceScaleId:'right' }),
-        long:  liqC.addHistogramSeries({ color:'rgba(205,65,65,0.8)',   priceLineVisible:false, lastValueVisible:false, priceScaleId:'right' }),
-        price: liqC.addLineSeries({ color:'rgba(217,173,112,0.4)', lineWidth:1, priceLineVisible:false, priceScaleId:'left', lineStyle:2 }),
-    };
+    // Liquidation Levels canvas
+    const liqCvs = document.getElementById('liq-canvas');
+    const liqParent = liqCvs.parentElement;
+    const sizeLiq = () => { liqCvs.width = liqParent.offsetWidth; liqCvs.height = liqParent.offsetHeight; };
+    sizeLiq();
+    new ResizeObserver(sizeLiq).observe(liqParent);
 
     // OB Heatmap canvas
     heatCvs = document.getElementById('heat-canvas');
@@ -640,65 +655,149 @@ async function loadLS() {
     }
 }
 
-// ── REST: Liquidations history ────────────────────────────────────
-async function loadLiqHistory() {
+// ── Klines adapters (reusable) ────────────────────────────────────
+const KLINE_TF = {
+    binance: { '5m':'5m','15m':'15m','1h':'1h','4h':'4h','1d':'1d' },
+    bybit:   { '5m':'5','15m':'15','1h':'60','4h':'240','1d':'D' },
+};
+
+async function fetchKlines_Binance(sym, tf, limit=500) {
+    const r = await fetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${sym}&interval=${KLINE_TF.binance[tf]||tf}&limit=${limit}`);
+    const d = await r.json();
+    if (!Array.isArray(d)) throw new Error('Binance klines: ' + JSON.stringify(d).slice(0,60));
+    return d.map(k => ({ t:Math.floor(k[0]/1000), o:+k[1], h:+k[2], l:+k[3], c:+k[4], v:+k[7] }));
+}
+
+async function fetchKlines_Bybit(sym, tf, limit=500) {
+    const r = await fetch(`https://api.bybit.com/v5/market/kline?category=linear&symbol=${sym}&interval=${KLINE_TF.bybit[tf]||'60'}&limit=${limit}`);
+    const d = await r.json();
+    if (d.retCode !== 0) throw new Error('Bybit klines: ' + d.retMsg);
+    return (d.result?.list || []).reverse().map(k => ({ t:Math.floor(+k[0]/1000), o:+k[1], h:+k[2], l:+k[3], c:+k[4], v:+k[6] }));
+}
+
+// ── Liquidation Levels Heatmap ────────────────────────────────────
+// Levers: [leverage, side, liqFactor, colorRGB]
+const LIQ_LEVERS = [
+    [5,  'long',  0.8,  [205,65,65]],   // long  5x  → price drops 20%
+    [10, 'long',  0.9,  [224,120,50]],  // long  10x → price drops 10%
+    [5,  'short', 1.2,  [91,186,137]],  // short 5x  → price rises 20%
+    [10, 'short', 1.1,  [88,166,255]],  // short 10x → price rises 10%
+];
+
+async function loadLiqHeat() {
     const sym = currentSym + 'USDT';
-    resetLiqData();
-    try {
-        const r = await fetch(`https://fapi.binance.com/fapi/v1/allForceOrders?symbol=${sym}&limit=500`);
-        const data = await r.json();
-        if (!Array.isArray(data)) return;
-        data.forEach(o => {
-            addLiqEvent(+o.averagePrice, +o.executedQty, o.side === 'BUY' ? 'short' : 'long', +o.time);
-        });
-        renderLiqChart();
-    } catch {}
-}
-
-function resetLiqData() {
-    liqBuckets.clear();
+    const itf = liqState.tf;
+    const exch = liqState.exchange;
+    const emEl = document.getElementById('empty-liq');
+    emEl.style.display = '';
+    emEl.textContent = 'Loading…';
     document.getElementById('liq-val').textContent = '';
-    document.getElementById('empty-liq').style.display = '';
-    if (charts.liq) {
-        charts.liq.short.setData([]);
-        charts.liq.long.setData([]);
-        charts.liq.price.setData([]);
-    }
-}
 
-function addLiqEvent(price, qty, side, ts) {
-    const usd = price * qty;
-    const bucketSec = tfBucketSec();
-    const t = Math.floor(ts / 1000 / bucketSec) * bucketSec;
-    if (!liqBuckets.has(t)) liqBuckets.set(t, { long:0, short:0, prices:[] });
-    const b = liqBuckets.get(t);
-    b[side] += usd;
-    b.prices.push(price);
-}
+    const exchanges = exch === 'ALL' ? ['binance','bybit'] : [exch];
+    const results = await Promise.allSettled(exchanges.map(e => {
+        if (e === 'binance') return fetchKlines_Binance(sym, itf, 500);
+        if (e === 'bybit')   return fetchKlines_Bybit(sym, itf, 500);
+    }));
+    results.forEach((r,i) => { if (r.status==='rejected') console.warn(`Klines ${exchanges[i]}:`, r.reason?.message); });
 
-function tfBucketSec() {
-    return { '5m':300, '15m':900, '1h':3600, '4h':14400, '1d':86400 }[tf] || 3600;
-}
-
-function renderLiqChart() {
-    const keys = Array.from(liqBuckets.keys()).sort((a,b) => a-b);
-    if (!keys.length) { document.getElementById('empty-liq').style.display = ''; return; }
-    document.getElementById('empty-liq').style.display = 'none';
-
-    const shortData = [], longData = [], priceData = [];
-    keys.forEach(t => {
-        const b = liqBuckets.get(t);
-        if (b.short > 0) shortData.push({ time:t, value: b.short });
-        if (b.long  > 0) longData.push({ time:t, value: -b.long });
-        if (b.prices.length) priceData.push({ time:t, value: b.prices.reduce((a,v) => a+v,0) / b.prices.length });
+    // Merge klines by timestamp (sum volumes, average OHLC from first source)
+    const kMap = new Map();
+    results.filter(r => r.status==='fulfilled').forEach(r => {
+        r.value.forEach(k => {
+            if (kMap.has(k.t)) kMap.get(k.t).v += k.v;
+            else kMap.set(k.t, {...k});
+        });
     });
-    charts.liq.short.setData(shortData);
-    charts.liq.long.setData(longData);
-    charts.liq.price.setData(priceData);
-    charts.liq.chart.timeScale().fitContent();
+    const klines = Array.from(kMap.values()).sort((a,b) => a.t - b.t);
 
-    const total = keys.reduce((s,t) => s + liqBuckets.get(t).long + liqBuckets.get(t).short, 0);
-    document.getElementById('liq-val').textContent = fmtB(total);
+    if (!klines.length) { emEl.textContent = 'No data'; return; }
+    emEl.style.display = 'none';
+    renderLiqHeat(klines);
+    document.getElementById('liq-val').textContent = klines.length + ' candles · ' + exchanges.join('+');
+}
+
+function renderLiqHeat(klines) {
+    const cvs = document.getElementById('liq-canvas');
+    if (!cvs) return;
+    const W = cvs.width, H = cvs.height;
+    if (!W || !H) return;
+    const ctx = cvs.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+
+    const NUM_BINS = 250;
+    const allP = klines.flatMap(k => [k.h, k.l]);
+    const rawMin = Math.min(...allP), rawMax = Math.max(...allP);
+    // Extend range to include liq levels (5x longs go 20% below, shorts 20% above)
+    const pMin = rawMin * 0.75;
+    const pMax = rawMax * 1.25;
+    const pRange = pMax - pMin;
+
+    // Accumulate liq volumes per price bin × lever
+    const bins = Array.from({length:NUM_BINS}, () => new Float32Array(LIQ_LEVERS.length));
+    klines.forEach(k => {
+        LIQ_LEVERS.forEach(([,, factor,], li) => {
+            const liqPrice = k.c * factor;
+            const bi = Math.floor((liqPrice - pMin) / pRange * NUM_BINS);
+            if (bi >= 0 && bi < NUM_BINS) bins[bi][li] += k.v;
+        });
+    });
+
+    // Max per lever for normalization
+    const maxByLev = LIQ_LEVERS.map((_, li) => Math.max(...bins.map(b => b[li])) || 1);
+    const MARGIN_R = 56; // right price axis
+    const CW = W - MARGIN_R;
+
+    // Draw heatmap bands
+    const bandH = H / NUM_BINS;
+    for (let bi = 0; bi < NUM_BINS; bi++) {
+        const y = H - ((bi + 0.5) / NUM_BINS) * H;
+        LIQ_LEVERS.forEach(([,, , rgb], li) => {
+            const v = bins[bi][li];
+            if (!v) return;
+            const intensity = Math.pow(v / maxByLev[li], 0.35); // gamma — small values still visible
+            const [r, g, b] = rgb;
+            ctx.fillStyle = `rgba(${r},${g},${b},${(0.05 + 0.85 * intensity).toFixed(2)})`;
+            ctx.fillRect(0, y - bandH * 0.5, CW, bandH + 1);
+        });
+    }
+
+    // Price line
+    const py = p => H - (p - pMin) / pRange * H;
+    ctx.strokeStyle = 'rgba(217,173,112,0.9)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    klines.forEach((k, i) => {
+        const x = (i / (klines.length - 1)) * CW;
+        i === 0 ? ctx.moveTo(x, py(k.c)) : ctx.lineTo(x, py(k.c));
+    });
+    ctx.stroke();
+
+    // Current price dashed line
+    const lastP = klines[klines.length-1].c;
+    const ly = py(lastP);
+    ctx.setLineDash([4, 3]);
+    ctx.strokeStyle = '#d9ad70'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(W, ly); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Price axis (right)
+    ctx.fillStyle = '#6a7a8e'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
+    for (let i = 0; i <= 8; i++) {
+        const p = pMin + pRange * i / 8;
+        const y = H - (i / 8) * H;
+        ctx.fillText(fmtNum(p), CW + 3, y + 3);
+    }
+    ctx.fillStyle = '#d9ad70'; ctx.font = 'bold 9px monospace';
+    ctx.fillText(fmtNum(lastP), CW + 3, ly + 3);
+
+    // Time axis labels
+    ctx.fillStyle = '#6a7a8e'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
+    const fmt = t => new Date(t*1000).toLocaleDateString('en', {month:'numeric',day:'numeric'});
+    if (klines.length > 1) {
+        ctx.fillText(fmt(klines[0].t), 4, H - 4);
+        ctx.textAlign = 'right';
+        ctx.fillText(fmt(klines[klines.length-1].t), CW - 4, H - 4);
+    }
 }
 
 // ── WebSocket connections ─────────────────────────────────────────
@@ -708,7 +807,7 @@ function setWS(live, label) {
 }
 
 function connectWS() {
-    [depthWS, liqWS, tickerWS].forEach(ws => { if (ws) ws.close(); });
+    [depthWS, tickerWS].forEach(ws => { if (ws) ws.close(); });
     const s = (currentSym + 'USDT').toLowerCase();
 
     // Mark price ticker
@@ -746,14 +845,6 @@ function connectWS() {
         }
     };
 
-    // Force orders (liquidations)
-    liqWS = new WebSocket(`wss://fstream.binance.com/ws/${s}@forceOrder`);
-    liqWS.onmessage = e => {
-        const o = JSON.parse(e.data).o;
-        if (!o) return;
-        addLiqEvent(+o.ap, +o.l, o.S === 'BUY' ? 'short' : 'long', o.T);
-        renderLiqChart();
-    };
 }
 
 // ── Canvas: OB Heatmap ────────────────────────────────────────────
