@@ -183,10 +183,25 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); font-si
         <div class="ab-hdr">
             LONG / SHORT RATIO
             <span class="ab-val" id="ls-val"></span>
+            <div class="blk-controls">
+                <select class="blk-sel" onchange="lsState.exchange=this.value;loadLS()">
+                    <option value="ALL">ALL</option>
+                    <option value="binance">Binance</option>
+                    <option value="bybit">Bybit</option>
+                    <option value="okx">OKX</option>
+                </select>
+                <select class="blk-sel" onchange="lsState.tf=this.value;loadLS()">
+                    <option value="5m">5m</option>
+                    <option value="15m">15m</option>
+                    <option value="1h" selected>1h</option>
+                    <option value="4h">4h</option>
+                    <option value="1d">1D</option>
+                </select>
+            </div>
             <span class="ab-legend">
-                <span class="ab-leg"><i style="background:#d9ad70"></i> Top Acct</span>
-                <span class="ab-leg"><i style="background:#5bba89"></i> Top Pos</span>
-                <span class="ab-leg"><i style="background:#8594a8"></i> Global</span>
+                <span class="ab-leg"><i style="background:#d9ad70"></i> <span id="ls-leg-1">Binance</span></span>
+                <span class="ab-leg"><i style="background:#5bba89"></i> <span id="ls-leg-2">Bybit</span></span>
+                <span class="ab-leg"><i style="background:#8594a8"></i> <span id="ls-leg-3">OKX</span></span>
             </span>
         </div>
         <div class="ab-body"><div id="chart-ls"></div><div class="ab-empty" id="empty-ls" style="display:none">No data for this pair</div></div>
@@ -265,8 +280,9 @@ let catFilter  = 'ALL';
 let tf         = '1h';
 let livePrice  = 0;
 
-// Per-block state for OI
+// Per-block state
 const oiState = { exchange: 'ALL', tf: '1h' };
+const lsState = { exchange: 'ALL', tf: '1h' };
 
 // TF mappings per exchange for OI endpoints
 const OI_TF = {
@@ -340,7 +356,7 @@ function setTF(t, btn) {
     tf = t;
     document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    loadCVD(); loadLS(); loadLiqHistory(); // OI has its own TF control
+    loadCVD(); loadLiqHistory(); // OI and L/S have their own TF controls
 }
 
 function refreshAll() { loadOI(); loadCVD(); loadLS(); loadLiqHistory(); }
@@ -522,29 +538,105 @@ async function loadCVD() {
     } catch {}
 }
 
+// ── L/S exchange adapters ─────────────────────────────────────────
+async function fetchLS_Binance(sym, tf) {
+    const p = OI_TF.binance[tf] || tf;
+    const [rA, rP, rG] = await Promise.all([
+        fetch(`https://fapi.binance.com/fapi/v1/topLongShortAccountRatio?symbol=${sym}&period=${p}&limit=200`),
+        fetch(`https://fapi.binance.com/fapi/v1/topLongShortPositionRatio?symbol=${sym}&period=${p}&limit=200`),
+        fetch(`https://fapi.binance.com/fapi/v1/globalLongShortAccountRatio?symbol=${sym}&period=${p}&limit=200`),
+    ]);
+    const [dA, dP, dG] = await Promise.all([rA.json(), rP.json(), rG.json()]);
+    if (!Array.isArray(dA) || !dA.length) throw new Error('Binance L/S empty: ' + JSON.stringify(dA).slice(0,80));
+    const toS = (arr, key) => Array.isArray(arr) ? arr.map(x => ({ time: Math.floor(+x.timestamp/1000), value: +x[key] })) : [];
+    return { acct: toS(dA,'longShortRatio'), pos: toS(dP,'longShortRatio'), global: toS(dG,'longShortRatio') };
+}
+
+async function fetchLS_Bybit(sym, tf) {
+    const r = await fetch(`https://api.bybit.com/v5/market/account-ratio?category=linear&symbol=${sym}&period=${OI_TF.bybit[tf]||'1h'}&limit=200`);
+    const d = await r.json();
+    if (d.retCode !== 0) throw new Error('Bybit L/S: ' + d.retMsg);
+    const list = (d.result?.list || []).reverse();
+    if (!list.length) throw new Error('Bybit L/S empty');
+    return { acct: list.map(x => ({ time: Math.floor(+x.timestamp/1000), value: +x.buyRatio / (+x.sellRatio || 0.001) })) };
+}
+
+async function fetchLS_OKX(sym, tf) {
+    const ccy = sym.replace('USDT','');
+    const r = await fetch(`https://www.okx.com/api/v5/rubik/stat/contracts/long-short-account-ratio?ccy=${ccy}&period=${OI_TF.okx[tf]||'1H'}&limit=200`);
+    const d = await r.json();
+    if (d.code !== '0') throw new Error('OKX L/S: ' + d.msg);
+    const data = (d.data || []).reverse();
+    if (!data.length) throw new Error('OKX L/S empty');
+    return { acct: data.map(x => ({ time: Math.floor(+x[0]/1000), value: +x[1] })) };
+}
+
 // ── REST: Long/Short ──────────────────────────────────────────────
 async function loadLS() {
     const sym = currentSym + 'USDT';
+    const itf = lsState.tf;
+    const exch = lsState.exchange;
     document.getElementById('empty-ls').style.display = 'none';
-    const toS = (arr, key) => arr.map(d => ({ time: Math.floor(d.timestamp/1000), value: +d[key] }));
+
     try {
-        const [rA, rP, rG] = await Promise.all([
-            fetch(`https://fapi.binance.com/fapi/v1/topLongShortAccountRatio?symbol=${sym}&period=${tf}&limit=288`),
-            fetch(`https://fapi.binance.com/fapi/v1/topLongShortPositionRatio?symbol=${sym}&period=${tf}&limit=288`),
-            fetch(`https://fapi.binance.com/fapi/v1/globalLongShortAccountRatio?symbol=${sym}&period=${tf}&limit=288`),
-        ]);
-        const [dA, dP, dG] = await Promise.all([rA.json(), rP.json(), rG.json()]);
-        if (!Array.isArray(dA) || !dA.length) { document.getElementById('empty-ls').style.display = ''; return; }
-        charts.ls.acct.setData(toS(dA, 'longShortRatio'));
-        if (Array.isArray(dP) && dP.length) charts.ls.pos.setData(toS(dP, 'longShortRatio'));
-        if (Array.isArray(dG) && dG.length) charts.ls.global.setData(toS(dG, 'longShortRatio'));
+        const exchanges = exch === 'ALL' ? ['binance','bybit','okx'] : [exch];
+
+        const results = await Promise.allSettled(exchanges.map(e => {
+            if (e === 'binance') return fetchLS_Binance(sym, itf);
+            if (e === 'bybit')   return fetchLS_Bybit(sym, itf);
+            if (e === 'okx')     return fetchLS_OKX(sym, itf);
+        }));
+
+        results.forEach((r, i) => {
+            if (r.status === 'rejected') console.warn(`L/S ${exchanges[i]} failed:`, r.reason?.message || r.reason);
+        });
+
+        const ok = results.map((r,i) => r.status === 'fulfilled' ? { exch: exchanges[i], data: r.value } : null).filter(Boolean);
+
+        if (!ok.length) { document.getElementById('empty-ls').style.display = ''; return; }
+
+        // Lines: acct=line1(gold), pos=line2(green), global=line3(muted)
+        // When Binance only: Top Acct / Top Pos / Global
+        // When ALL or other: one line per exchange
+        if (exch === 'binance') {
+            const d = ok[0].data;
+            charts.ls.acct.setData(d.acct || []);
+            charts.ls.pos.setData(d.pos || []);
+            charts.ls.global.setData(d.global || []);
+            document.getElementById('ls-leg-1').textContent = 'Top Acct';
+            document.getElementById('ls-leg-2').textContent = 'Top Pos';
+            document.getElementById('ls-leg-3').textContent = 'Global';
+        } else {
+            // Each exchange gets one line
+            const lineKeys = ['acct','pos','global'];
+            const seriesKeys = ['acct','pos','global'];
+            [0,1,2].forEach(i => {
+                const entry = ok[i];
+                const chartSeries = [charts.ls.acct, charts.ls.pos, charts.ls.global][i];
+                if (entry) {
+                    chartSeries.setData(entry.data.acct || []);
+                    const label = entry.exch.charAt(0).toUpperCase() + entry.exch.slice(1);
+                    document.getElementById(`ls-leg-${i+1}`).textContent = label;
+                } else {
+                    chartSeries.setData([]);
+                    document.getElementById(`ls-leg-${i+1}`).textContent = '';
+                }
+            });
+        }
+
         charts.ls.chart.timeScale().fitContent();
-        const last = dA[dA.length-1];
-        const el = document.getElementById('ls-val');
-        const ratio = +last.longShortRatio;
-        el.textContent = ratio.toFixed(2);
-        el.style.color = ratio >= 1 ? 'var(--green)' : 'var(--red)';
-    } catch { document.getElementById('empty-ls').style.display = ''; }
+
+        const mainData = ok[0].data.acct || [];
+        if (mainData.length) {
+            const ratio = mainData[mainData.length-1].value;
+            const el = document.getElementById('ls-val');
+            el.textContent = ratio.toFixed(2);
+            el.style.color = ratio >= 1 ? 'var(--green)' : 'var(--red)';
+        }
+    } catch(e) {
+        console.error('loadLS error:', e);
+        document.getElementById('empty-ls').style.display = '';
+    }
 }
 
 // ── REST: Liquidations history ────────────────────────────────────
