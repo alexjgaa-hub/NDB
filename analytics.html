@@ -549,7 +549,10 @@ async function fetchLS_Binance(sym, tf) {
         fetch(`https://fapi.binance.com/fapi/v1/globalLongShortAccountRatio?symbol=${sym}&period=${p}&limit=200`),
     ]);
     const [dA, dP, dG] = await Promise.all([rA.json(), rP.json(), rG.json()]);
-    if (!Array.isArray(dA) || !dA.length) throw new Error('Binance L/S empty: ' + JSON.stringify(dA).slice(0,80));
+    if (!Array.isArray(dA) || !dA.length) {
+        console.warn('Binance topLongShortAccountRatio response:', JSON.stringify(dA).slice(0,120));
+        throw new Error('Binance L/S: ' + JSON.stringify(dA).slice(0,80));
+    }
     const toS = (arr, key) => Array.isArray(arr) ? arr.map(x => ({ time: Math.floor(+x.timestamp/1000), value: +x[key] })) : [];
     return { acct: toS(dA,'longShortRatio'), pos: toS(dP,'longShortRatio'), global: toS(dG,'longShortRatio') };
 }
@@ -611,27 +614,29 @@ async function loadLS() {
         }
         charts.ls.retail.setData(retailData);
 
-        // Main lines: one per exchange (top traders)
+        // Map results by exchange name (not by position — avoids wrong labels when one exchange fails)
+        const byExch = {};
+        ok.forEach(e => { byExch[e.exch] = e.data; });
+
         if (exch === 'binance') {
-            const d = ok[0].data;
+            const d = byExch.binance || {};
             charts.ls.acct.setData(d.acct || []);
             charts.ls.pos.setData(d.pos || []);
-            charts.ls.global.setData([]);  // retail takes over global slot
+            charts.ls.global.setData([]);
             document.getElementById('ls-leg-1').textContent = 'Top Acct';
             document.getElementById('ls-leg-2').textContent = 'Top Pos';
             document.getElementById('ls-leg-3').textContent = '';
         } else {
-            [0,1,2].forEach(i => {
-                const entry = ok[i];
-                const series = [charts.ls.acct, charts.ls.pos, charts.ls.global][i];
-                if (entry) {
-                    series.setData(entry.data.acct || []);
-                    document.getElementById(`ls-leg-${i+1}`).textContent =
-                        entry.exch.charAt(0).toUpperCase() + entry.exch.slice(1);
-                } else {
-                    series.setData([]);
-                    document.getElementById(`ls-leg-${i+1}`).textContent = '';
-                }
+            // Fixed slots: Binance=gold, Bybit=green, OKX=gray
+            const slots = [
+                { key:'binance', label:'Binance', series: charts.ls.acct,   leg:'ls-leg-1' },
+                { key:'bybit',   label:'Bybit',   series: charts.ls.pos,    leg:'ls-leg-2' },
+                { key:'okx',     label:'OKX',     series: charts.ls.global, leg:'ls-leg-3' },
+            ];
+            slots.forEach(s => {
+                const d = byExch[s.key];
+                s.series.setData(d?.acct || []);
+                document.getElementById(s.leg).textContent = d ? s.label : '';
             });
         }
 
