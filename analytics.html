@@ -207,15 +207,23 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); font-si
 
     <div class="an-block">
         <div class="ab-hdr">
-            LIQUIDATION LEVELS
-            <span style="color:var(--muted);font-size:9px;margin-left:4px">via CoinGlass</span>
+            LIQUIDATION HEATMAP
+            <span class="ab-val" id="liq-val"></span>
+            <div class="blk-controls">
+                <select class="blk-sel" onchange="liqState.tf=this.value;loadLiqHeat()">
+                    <option value="15m">15m</option>
+                    <option value="1h" selected>1h</option>
+                    <option value="4h">4h</option>
+                </select>
+            </div>
+            <span class="ab-legend">
+                <span class="ab-leg"><i style="background:#e05050"></i> Long liq</span>
+                <span class="ab-leg"><i style="background:#4aadff"></i> Short liq</span>
+            </span>
         </div>
-        <div class="ab-body" style="padding:0">
-            <iframe id="liq-iframe"
-                src="https://www.coinglass.com/pro/futures/LiquidationModel?coin=BTC&layout=basic"
-                style="width:100%;height:100%;border:none;display:block"
-                allowtransparency="true">
-            </iframe>
+        <div class="ab-body">
+            <canvas id="liq-canvas"></canvas>
+            <div class="ab-empty" id="empty-liq">Loading…</div>
         </div>
     </div>
 
@@ -296,9 +304,143 @@ const HEAT_MAX   = 600;
 
 let depthWS = null, tickerWS = null, heatTimer = null;
 
-function updateLiqWidget() {
-    const el = document.getElementById('liq-iframe');
-    if (el) el.src = `https://www.coinglass.com/pro/futures/LiquidationModel?coin=${currentSym}&layout=basic`;
+// ── Liquidation heatmap ───────────────────────────────────────────
+const liqState      = { tf: '1h' };
+const LIQ_LEVERAGES = [3, 5, 10, 20, 50, 100];
+const LIQ_MARGIN    = 0.005;  // 0.5% maintenance margin
+const LIQ_LAMBDA    = 0.2;    // hourly time-decay rate
+
+async function loadLiqHeat() {
+    const sym  = currentSym + 'USDT';
+    const itf  = liqState.tf;
+    const emEl = document.getElementById('empty-liq');
+    emEl.style.display = ''; emEl.textContent = 'Loading…';
+    document.getElementById('liq-val').textContent = '';
+
+    const [klRes, lsRes] = await Promise.allSettled([
+        fetchKlines_Binance(sym, itf, 200),
+        fetchLS_Binance(sym, itf)
+    ]);
+    if (klRes.status === 'rejected') {
+        emEl.textContent = 'Error: ' + (klRes.reason?.message || '?');
+        return;
+    }
+    const klines = klRes.value;
+    if (!klines.length) { emEl.textContent = 'No data'; return; }
+
+    // L/S map: candle timestamp → longRatio 0-1 (fallback 0.5)
+    const lsMap = new Map();
+    if (lsRes.status === 'fulfilled') {
+        lsRes.value.forEach(x => lsMap.set(x.time, x.value / 100));
+    }
+
+    emEl.style.display = 'none';
+    renderLiqHeat(klines, lsMap);
+    document.getElementById('liq-val').textContent =
+        klines.length + ' candles · Binance · λ=' + LIQ_LAMBDA;
+}
+
+function renderLiqHeat(klines, lsMap) {
+    const cvs = document.getElementById('liq-canvas');
+    if (!cvs) return;
+    const W = cvs.width, H = cvs.height;
+    if (!W || !H) return;
+    const ctx = cvs.getContext('2d');
+
+    ctx.fillStyle = '#06091a';
+    ctx.fillRect(0, 0, W, H);
+
+    const now    = Date.now() / 1000;
+    const MARGIN_R = 68;
+    const CW     = W - MARGIN_R;
+
+    // Price range: enough to show 3x liq (±33%) around current price
+    const midP    = livePrice || klines[klines.length - 1].c;
+    const pMin    = midP * 0.60;
+    const pMax    = midP * 1.40;
+    const logPMin = Math.log(pMin);
+    const logRng  = Math.log(pMax / pMin);
+    const pToY    = p => H - (Math.log(Math.max(p, 0.01)) - logPMin) / logRng * H;
+    const yToP    = y => Math.exp(logPMin + (1 - y / H) * logRng);
+
+    // Time range: first kline → now
+    const tMin   = klines[0].t;
+    const tRng   = Math.max(now - tMin, 1);
+    const tToX   = t => ((t - tMin) / tRng) * CW;
+
+    // Per-candle weights: w = ln(volume) × e^(-λ × age_hours)
+    const weights = klines.map(k => {
+        const ageH = (now - k.t) / 3600;
+        return Math.log(Math.max(k.v, 1)) * Math.exp(-LIQ_LAMBDA * ageH);
+    });
+    const maxW = Math.max(...weights, 1e-9);
+
+    // Band height = 0.25% of price in pixels (same as $250 at BTC $100k)
+    const bandH = Math.max(1.5, H * Math.log(1.0025) / logRng);
+
+    // Build draw list: sort dim→bright so bright bars paint on top
+    const bars = [];
+    klines.forEach((k, i) => {
+        const w          = weights[i];
+        const longRatio  = lsMap.get(k.t) ?? 0.5;
+        const shortRatio = 1 - longRatio;
+        const x0         = Math.max(0, tToX(k.t));
+
+        LIQ_LEVERAGES.forEach(lev => {
+            const lLiq = k.o * (1 - 1 / lev + LIQ_MARGIN);
+            const sLiq = k.o * (1 + 1 / lev - LIQ_MARGIN);
+            if (lLiq > pMin && lLiq < pMax)
+                bars.push({ y: pToY(lLiq), x0, norm: (w * longRatio) / maxW,  side: 0 });
+            if (sLiq > pMin && sLiq < pMax)
+                bars.push({ y: pToY(sLiq), x0, norm: (w * shortRatio) / maxW, side: 1 });
+        });
+    });
+    bars.sort((a, b) => a.norm - b.norm);
+
+    bars.forEach(({ y, x0, norm, side }) => {
+        const a = 0.06 + 0.60 * Math.pow(norm, 0.35);
+        // long liq = warm red, short liq = cool blue
+        ctx.fillStyle = side === 0
+            ? `rgba(210,70,70,${a.toFixed(2)})`
+            : `rgba(70,160,240,${a.toFixed(2)})`;
+        ctx.fillRect(x0, y - bandH / 2, CW - x0, bandH);
+    });
+
+    // Price line (close)
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    let first = true;
+    klines.forEach(k => {
+        const x = tToX(k.t), y = pToY(k.c);
+        first ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        first = false;
+    });
+    ctx.stroke();
+
+    // Current price dashed
+    const ly = pToY(midP);
+    ctx.setLineDash([4, 3]); ctx.strokeStyle = '#d9ad70'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(CW, ly); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Right margin: price axis
+    ctx.font = '9px monospace'; ctx.textAlign = 'left';
+    for (let i = 0; i <= 6; i++) {
+        const p = Math.exp(logPMin + (i / 6) * logRng);
+        ctx.fillStyle = i === 3 ? '#d9ad70' : '#3a4e62';
+        ctx.fillText(fmtNum(p), CW + 3, H - (i / 6) * H + 3);
+    }
+    ctx.fillStyle = '#d9ad70'; ctx.font = 'bold 9px monospace';
+    ctx.fillText(fmtNum(midP), CW + 3, ly + 3);
+
+    // Time labels
+    ctx.fillStyle = '#4a5a6e'; ctx.font = '9px monospace';
+    const fmtDt = t => new Date(t * 1000).toLocaleString('en', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    ctx.textAlign = 'left';  ctx.fillText(fmtDt(tMin), 4, H - 4);
+    ctx.textAlign = 'right'; ctx.fillText(fmtDt(now),  CW - 4, H - 4);
+
+    cvs._liqMeta = { yToP };
 }
 const charts = {};
 let heatCvs;
@@ -362,7 +504,7 @@ function setTF(t, btn) {
     loadCVD(); // OI and L/S have their own TF controls
 }
 
-function refreshAll() { loadOI(); loadCVD(); loadLS(); updateLiqWidget(); }
+function refreshAll() { loadOI(); loadCVD(); loadLS(); loadLiqHeat(); }
 
 // ── Chart init ────────────────────────────────────────────────────
 function mkChart(id) {
@@ -417,6 +559,37 @@ function initCharts() {
         bb: lsC.addLineSeries({ color:'#5bba89', lineWidth:1, priceLineVisible:false, lastValueVisible:false }),
         ok: lsC.addLineSeries({ color:'#8594a8', lineWidth:1, priceLineVisible:false, lastValueVisible:false }),
     };
+
+    // Liquidation heatmap canvas
+    const liqCvs = document.getElementById('liq-canvas');
+    const liqPar = liqCvs.parentElement;
+    const sizeLiq = () => {
+        liqCvs.width  = liqPar.offsetWidth;
+        liqCvs.height = liqPar.offsetHeight;
+        if (liqCvs._liqMeta) loadLiqHeat();
+    };
+    sizeLiq();
+    new ResizeObserver(sizeLiq).observe(liqPar);
+
+    // Tooltip
+    const liqTip = document.getElementById('liq-tip');
+    liqCvs.addEventListener('mousemove', e => {
+        const meta = liqCvs._liqMeta;
+        if (!meta) return;
+        const rect = liqCvs.getBoundingClientRect();
+        const my   = (e.clientY - rect.top) * (liqCvs.height / rect.height);
+        const p    = meta.yToP(my);
+        liqTip.style.display = 'block';
+        liqTip.style.left = (e.clientX + 16) + 'px';
+        liqTip.style.top  = (e.clientY - 10) + 'px';
+        const cur   = livePrice || 0;
+        const side  = p < cur ? 'Long liq zone' : 'Short liq zone';
+        const dist  = cur ? ((Math.abs(p - cur) / cur) * 100).toFixed(2) + '% from price' : '';
+        liqTip.innerHTML = `<div style="color:#8594a8;font-size:10px">${side}</div>` +
+            `<div style="color:#e5edf6;font-weight:700">${fmtNum(p)}</div>` +
+            `<div style="color:#d9ad70;font-size:10px">${dist}</div>`;
+    });
+    liqCvs.addEventListener('mouseleave', () => { liqTip.style.display = 'none'; });
 
     // OB Heatmap canvas
     heatCvs = document.getElementById('heat-canvas');
@@ -806,5 +979,6 @@ window.addEventListener('DOMContentLoaded', () => {
     refreshAll();
 });
 </script>
+<div id="liq-tip" style="position:fixed;display:none;background:rgba(8,14,28,0.97);border:1px solid #1f2a3d;padding:7px 11px;border-radius:4px;pointer-events:none;z-index:200;line-height:1.7"></div>
 </body>
 </html>
