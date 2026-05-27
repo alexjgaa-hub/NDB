@@ -208,37 +208,14 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); font-si
     <div class="an-block">
         <div class="ab-hdr">
             LIQUIDATION LEVELS
-            <span class="ab-val" id="liq-val"></span>
-            <div class="blk-controls">
-                <select class="blk-sel" onchange="liqState.exchange=this.value;loadLiqHeat()">
-                    <option value="ALL">ALL</option>
-                    <option value="binance">Binance</option>
-                    <option value="bybit">Bybit</option>
-                </select>
-                <select class="blk-sel" onchange="liqState.tf=this.value;loadLiqHeat()">
-                    <option value="5m">5m</option>
-                    <option value="15m">15m</option>
-                    <option value="1h" selected>1h</option>
-                    <option value="4h">4h</option>
-                    <option value="1d">1D</option>
-                </select>
-                <select class="blk-sel" onchange="liqState.minTrade=+this.value;loadLiqHeat()" title="Min trade size">
-                    <option value="5000">$5K+</option>
-                    <option value="10000">$10K+</option>
-                    <option value="25000">$25K+</option>
-                    <option value="50000" selected>$50K+</option>
-                    <option value="100000">$100K+</option>
-                    <option value="250000">$250K+</option>
-                    <option value="500000">$500K+</option>
-                </select>
-            </div>
-            <span class="ab-legend">
-                <span class="ab-leg" style="color:var(--muted)">7x · hover for totals</span>
-            </span>
+            <span style="color:var(--muted);font-size:9px;margin-left:4px">via CoinGlass</span>
         </div>
-        <div class="ab-body">
-            <canvas id="liq-canvas"></canvas>
-            <div class="ab-empty" id="empty-liq">Loading…</div>
+        <div class="ab-body" style="padding:0">
+            <iframe id="liq-iframe"
+                src="https://www.coinglass.com/pro/futures/LiquidationModel?coin=BTC&layout=basic"
+                style="width:100%;height:100%;border:none;display:block"
+                allowtransparency="true">
+            </iframe>
         </div>
     </div>
 
@@ -306,7 +283,6 @@ let livePrice  = 0;
 // Per-block state
 const oiState  = { exchange: 'ALL', tf: '1h' };
 const lsState  = { exchange: 'ALL', tf: '1h' };
-const liqState = { exchange: 'ALL', tf: '1h', minTrade: 50000 };
 
 // TF mappings per exchange for OI endpoints
 const OI_TF = {
@@ -318,39 +294,11 @@ const OI_TF = {
 const heatBuf    = [];
 const HEAT_MAX   = 600;
 
-let depthWS = null, tickerWS = null, liqTradeWS = null, heatTimer = null;
-let _liqKlines = [];
-let _liqRenderPending = false;
+let depthWS = null, tickerWS = null, heatTimer = null;
 
-// ── Liq trade accumulator ─────────────────────────────────────────
-const LIQ_LEVER    = 7;
-const liqBucketMap = new Map(); // "t5min_bin" → {t, bin, liqP, usd}
-const binTotals    = new Map(); // bin → total USD (for hover + labels)
-
-function liqPriceToBin(p) { return Math.round(Math.log(p / 1000) / Math.log(1.01)); }
-function binToLiqPrice(b) { return 1000 * Math.pow(1.01, b); }
-
-function addLiqTrade(priceStr, qtyStr, tMs, isMaker) {
-    const usd = +priceStr * +qtyStr;
-    if (usd < (liqState.minTrade || 50000)) return false;
-    const price  = +priceStr;
-    // aggressive buy (isMaker=false) → likely long → liq below at price*(6/7)
-    // aggressive sell (isMaker=true) → likely short → liq above at price*(8/7)
-    const liqP   = isMaker ? price * (1 + 1/LIQ_LEVER) : price * (1 - 1/LIQ_LEVER);
-    const bin    = liqPriceToBin(liqP);
-    const bucket = Math.floor(+tMs / 1000 / 300) * 300; // 5-min bucket
-    const key    = `${bucket}_${bin}`;
-    const entry  = liqBucketMap.get(key);
-    if (entry) { entry.usd += usd; }
-    else       { liqBucketMap.set(key, { t: bucket, bin, liqP, usd }); }
-    binTotals.set(bin, (binTotals.get(bin) || 0) + usd);
-    return true;
-}
-
-function scheduleRenderLiq() {
-    if (_liqRenderPending) return;
-    _liqRenderPending = true;
-    requestAnimationFrame(() => { renderLiqHeat(_liqKlines); _liqRenderPending = false; });
+function updateLiqWidget() {
+    const el = document.getElementById('liq-iframe');
+    if (el) el.src = `https://www.coinglass.com/pro/futures/LiquidationModel?coin=${currentSym}&layout=basic`;
 }
 const charts = {};
 let heatCvs;
@@ -411,10 +359,10 @@ function setTF(t, btn) {
     tf = t;
     document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    loadCVD(); loadLiqHeat(); // OI and L/S have their own TF controls
+    loadCVD(); // OI and L/S have their own TF controls
 }
 
-function refreshAll() { loadOI(); loadCVD(); loadLS(); loadLiqHeat(); }
+function refreshAll() { loadOI(); loadCVD(); loadLS(); updateLiqWidget(); }
 
 // ── Chart init ────────────────────────────────────────────────────
 function mkChart(id) {
@@ -469,40 +417,6 @@ function initCharts() {
         bb: lsC.addLineSeries({ color:'#5bba89', lineWidth:1, priceLineVisible:false, lastValueVisible:false }),
         ok: lsC.addLineSeries({ color:'#8594a8', lineWidth:1, priceLineVisible:false, lastValueVisible:false }),
     };
-
-    // Liquidation Levels canvas
-    const liqCvs = document.getElementById('liq-canvas');
-    const liqParent = liqCvs.parentElement;
-    const sizeLiq = () => {
-        liqCvs.width = liqParent.offsetWidth;
-        liqCvs.height = liqParent.offsetHeight;
-        renderLiqHeat(_liqKlines);
-    };
-    sizeLiq();
-    new ResizeObserver(sizeLiq).observe(liqParent);
-
-    // Hover tooltip
-    const liqTip = document.getElementById('liq-tip');
-    liqCvs.addEventListener('mousemove', e => {
-        const meta = liqCvs._liqMeta;
-        if (!meta || !binTotals.size) { liqTip.style.display='none'; return; }
-        const rect = liqCvs.getBoundingClientRect();
-        const my   = (e.clientY - rect.top) * (liqCvs.height / rect.height);
-        const hoverPrice = meta.yToPrice(my);
-        const bin   = liqPriceToBin(hoverPrice);
-        const total = binTotals.get(bin) || 0;
-        if (!total) { liqTip.style.display='none'; return; }
-        const liqP  = binToLiqPrice(bin);
-        const pctUp = ((liqP/hoverPrice - 1)*100).toFixed(1);
-        liqTip.style.display = 'block';
-        liqTip.style.left = (e.clientX + 16) + 'px';
-        liqTip.style.top  = (e.clientY - 12) + 'px';
-        liqTip.innerHTML  =
-            `<div style="color:#8594a8;font-size:10px;margin-bottom:2px">LIQ LEVEL · 7x</div>` +
-            `<div style="color:#e5edf6;font-weight:700">${fmtNum(liqP)}</div>` +
-            `<div style="color:#d9ad70;font-size:11px">${fmtUSD(total)} potential</div>`;
-    });
-    liqCvs.addEventListener('mouseleave', () => { liqTip.style.display='none'; });
 
     // OB Heatmap canvas
     heatCvs = document.getElementById('heat-canvas');
@@ -741,202 +655,6 @@ async function fetchKlines_Bybit(sym, tf, limit=500) {
     return (d.result?.list || []).reverse().map(k => ({ t:Math.floor(+k[0]/1000), o:+k[1], h:+k[2], l:+k[3], c:+k[4], v:+k[6] }));
 }
 
-// ── Liquidation Levels Heatmap ────────────────────────────────────
-// Levers: [leverage, side, liqFactor, colorRGB]
-
-async function loadLiqHeat() {
-    const sym  = currentSym + 'USDT';
-    const itf  = liqState.tf;
-    const exch = liqState.exchange;
-    const emEl = document.getElementById('empty-liq');
-    emEl.style.display = ''; emEl.textContent = 'Loading…';
-    document.getElementById('liq-val').textContent = '';
-
-    // Reset accumulated data on reload
-    liqBucketMap.clear(); binTotals.clear();
-
-    const exchanges = exch === 'ALL' ? ['binance','bybit'] : [exch];
-
-    // Klines — for price line background only
-    const klRes = await Promise.allSettled(exchanges.map(e =>
-        e === 'binance' ? fetchKlines_Binance(sym, itf, 200)
-                        : fetchKlines_Bybit(sym, itf, 200)
-    ));
-    const kMap = new Map();
-    klRes.filter(r => r.status==='fulfilled').forEach(r =>
-        r.value.forEach(k => kMap.has(k.t) ? null : kMap.set(k.t, k))
-    );
-    _liqKlines = Array.from(kMap.values()).sort((a,b) => a.t - b.t);
-
-    // Recent aggTrades — initial snapshot (last ~1000 trades per exchange)
-    const tradeFetches = [];
-    if (exchanges.includes('binance')) {
-        tradeFetches.push(
-            fetch(`https://fapi.binance.com/fapi/v1/aggTrades?symbol=${sym}&limit=1000`)
-                .then(r => r.json())
-                .then(d => { if (Array.isArray(d)) d.forEach(t => addLiqTrade(t.p, t.q, t.T, t.m)); })
-                .catch(e => console.warn('aggTrades Binance:', e.message))
-        );
-    }
-    if (exchanges.includes('bybit')) {
-        tradeFetches.push(
-            fetch(`https://api.bybit.com/v5/market/recent-trade?category=linear&symbol=${sym}&limit=1000`)
-                .then(r => r.json())
-                .then(d => { if (d.retCode === 0) (d.result?.list || []).forEach(t => addLiqTrade(t.price, t.size, +t.time, t.side === 'Sell')); })
-                .catch(e => console.warn('recent-trade Bybit:', e.message))
-        );
-    }
-    await Promise.allSettled(tradeFetches);
-
-    emEl.style.display = 'none';
-    renderLiqHeat(_liqKlines);
-    document.getElementById('liq-val').textContent = liqBucketMap.size + ' zones · WS active';
-
-    // Start real-time aggTrade WebSocket
-    startLiqTradeWS(sym, exchanges);
-}
-
-function startLiqTradeWS(sym, exchanges) {
-    if (liqTradeWS) { liqTradeWS.close(); liqTradeWS = null; }
-    const s = sym.toLowerCase();
-    liqTradeWS = new WebSocket(`wss://fstream.binance.com/ws/${s}@aggTrade`);
-    liqTradeWS.onmessage = e => {
-        const t = JSON.parse(e.data);
-        if (addLiqTrade(t.p, t.q, t.T, t.m)) scheduleRenderLiq();
-    };
-}
-
-function liqUsdToColor(usd, maxUSD) {
-    const t = Math.pow(usd / (maxUSD || 1), 0.35);
-    // dark purple → teal → cyan-green → yellow-green → yellow
-    const r = t < 0.5 ? Math.round(30 + t*2*30)  : Math.round(60  + (t-0.5)*2*180);
-    const g = t < 0.5 ? Math.round(60 + t*2*130) : Math.round(190 + (t-0.5)*2*65);
-    const b = t < 0.5 ? Math.round(100 + t*2*50) : Math.round(150 - (t-0.5)*2*150);
-    return [r, g, b];
-}
-
-function renderLiqHeat(klines) {
-    const cvs = document.getElementById('liq-canvas');
-    if (!cvs) return;
-    const W = cvs.width, H = cvs.height;
-    if (!W || !H) return;
-    const ctx = cvs.getContext('2d');
-
-    // Dark background (CoinGlass style)
-    ctx.fillStyle = '#06091a';
-    ctx.fillRect(0, 0, W, H);
-
-    if (!liqBucketMap.size && !klines.length) return;
-
-    const now = Date.now() / 1000;
-
-    // Price range: from klines extremes + liq levels
-    const allP = klines.flatMap(k => [k.h, k.l]);
-    liqBucketMap.forEach(e => allP.push(e.liqP));
-    if (!allP.length) return;
-    const pMin = Math.min(...allP) * 0.97;
-    const pMax = Math.max(...allP) * 1.03;
-
-    // Time range: oldest bucket or kline[0] → now
-    const tBuckets = Array.from(liqBucketMap.values()).map(e => e.t);
-    const tMin = Math.min(
-        klines.length ? klines[0].t : now - 7200,
-        tBuckets.length ? Math.min(...tBuckets) : now - 7200
-    );
-    const tRange = Math.max(now - tMin, 1);
-
-    const MARGIN_R = 82;
-    const CW = W - MARGIN_R;
-    const logPMin  = Math.log(pMin);
-    const logPMax  = Math.log(pMax);
-    const logRange = logPMax - logPMin;
-    const priceToY = p => H - (Math.log(p) - logPMin) / logRange * H;
-    const yToPrice = y => Math.exp(logPMin + (1 - y/H) * logRange);
-    const timeToX  = t => Math.max(0, ((t - tMin) / tRange) * CW);
-
-    // Band height = 1% of chart height at midpoint
-    const bandH = Math.max(2, H * Math.log(1.01) / logRange);
-
-    // Max USD for color scaling
-    let maxUSD = 0;
-    binTotals.forEach(v => { if (v > maxUSD) maxUSD = v; });
-
-    // Draw liq bands: each 5-min bucket is a bar from its time → right edge
-    liqBucketMap.forEach(({ t, liqP, usd }) => {
-        if (liqP < pMin || liqP > pMax) return;
-        const x0 = timeToX(t);
-        if (x0 >= CW) return;
-        const y  = priceToY(liqP);
-        const binTotal = binTotals.get(liqPriceToBin(liqP)) || usd;
-        const [r,g,b]  = liqUsdToColor(binTotal, maxUSD);
-        // alpha based on bucket's own contribution
-        const alpha = 0.12 + 0.55 * Math.pow(usd / (maxUSD || 1), 0.4);
-        ctx.fillStyle = `rgba(${r},${g},${b},${alpha.toFixed(2)})`;
-        ctx.fillRect(x0, y - bandH/2, CW - x0, bandH);
-    });
-
-    // Candle price line overlay
-    if (klines.length > 1) {
-        ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        let first = true;
-        klines.forEach(k => {
-            const x = timeToX(k.t);
-            if (x > CW) return;
-            first ? ctx.moveTo(x, priceToY(k.c)) : ctx.lineTo(x, priceToY(k.c));
-            first = false;
-        });
-        ctx.stroke();
-    }
-
-    // Current price dashed line
-    const refP = livePrice || (klines.length ? klines[klines.length-1].c : 0);
-    if (refP) {
-        const ly = priceToY(refP);
-        ctx.setLineDash([4,3]); ctx.strokeStyle = '#d9ad70'; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(CW, ly); ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = '#d9ad70'; ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left';
-        ctx.fillText(fmtNum(refP), CW + 3, ly + 3);
-    }
-
-    // Right: price axis ticks
-    ctx.font = '9px monospace'; ctx.textAlign = 'left'; ctx.fillStyle = '#3a4a5e';
-    for (let i = 0; i <= 6; i++) {
-        const p = Math.exp(logPMin + (i/6)*logRange);
-        ctx.fillText(fmtNum(p), CW + 3, H - (i/6)*H + 3);
-    }
-
-    // Right: liq totals per bin (right-aligned, colored)
-    const sigMin = maxUSD * 0.03;
-    let lastLY = -99;
-    ctx.font = '8px monospace'; ctx.textAlign = 'right';
-    // Sort by value desc so important labels take priority
-    const sortedBins = Array.from(binTotals.entries()).sort((a,b) => b[1]-a[1]);
-    for (const [bin, total] of sortedBins) {
-        if (total < sigMin) break;
-        const liqP = binToLiqPrice(bin);
-        if (liqP < pMin || liqP > pMax) continue;
-        const y = priceToY(liqP);
-        if (y < 4 || y > H - 4) continue;
-        if (Math.abs(y - lastLY) < 9) continue;
-        const [r,g,b] = liqUsdToColor(total, maxUSD);
-        ctx.fillStyle = `rgba(${r},${g},${b},0.9)`;
-        ctx.fillText(fmtUSD(total), W - 2, y + 3);
-        lastLY = y;
-    }
-
-    // Time labels
-    ctx.fillStyle = '#4a5a6e'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
-    const fmtT = t => new Date(t*1000).toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
-    ctx.fillText(fmtT(tMin), 4, H - 4);
-    ctx.textAlign = 'right';
-    ctx.fillText(fmtT(now), CW - 4, H - 4);
-
-    // Store for hover handler
-    cvs._liqMeta = { yToPrice };
-}
 
 // ── WebSocket connections ─────────────────────────────────────────
 function setWS(live, label) {
@@ -945,8 +663,7 @@ function setWS(live, label) {
 }
 
 function connectWS() {
-    [depthWS, tickerWS, liqTradeWS].forEach(ws => { if (ws) ws.close(); });
-    liqTradeWS = null;
+    [depthWS, tickerWS].forEach(ws => { if (ws) ws.close(); });
     const s = (currentSym + 'USDT').toLowerCase();
 
     // Mark price ticker
@@ -1089,6 +806,5 @@ window.addEventListener('DOMContentLoaded', () => {
     refreshAll();
 });
 </script>
-<div id="liq-tip" style="position:fixed;display:none;background:rgba(8,14,28,0.97);border:1px solid #1f2a3d;padding:8px 12px;font-size:11px;border-radius:5px;pointer-events:none;z-index:200;min-width:150px;line-height:1.6"></div>
 </body>
 </html>
