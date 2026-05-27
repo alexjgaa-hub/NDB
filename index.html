@@ -99,101 +99,68 @@
 
         .v-div { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
 
-        /* ── PAIR DROPDOWN ── */
-        .pair-dropdown { position: relative; }
-
-        .pair-trigger {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 5px 10px;
-            border: 1px solid var(--border);
-            border-radius: 5px;
+        /* ── ORDERBOOK PAIR LABEL ── */
+        .ob-set-pair {
+            text-decoration: underline;
             cursor: pointer;
-            background: var(--surface2);
-            transition: border-color 0.15s;
-            user-select: none;
-            min-width: 140px;
+            color: var(--muted);
+            transition: color 0.1s;
+            letter-spacing: 1px;
         }
+        .ob-set-pair:hover { color: var(--text); }
 
-        .pair-trigger:hover { border-color: var(--blue); }
-        .pair-trigger.open  { border-color: var(--blue); }
+        /* OB header color by market type */
+        .ob-hdr-spot { background: rgba(232,228,58,0.12) !important; border-bottom-color: rgba(232,228,58,0.28) !important; }
+        .ob-hdr-spot #ob-pair-label { color: rgb(222,218,50); }
+        .ob-hdr-perp { background: rgba(183,253,99,0.12) !important; border-bottom-color: rgba(183,253,99,0.28) !important; }
+        .ob-hdr-perp #ob-pair-label { color: rgb(170,240,88); }
 
-        .pt-name  { font-size: 13px; font-weight: bold; }
-        .pt-type  { font-size: 10px; color: var(--muted); }
-        .pt-arrow { margin-left: auto; color: var(--muted); font-size: 10px; }
-
-        .pair-panel {
-            display: none;
-            position: absolute;
-            top: calc(100% + 6px);
-            left: 0;
-            width: 340px;
+        /* ── ORDERBOOK PAIR PICKER MODAL ── */
+        .ob-pp-overlay {
+            position: fixed; inset: 0; z-index: 300;
+            background: rgba(0,0,0,0.55);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .ob-pp-overlay.hidden { display: none; }
+        .ob-pp-card {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 6px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-            z-index: 200;
-            overflow: hidden;
+            border-radius: 10px;
+            width: 460px;
+            max-height: 500px;
+            display: flex; flex-direction: column;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6);
         }
-
-        .pair-panel.open { display: block; }
-
-        .pair-search-wrap { padding: 8px; border-bottom: 1px solid var(--border); }
-
-        .pair-search {
-            width: 100%;
-            padding: 6px 10px;
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            color: var(--text);
-            border-radius: 4px;
-            font-family: var(--font);
-            font-size: 12px;
-            outline: none;
-        }
-
-        .pair-search:focus { border-color: var(--blue); }
-
-        .pair-cats {
-            display: flex;
-            gap: 4px;
-            padding: 6px 8px;
+        .ob-pp-hdr {
+            padding: 13px 18px;
             border-bottom: 1px solid var(--border);
-            overflow-x: auto;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 13px; font-weight: 600; flex-shrink: 0;
         }
-
-        .pcat {
-            padding: 2px 8px;
-            border: 1px solid var(--border);
-            border-radius: 3px;
-            background: transparent;
-            color: var(--muted);
-            cursor: pointer;
-            font-family: var(--font);
-            font-size: 10px;
-            white-space: nowrap;
+        .ob-pp-close {
+            background: none; border: none; color: var(--muted);
+            cursor: pointer; font-size: 20px; line-height: 1; padding: 0 2px;
+            transition: color 0.1s; font-family: var(--font);
         }
-
-        .pcat.active { border-color: var(--blue); color: var(--blue); background: rgba(88,166,255,0.1); }
-
-        .pair-items { max-height: 280px; overflow-y: auto; }
-
-        .pair-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 7px 12px;
-            cursor: pointer;
-            transition: background 0.1s;
+        .ob-pp-close:hover { color: var(--text); }
+        .ob-pp-body { overflow-y: auto; flex: 1; }
+        .ob-pp-empty { padding: 32px 18px; text-align: center; color: var(--muted); font-size: 13px; }
+        .ob-pp-item {
+            padding: 11px 18px; cursor: pointer;
+            display: flex; align-items: center; gap: 12px;
+            border-bottom: 1px solid var(--border2); transition: background 0.1s;
         }
-
-        .pair-item:hover { background: var(--surface2); }
-        .pair-item.active { background: rgba(88,166,255,0.08); }
-
-        .pi-sym  { font-size: 12px; font-weight: bold; width: 60px; }
-        .pi-name { font-size: 11px; color: var(--muted); flex: 1; }
-        .pi-cat  { font-size: 10px; color: var(--muted); background: var(--surface2); padding: 1px 5px; border-radius: 2px; }
+        .ob-pp-item:last-child { border-bottom: none; }
+        .ob-pp-item:hover { background: var(--surface2); }
+        .ob-pp-item-name { font-size: 13px; font-weight: 600; flex: 1; }
+        .ob-pp-item-exchange { font-size: 11px; color: var(--muted); }
+        .ob-pp-badge {
+            padding: 2px 7px; border-radius: 4px;
+            font-size: 10px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .ob-pp-badge-spot { background: rgba(232,228,58,0.15); color: rgb(222,218,50); }
+        .ob-pp-badge-perp { background: rgba(183,253,99,0.15); color: rgb(170,240,88); }
 
         /* ── HEADER REST ── */
         select {
@@ -286,13 +253,13 @@
             justify-content: space-between;
             flex-shrink: 0;
         }
-        .orderbook .panel-hdr { color: #333; background: #e0e0e0; border-bottom-color: #c0c0c0; }
+        .orderbook .panel-hdr { color: var(--muted); background: var(--surface2); border-bottom-color: var(--border); }
         .ob-hdr-btns { display: flex; gap: 2px; }
         .ob-icon-btn {
-            background: none; border: none; color: #555;
+            background: none; border: none; color: var(--muted);
             cursor: pointer; font-size: 14px; padding: 0 4px; line-height: 1; transition: color 0.1s;
         }
-        .ob-icon-btn:hover { color: #000; }
+        .ob-icon-btn:hover { color: var(--text); }
 
         /* Settings popup */
         .ob-settings-popup {
@@ -550,6 +517,25 @@
         .tf-btn.active { background: var(--surface2); color: var(--blue); }
 
         .tb-sep { width: 1px; height: 16px; background: var(--border); margin: 0 4px; }
+
+        /* ── EXCHANGE SELECTOR ── */
+        .exch-sel-row {
+            display: flex; align-items: center; gap: 2px;
+            padding: 4px 10px; border-bottom: 1px solid var(--border);
+            flex-shrink: 0; overflow-x: auto; background: var(--surface);
+        }
+        .exch-sel-btn {
+            display: flex; flex-direction: column; align-items: center;
+            padding: 3px 10px; border: 1px solid var(--border); border-radius: 5px;
+            cursor: pointer; background: transparent; font-family: var(--font);
+            transition: all 0.12s; color: var(--muted); font-size: 11px;
+            font-weight: 600; gap: 1px; white-space: nowrap; line-height: 1.3;
+        }
+        .exch-sel-btn span { font-size: 9px; font-weight: 400; color: var(--muted); }
+        .exch-sel-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(217,173,112,0.08); }
+        .exch-sel-btn.active span { color: var(--gold); opacity: 0.8; }
+        .exch-sel-btn:hover:not(.active) { border-color: var(--muted); color: var(--text); }
+        .exch-sel-sep { width: 1px; height: 24px; background: var(--border); margin: 0 3px; flex-shrink: 0; }
 
         #chart-ohlc { margin-left: auto; color: var(--muted); font-size: 10px; }
 
@@ -922,9 +908,30 @@
         .proj-info-label { font-size:11px; font-weight:600; color:var(--muted); letter-spacing:0.4px; text-transform:uppercase; }
         .proj-info-value { font-size:13px; color:var(--text); font-weight:500; min-height:18px; }
         .proj-tab-empty { color:var(--muted); font-size:13px; padding:16px 0; }
+        /* Pairs tab */
+        .pairs-form { display:flex; align-items:flex-end; gap:12px; margin-bottom:20px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:14px 16px; flex-wrap:wrap; }
+        .pairs-form-group { display:flex; flex-direction:column; gap:5px; }
+        .pairs-sym-input { width:200px; }
+        .pairs-exch-select { width:180px; }
+        .pairs-link-btn { padding:8px 18px; border:none; border-radius:6px; background:#34d399; color:#0b0f17; font-family:var(--font); font-size:12px; font-weight:700; cursor:pointer; transition:opacity 0.15s; white-space:nowrap; margin-top:19px; }
+        .pairs-link-btn:hover { opacity:0.82; }
+        .pairs-price { font-weight:500; }
+        .pairs-price.loading { color:var(--muted); font-style:italic; }
+
+        /* ── PAGE LAYOUT ── */
+        .page-layout { display:flex; flex:1; overflow:hidden; min-height:0; }
+        .page-content { display:flex; flex:1; flex-direction:column; overflow-y:auto; overflow-x:hidden; min-height:0; }
+        .sb-toggle-btn {
+            width:14px; flex-shrink:0; border:none; padding:0; cursor:pointer;
+            background:var(--sidebar-bg); border-right:1px solid var(--sidebar-border);
+            color:var(--sidebar-muted); font-size:16px; line-height:1;
+            display:flex; align-items:center; justify-content:center;
+            transition:background 0.15s, color 0.15s;
+        }
+        .sb-toggle-btn:hover { background:var(--surface-muted); color:var(--sidebar-text); }
 
         /* ── APP BODY ── */
-        .app-body { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+        .app-body { display: flex; flex: 1; min-height: 0; }
 
         /* ── SIDEBAR ── always dark regardless of theme */
         .sidebar {
@@ -933,7 +940,9 @@
             border-right: 1px solid var(--sidebar-border);
             display: flex; flex-direction: column;
             overflow-y: auto; overflow-x: hidden;
+            transition: width 0.22s ease;
         }
+        .sidebar.collapsed { width: 0; overflow: hidden; }
         .sb-logo {
             padding: 14px 16px 12px;
             border-bottom: 1px solid var(--sidebar-border);
@@ -965,9 +974,25 @@
         }
         .sb-section-hdr:hover { color: var(--sidebar-text); }
         .sb-sub .sb-item { font-size: 12px; padding: 6px 16px 6px 20px; }
+        /* ── PROJECT PICKER ── */
+        .sb-proj-picker { display:flex; align-items:center; justify-content:space-between; padding:8px 16px 6px; cursor:pointer; user-select:none; transition:background 0.12s; }
+        .sb-proj-picker:hover { background:rgba(255,255,255,0.04); }
+        .sb-proj-name { color:var(--sidebar-text); font-size:13px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
+        .sb-proj-arrow { font-size:10px; color:var(--sidebar-muted); transition:transform 0.15s; flex-shrink:0; margin-left:6px; }
+        .sb-proj-arrow.open { transform:rotate(180deg); }
+        .sb-proj-dropdown { border-top:1px solid var(--sidebar-border); border-bottom:1px solid var(--sidebar-border); }
+        .sb-proj-dropdown.hidden { display:none; }
+        .sb-proj-search-wrap { padding:8px 10px 4px; }
+        .sb-proj-search { width:100%; box-sizing:border-box; padding:5px 9px; border:1px solid var(--sidebar-border); border-radius:5px; background:rgba(255,255,255,0.06); color:var(--sidebar-text); font-family:var(--font); font-size:12px; outline:none; }
+        .sb-proj-search::placeholder { color:var(--sidebar-muted); }
+        .sb-proj-list { max-height:220px; overflow-y:auto; padding:4px 0 6px; }
+        .sb-proj-option { padding:7px 16px; font-size:13px; color:var(--sidebar-muted); cursor:pointer; transition:color 0.1s, background 0.1s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .sb-proj-option:hover { color:var(--sidebar-text); background:rgba(255,255,255,0.04); }
+        .sb-proj-option.selected { color:var(--sidebar-text); font-weight:600; }
+        .sb-proj-empty { padding:10px 16px; font-size:12px; color:var(--sidebar-muted); }
 
         /* ── MAIN CONTENT ── */
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+        .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
         /* ── EXCHANGE STATS ── */
         .exchange-stats {
@@ -1103,6 +1128,111 @@
         }
         .task-act-btn:hover { border-color: var(--border); color: var(--text); }
         .tasks-title { font-size: 11px; font-weight: 600; color: var(--text); padding: 0 6px 0 2px; white-space: nowrap; }
+
+        /* ── OB-CHART LAYOUT ── */
+        .ob-chart-viewport {
+            height: calc(100vh - 48px);
+            min-height: calc(100vh - 48px);
+            flex-shrink: 0;
+            display: flex;
+            overflow: hidden;
+            width: 100%;
+        }
+        .ob-chart-scroll {
+            flex: 1;
+            display: flex;
+            overflow-x: auto;
+            overflow-y: hidden;
+            min-width: 0;
+        }
+        .ob-chart-scroll::-webkit-scrollbar { height: 3px; }
+        .ob-chart-scroll::-webkit-scrollbar-thumb { background: #b0b0b0; border-radius: 2px; }
+        .ob-chart-group {
+            flex: 1 1 25%;
+            min-width: 280px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #b0b0b0;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .ob-chart-group:last-child { border-right: none; }
+        .ob-chart-group .orderbook {
+            width: 100% !important;
+            flex: 0 0 62%;
+            border-left: none;
+            position: relative;
+        }
+        .chart-mini {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            min-height: 0;
+        }
+        .chart-mini-top {
+            flex-shrink: 0;
+        }
+        .chart-mini-top .exch-sel-row {
+            padding: 2px 6px;
+            gap: 2px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+        }
+        .chart-mini-top .exch-sel-btn {
+            padding: 2px 6px;
+            font-size: 10px;
+        }
+        .chart-mini-top .exch-sel-btn span { font-size: 8px; }
+        .chart-mini-top .chart-toolbar {
+            padding: 3px 6px;
+        }
+        .chart-mini-body {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            min-height: 0;
+        }
+        .chart-mini-body .draw-sidebar {
+            width: 32px;
+            padding: 4px 0;
+        }
+        .chart-mini-body .dt-btn {
+            width: 26px;
+            height: 26px;
+            font-size: 10px;
+        }
+        .chart-mini-body .chart-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        .chart-mini-clone {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+        }
+        .clone-chart-top {
+            flex-shrink: 0;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+        }
+        .clone-chart-top .chart-toolbar { padding: 3px 8px; }
+        .clone-ohlc { margin-left: auto; color: var(--muted); font-size: 10px; }
+        .chart-mini-clone .chart-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            min-height: 0;
+        }
+        #chart-container-2, #chart-container-3, #chart-container-4 {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+        }
     </style>
 </head>
 <body>
@@ -1110,32 +1240,6 @@
 <!-- ═══ HEADER ═══ -->
 <div class="header">
     <div class="logo">FIBONACCI<span>MARKET MAKER</span></div>
-    <div class="v-div"></div>
-
-    <!-- Pair dropdown -->
-    <div class="pair-dropdown" id="pair-dropdown">
-        <div class="pair-trigger" id="pair-trigger" onclick="togglePairDD()">
-            <div>
-                <div class="pt-name" id="pt-name">BTC/USDT</div>
-                <div class="pt-type">PERP</div>
-            </div>
-            <span class="pt-arrow">▾</span>
-        </div>
-        <div class="pair-panel" id="pair-panel">
-            <div class="pair-search-wrap">
-                <input class="pair-search" id="pair-search" type="text" placeholder="Search pairs…" oninput="filterPairs(this.value)" autocomplete="off">
-            </div>
-            <div class="pair-cats">
-                <button class="pcat active" onclick="setPairCat(this,'ALL')">ALL</button>
-                <button class="pcat" onclick="setPairCat(this,'L1')">Layer 1</button>
-                <button class="pcat" onclick="setPairCat(this,'L2')">Layer 2</button>
-                <button class="pcat" onclick="setPairCat(this,'DeFi')">DeFi</button>
-                <button class="pcat" onclick="setPairCat(this,'Meme')">Meme</button>
-                <button class="pcat" onclick="setPairCat(this,'AI')">AI</button>
-            </div>
-            <div class="pair-items" id="pair-items"></div>
-        </div>
-    </div>
 
     <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">☀</button>
 
@@ -1144,47 +1248,55 @@
 </div>
 </div>
 
-<div class="app-body">
-
-    <!-- ─── SIDEBAR ─── -->
-    <div class="sidebar">
-        <div class="sb-logo">
-            <div class="sb-logo-icon">F</div>
-            <div class="sb-logo-text">Fibonacci<span>MARKET MAKER</span></div>
-        </div>
-        <div class="sb-nav">
-            <div class="sb-item" onclick="showPage('projects')"><span class="sb-icon"></span>Projects</div>
-            <div class="sb-item"><span class="sb-icon"></span>Performance</div>
-            <div class="sb-divider"></div>
-            <div class="sb-section">
-                <div class="sb-section-hdr">SOIL <span>▾</span></div>
-                <div class="sb-sub">
-                    <div class="sb-item active" onclick="showPage('trading')"><span class="sb-icon"></span>Trading Panel</div>
-                    <div class="sb-item"><span class="sb-icon"></span>Tasks</div>
-                    <div class="sb-item"><span class="sb-icon"></span>Arbitrage tasks</div>
-                    <div class="sb-item" onclick="showPage('analytics')"><span class="sb-icon"></span>Analytics</div>
-                    <div class="sb-item" id="sb-stats-hdr" onclick="toggleSbStats()"><span class="sb-icon"></span>Statistics <span id="sb-stats-arrow" style="margin-left:auto;font-size:10px">▾</span></div>
-                    <div class="sb-sub" id="sb-stats-sub" style="display:none">
-                        <div class="sb-item"><span class="sb-icon"></span>Liquidity</div>
-                        <div class="sb-item"><span class="sb-icon"></span>Principal MM</div>
-                        <div class="sb-item"><span class="sb-icon"></span>Volume</div>
-                        <div class="sb-item"><span class="sb-icon"></span>Arbitrage</div>
-                        <div class="sb-item"><span class="sb-icon"></span>PnL</div>
-                    </div>
+<div class="page-layout">
+<div class="sidebar" id="global-sidebar">
+    <div class="sb-logo">
+        <div class="sb-logo-icon">F</div>
+        <div class="sb-logo-text">Fibonacci<span>MARKET MAKER</span></div>
+    </div>
+    <div class="sb-nav">
+        <div class="sb-item" onclick="showPage('projects')"><span class="sb-icon"></span>Projects</div>
+        <div class="sb-item"><span class="sb-icon"></span>Performance</div>
+        <div class="sb-divider"></div>
+        <div class="sb-section">
+            <div class="sb-proj-picker" id="sb-proj-picker" onclick="toggleProjPicker(event)">
+                <span class="sb-proj-name" id="sb-proj-name">Select project</span>
+                <span class="sb-proj-arrow" id="sb-proj-arrow">▾</span>
+            </div>
+            <div class="sb-proj-dropdown hidden" id="sb-proj-dropdown" onclick="event.stopPropagation()">
+                <div class="sb-proj-search-wrap">
+                    <input class="sb-proj-search" id="sb-proj-search" type="text" placeholder="Search projects..." oninput="filterProjList(this.value)" autocomplete="off">
+                </div>
+                <div class="sb-proj-list" id="sb-proj-list"></div>
+            </div>
+            <div class="sb-sub">
+                <div class="sb-item active" onclick="showPage('trading')"><span class="sb-icon"></span>Trading Panel</div>
+                <div class="sb-item"><span class="sb-icon"></span>Tasks</div>
+                <div class="sb-item"><span class="sb-icon"></span>Arbitrage tasks</div>
+                <div class="sb-item" onclick="showPage('analytics')"><span class="sb-icon"></span>Analytics</div>
+                <div class="sb-item" id="sb-stats-hdr" onclick="toggleSbStats()"><span class="sb-icon"></span>Statistics <span id="sb-stats-arrow" style="margin-left:auto;font-size:10px">▾</span></div>
+                <div class="sb-sub" id="sb-stats-sub" style="display:none">
+                    <div class="sb-item"><span class="sb-icon"></span>Liquidity</div>
+                    <div class="sb-item"><span class="sb-icon"></span>Principal MM</div>
+                    <div class="sb-item"><span class="sb-icon"></span>Volume</div>
+                    <div class="sb-item"><span class="sb-icon"></span>Arbitrage</div>
+                    <div class="sb-item"><span class="sb-icon"></span>PnL</div>
                 </div>
             </div>
         </div>
     </div>
+</div>
+<button class="sb-toggle-btn" id="sb-toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar">‹</button>
+<div class="page-content" id="page-content">
+
+<div class="app-body">
 
     <!-- ─── MAIN CONTENT ─── -->
     <div class="main-content">
 
 
-        <div class="main-inner">
-        <div class="center-col">
-
-        <!-- ═══ MAIN ═══ -->
-        <div class="main">
+        <!-- ═══ OB+CHART VIEWPORT ═══ -->
+        <div class="ob-chart-viewport main">
 
             <!-- ─── POSITION PANEL ─── -->
             <div class="position-panel">
@@ -1218,52 +1330,273 @@
                 </div>
             </div>
 
-            <!-- ─── CHART AREA ─── -->
-            <div class="chart-area">
-                <div class="draw-sidebar">
-                    <button class="dt-btn active" id="dt-cursor" data-tip="Cursor (Esc)" onclick="selectTool('cursor')">↖</button>
-                    <div class="dt-sep"></div>
-                    <button class="dt-btn" id="dt-line"    data-tip="Trend Line"      onclick="selectTool('line')">╱</button>
-                    <button class="dt-btn" id="dt-extline" data-tip="Extended Line"   onclick="selectTool('extline')">↔</button>
-                    <button class="dt-btn" id="dt-ray"     data-tip="Ray"             onclick="selectTool('ray')">→</button>
-                    <button class="dt-btn" id="dt-hline"   data-tip="Horizontal Line" onclick="selectTool('hline')">─</button>
-                    <button class="dt-btn" id="dt-vline"   data-tip="Vertical Line"   onclick="selectTool('vline')">│</button>
-                    <div class="dt-sep"></div>
-                    <button class="dt-btn" id="dt-rect"    data-tip="Rectangle"       onclick="selectTool('rect')">▭</button>
-                    <button class="dt-btn" id="dt-fib"     data-tip="Fibonacci"       onclick="selectTool('fib')">ℱ</button>
-                    <div class="dt-sep"></div>
-                    <button class="dt-btn" id="dt-text"    data-tip="Text Label"      onclick="selectTool('text')">T</button>
-                    <div class="dt-sep"></div>
-                    <button class="dt-btn" data-tip="Line Color" onclick="document.getElementById('draw-color-input').click()" style="padding:0">
-                        <span class="color-swatch" id="color-swatch" style="background:#d9ad70"></span>
-                    </button>
-                    <input type="color" id="draw-color-input" value="#d9ad70" oninput="setDrawColor(this.value)" style="display:none">
-                    <button class="dt-btn" id="dt-dash" data-tip="Dashed Line" onclick="toggleDash()">- -</button>
-                    <div class="dt-sep"></div>
-                    <button class="dt-btn" id="dt-erase" data-tip="Eraser"     onclick="selectTool('erase')" style="font-size:11px">✕</button>
-                    <button class="dt-btn" data-tip="Clear All"                 onclick="clearAllDrawings()" style="color:var(--red);font-size:11px">🗑</button>
-                </div>
-                <div class="chart-main">
-                    <div class="chart-toolbar">
-                        <button class="tf-btn" onclick="setTF(this,'1m')">1m</button>
-                        <button class="tf-btn" onclick="setTF(this,'5m')">5m</button>
-                        <button class="tf-btn active" onclick="setTF(this,'15m')">15m</button>
-                        <button class="tf-btn" onclick="setTF(this,'1h')">1h</button>
-                        <button class="tf-btn" onclick="setTF(this,'4h')">4h</button>
-                        <button class="tf-btn" onclick="setTF(this,'1d')">1D</button>
-                        <div class="tb-sep"></div>
-                        <div id="chart-ohlc"></div>
-                    </div>
-                    <div class="chart-wrapper">
-                        <div id="chart-container"></div>
-                        <canvas id="draw-canvas"></canvas>
-                    </div>
-                </div>
-            </div>
+            <!-- ─── 4 OB+CHART GROUPS ─── -->
+            <div class="ob-chart-scroll">
 
-        </div><!-- /.main -->
+                <!-- GROUP 1: Primary -->
+                <div class="ob-chart-group">
+                    <!-- Primary Order Book (all original IDs) -->
+                    <div class="orderbook">
+                        <div class="panel-hdr" id="ob-hdr-1">
+                            <span class="ob-set-pair" id="ob-pair-label-1" onclick="openOBPairPicker(1)">SET PAIR</span>
+                            <div class="ob-hdr-btns">
+                                <button class="ob-icon-btn" onclick="obRefresh()" title="Обновить">↺</button>
+                                <button class="ob-icon-btn" onclick="toggleOBSettings()" title="Настройки">⚙</button>
+                            </div>
+                        </div>
+                        <div class="ob-settings-popup" id="ob-settings-popup">
+                            <div class="obs-row">
+                                <div class="obs-label">Заполнение строки при USD (полная заливка)</div>
+                                <input class="obs-input" id="obs-fill" type="number" value="10000" onchange="obSettings.fillUSD=+this.value">
+                            </div>
+                            <div class="obs-row">
+                                <div class="obs-label">Крупный объем USD 1 → желтый</div>
+                                <input class="obs-input" id="obs-t1" type="number" value="2500" onchange="obSettings.largeUSD1=+this.value">
+                            </div>
+                            <div class="obs-row">
+                                <div class="obs-label">Крупный объем USD 2 → фиолетовый</div>
+                                <input class="obs-input" id="obs-t2" type="number" value="5000" onchange="obSettings.largeUSD2=+this.value">
+                            </div>
+                            <button class="obs-close" onclick="toggleOBSettings()">Применить</button>
+                        </div>
+                        <div class="ob-lev-popup" id="ob-lev-popup">
+                            <div class="ob-lev-row">
+                                <div class="ob-lev-label">Плечо</div>
+                                <div class="ob-lev-val" id="ob-lev-val">20</div>
+                                <input class="ob-lev-slider" type="range" id="ob-lev-slider" min="1" max="125" value="20" oninput="obLevChange(this.value)">
+                            </div>
+                            <div class="ob-lev-info">
+                                <div class="ob-lev-info-item">Макс. плечо: <span id="ob-max-lev">125</span></div>
+                                <div class="ob-lev-info-item">Макс. позиция: <span id="ob-max-pos">100K USD</span></div>
+                            </div>
+                            <button class="ob-lev-close" onclick="obLevConfirm()">Применить</button>
+                        </div>
+                        <div class="vp-ctx-menu" id="vp-ctx-menu">
+                            <div class="vp-ctx-item" data-ms="0"        onclick="setVPPeriod(0)">Maximize</div>
+                            <div class="vp-ctx-item" data-ms="30000"    onclick="setVPPeriod(30000)">30s</div>
+                            <div class="vp-ctx-item" data-ms="60000"    onclick="setVPPeriod(60000)">1m</div>
+                            <div class="vp-ctx-item active" data-ms="300000" onclick="setVPPeriod(300000)">5m</div>
+                            <div class="vp-ctx-item" data-ms="600000"   onclick="setVPPeriod(600000)">10m</div>
+                            <div class="vp-ctx-item" data-ms="900000"   onclick="setVPPeriod(900000)">15m</div>
+                            <div class="vp-ctx-item" data-ms="1800000"  onclick="setVPPeriod(1800000)">30m</div>
+                            <div class="vp-ctx-item" data-ms="3600000"  onclick="setVPPeriod(3600000)">1h</div>
+                            <div class="vp-ctx-item" data-ms="86400000" onclick="setVPPeriod(86400000)">1d</div>
+                        </div>
+                        <div class="ob-panels">
+                            <div id="ob-pct-float" class="ob-pct-float"></div>
+                            <div class="ob-vp-wrap" id="ob-vp-wrap" oncontextmenu="showVPCtxMenu(event)" onwheel="vpScroll(event)">
+                                <div class="ob-vp-scroll">
+                                    <div class="ob-vp-cols" id="ob-vp-cols"></div>
+                                </div>
+                                <div class="ob-vp-footer" id="ob-vp-footer"></div>
+                            </div>
+                            <div class="ob-book">
+                                <div class="ob-scroll" id="ob-scroll">
+                                    <div class="ob-asks" id="ob-asks"></div>
+                                    <div class="ob-bids" id="ob-bids"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ob-control">
+                            <div class="ob-ctrl-top">
+                                <button class="ob-lev-btn" id="ob-lev-btn" ondblclick="toggleLevPopup()">20X</button>
+                                <div class="ob-pings" id="ob-pings">
+                                    <span class="ob-ping-val none">—</span>
+                                    <span class="ob-ping-val none">—</span>
+                                    <span class="ob-ping-val none">—</span>
+                                </div>
+                            </div>
+                            <div class="ob-presets" id="ob-presets"></div>
+                        </div>
+                    </div><!-- /.orderbook primary -->
+                    <!-- Chart Mini 1 (full controls) -->
+                    <div class="chart-mini">
+                        <div class="chart-mini-top">
+                            <div class="chart-toolbar">
+                                <button class="tf-btn" onclick="setTF(this,'1m')">1m</button>
+                                <button class="tf-btn" onclick="setTF(this,'5m')">5m</button>
+                                <button class="tf-btn active" onclick="setTF(this,'15m')">15m</button>
+                                <button class="tf-btn" onclick="setTF(this,'1h')">1h</button>
+                                <button class="tf-btn" onclick="setTF(this,'4h')">4h</button>
+                                <button class="tf-btn" onclick="setTF(this,'1d')">1D</button>
+                                <div class="tb-sep"></div>
+                                <div id="chart-ohlc"></div>
+                            </div>
+                        </div>
+                        <div class="chart-mini-body">
+                            <div class="draw-sidebar">
+                                <button class="dt-btn active" id="dt-cursor" data-tip="Cursor (Esc)" onclick="selectTool('cursor')">↖</button>
+                                <div class="dt-sep"></div>
+                                <button class="dt-btn" id="dt-line"    data-tip="Trend Line"      onclick="selectTool('line')">╱</button>
+                                <button class="dt-btn" id="dt-extline" data-tip="Extended Line"   onclick="selectTool('extline')">↔</button>
+                                <button class="dt-btn" id="dt-ray"     data-tip="Ray"             onclick="selectTool('ray')">→</button>
+                                <button class="dt-btn" id="dt-hline"   data-tip="Horizontal Line" onclick="selectTool('hline')">─</button>
+                                <button class="dt-btn" id="dt-vline"   data-tip="Vertical Line"   onclick="selectTool('vline')">│</button>
+                                <div class="dt-sep"></div>
+                                <button class="dt-btn" id="dt-rect"    data-tip="Rectangle"       onclick="selectTool('rect')">▭</button>
+                                <button class="dt-btn" id="dt-fib"     data-tip="Fibonacci"       onclick="selectTool('fib')">ℱ</button>
+                                <div class="dt-sep"></div>
+                                <button class="dt-btn" id="dt-text"    data-tip="Text Label"      onclick="selectTool('text')">T</button>
+                                <div class="dt-sep"></div>
+                                <button class="dt-btn" data-tip="Line Color" onclick="document.getElementById('draw-color-input').click()" style="padding:0">
+                                    <span class="color-swatch" id="color-swatch" style="background:#d9ad70"></span>
+                                </button>
+                                <input type="color" id="draw-color-input" value="#d9ad70" oninput="setDrawColor(this.value)" style="display:none">
+                                <button class="dt-btn" id="dt-dash" data-tip="Dashed Line" onclick="toggleDash()">- -</button>
+                                <div class="dt-sep"></div>
+                                <button class="dt-btn" id="dt-erase" data-tip="Eraser"     onclick="selectTool('erase')" style="font-size:11px">✕</button>
+                                <button class="dt-btn" data-tip="Clear All"                 onclick="clearAllDrawings()" style="color:var(--red);font-size:11px">🗑</button>
+                            </div>
+                            <div class="chart-wrapper">
+                                <div id="chart-container"></div>
+                                <canvas id="draw-canvas"></canvas>
+                            </div>
+                        </div>
+                    </div><!-- /.chart-mini -->
+                </div><!-- /.ob-chart-group 1 -->
 
-        <!-- ═══ TASKS PANEL ═══ -->
+                <!-- GROUP 2: Clone -->
+                <div class="ob-chart-group">
+                    <div class="orderbook">
+                        <div class="panel-hdr" id="ob-hdr-2">
+                            <span class="ob-set-pair" id="ob-pair-label-2" onclick="openOBPairPicker(2)">SET PAIR</span>
+                        </div>
+                        <div class="ob-panels">
+                            <div class="ob-vp-wrap">
+                                <div class="ob-vp-scroll">
+                                    <div class="ob-vp-cols" id="ob-vp-cols-2"></div>
+                                </div>
+                                <div class="ob-vp-footer" id="ob-vp-footer-2"></div>
+                            </div>
+                            <div class="ob-book">
+                                <div class="ob-scroll" id="ob-scroll-2">
+                                    <div class="ob-asks" id="ob-asks-2"></div>
+                                    <div class="ob-bids" id="ob-bids-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ob-control" id="ob-control-2">
+                            <div class="ob-ctrl-top">
+                                <button class="ob-lev-btn" id="ob-lev-btn-2" ondblclick="toggleLevPopup()">20X</button>
+                            </div>
+                            <div class="ob-presets" id="ob-presets-2"></div>
+                        </div>
+                    </div><!-- /.orderbook clone 2 -->
+                    <div class="chart-mini-clone">
+                        <div class="clone-chart-top">
+                            <div class="chart-toolbar">
+                                <button class="tf-btn" onclick="setCloneTF(2,this,'1m')">1m</button>
+                                <button class="tf-btn" onclick="setCloneTF(2,this,'5m')">5m</button>
+                                <button class="tf-btn active" onclick="setCloneTF(2,this,'15m')">15m</button>
+                                <button class="tf-btn" onclick="setCloneTF(2,this,'1h')">1h</button>
+                                <button class="tf-btn" onclick="setCloneTF(2,this,'4h')">4h</button>
+                                <button class="tf-btn" onclick="setCloneTF(2,this,'1d')">1D</button>
+                                <div class="tb-sep"></div>
+                                <div id="chart-ohlc-2" class="clone-ohlc"></div>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <div id="chart-container-2"></div>
+                        </div>
+                    </div>
+                </div><!-- /.ob-chart-group 2 -->
+
+                <!-- GROUP 3: Clone -->
+                <div class="ob-chart-group">
+                    <div class="orderbook">
+                        <div class="panel-hdr" id="ob-hdr-3">
+                            <span class="ob-set-pair" id="ob-pair-label-3" onclick="openOBPairPicker(3)">SET PAIR</span>
+                        </div>
+                        <div class="ob-panels">
+                            <div class="ob-vp-wrap">
+                                <div class="ob-vp-scroll">
+                                    <div class="ob-vp-cols" id="ob-vp-cols-3"></div>
+                                </div>
+                                <div class="ob-vp-footer" id="ob-vp-footer-3"></div>
+                            </div>
+                            <div class="ob-book">
+                                <div class="ob-scroll" id="ob-scroll-3">
+                                    <div class="ob-asks" id="ob-asks-3"></div>
+                                    <div class="ob-bids" id="ob-bids-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ob-control" id="ob-control-3">
+                            <div class="ob-ctrl-top">
+                                <button class="ob-lev-btn" id="ob-lev-btn-3" ondblclick="toggleLevPopup()">20X</button>
+                            </div>
+                            <div class="ob-presets" id="ob-presets-3"></div>
+                        </div>
+                    </div><!-- /.orderbook clone 3 -->
+                    <div class="chart-mini-clone">
+                        <div class="clone-chart-top">
+                            <div class="chart-toolbar">
+                                <button class="tf-btn" onclick="setCloneTF(3,this,'1m')">1m</button>
+                                <button class="tf-btn" onclick="setCloneTF(3,this,'5m')">5m</button>
+                                <button class="tf-btn active" onclick="setCloneTF(3,this,'15m')">15m</button>
+                                <button class="tf-btn" onclick="setCloneTF(3,this,'1h')">1h</button>
+                                <button class="tf-btn" onclick="setCloneTF(3,this,'4h')">4h</button>
+                                <button class="tf-btn" onclick="setCloneTF(3,this,'1d')">1D</button>
+                                <div class="tb-sep"></div>
+                                <div id="chart-ohlc-3" class="clone-ohlc"></div>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <div id="chart-container-3"></div>
+                        </div>
+                    </div>
+                </div><!-- /.ob-chart-group 3 -->
+
+                <!-- GROUP 4: Clone -->
+                <div class="ob-chart-group">
+                    <div class="orderbook">
+                        <div class="panel-hdr" id="ob-hdr-4">
+                            <span class="ob-set-pair" id="ob-pair-label-4" onclick="openOBPairPicker(4)">SET PAIR</span>
+                        </div>
+                        <div class="ob-panels">
+                            <div class="ob-vp-wrap">
+                                <div class="ob-vp-scroll">
+                                    <div class="ob-vp-cols" id="ob-vp-cols-4"></div>
+                                </div>
+                                <div class="ob-vp-footer" id="ob-vp-footer-4"></div>
+                            </div>
+                            <div class="ob-book">
+                                <div class="ob-scroll" id="ob-scroll-4">
+                                    <div class="ob-asks" id="ob-asks-4"></div>
+                                    <div class="ob-bids" id="ob-bids-4"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ob-control" id="ob-control-4">
+                            <div class="ob-ctrl-top">
+                                <button class="ob-lev-btn" id="ob-lev-btn-4" ondblclick="toggleLevPopup()">20X</button>
+                            </div>
+                            <div class="ob-presets" id="ob-presets-4"></div>
+                        </div>
+                    </div><!-- /.orderbook clone 4 -->
+                    <div class="chart-mini-clone">
+                        <div class="clone-chart-top">
+                            <div class="chart-toolbar">
+                                <button class="tf-btn" onclick="setCloneTF(4,this,'1m')">1m</button>
+                                <button class="tf-btn" onclick="setCloneTF(4,this,'5m')">5m</button>
+                                <button class="tf-btn active" onclick="setCloneTF(4,this,'15m')">15m</button>
+                                <button class="tf-btn" onclick="setCloneTF(4,this,'1h')">1h</button>
+                                <button class="tf-btn" onclick="setCloneTF(4,this,'4h')">4h</button>
+                                <button class="tf-btn" onclick="setCloneTF(4,this,'1d')">1D</button>
+                                <div class="tb-sep"></div>
+                                <div id="chart-ohlc-4" class="clone-ohlc"></div>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <div id="chart-container-4"></div>
+                        </div>
+                    </div>
+                </div><!-- /.ob-chart-group 4 -->
+
+            </div><!-- /.ob-chart-scroll -->
+        </div><!-- /.ob-chart-viewport -->
+
+        <!-- ═══ TASKS PANEL (below fold) ═══ -->
         <div class="tasks-panel">
             <div class="tasks-hdr-top">
                 <span class="tasks-title">Tasks</span>
@@ -1307,85 +1640,6 @@
                 </table>
             </div>
         </div>
-
-        </div><!-- /.center-col -->
-
-        <!-- ─── ORDER BOOK ─── -->
-        <div class="orderbook">
-            <div class="panel-hdr">
-                <span>ORDER BOOK</span>
-                <div class="ob-hdr-btns">
-                    <button class="ob-icon-btn" onclick="obRefresh()" title="Обновить">↺</button>
-                    <button class="ob-icon-btn" onclick="toggleOBSettings()" title="Настройки">⚙</button>
-                </div>
-            </div>
-            <div class="ob-settings-popup" id="ob-settings-popup">
-                <div class="obs-row">
-                    <div class="obs-label">Заполнение строки при USD (полная заливка)</div>
-                    <input class="obs-input" id="obs-fill" type="number" value="10000" onchange="obSettings.fillUSD=+this.value">
-                </div>
-                <div class="obs-row">
-                    <div class="obs-label">Крупный объем USD 1 → желтый</div>
-                    <input class="obs-input" id="obs-t1" type="number" value="2500" onchange="obSettings.largeUSD1=+this.value">
-                </div>
-                <div class="obs-row">
-                    <div class="obs-label">Крупный объем USD 2 → фиолетовый</div>
-                    <input class="obs-input" id="obs-t2" type="number" value="5000" onchange="obSettings.largeUSD2=+this.value">
-                </div>
-                <button class="obs-close" onclick="toggleOBSettings()">Применить</button>
-            </div>
-            <div class="ob-lev-popup" id="ob-lev-popup">
-                <div class="ob-lev-row">
-                    <div class="ob-lev-label">Плечо</div>
-                    <div class="ob-lev-val" id="ob-lev-val">20</div>
-                    <input class="ob-lev-slider" type="range" id="ob-lev-slider" min="1" max="125" value="20" oninput="obLevChange(this.value)">
-                </div>
-                <div class="ob-lev-info">
-                    <div class="ob-lev-info-item">Макс. плечо: <span id="ob-max-lev">125</span></div>
-                    <div class="ob-lev-info-item">Макс. позиция: <span id="ob-max-pos">100K USD</span></div>
-                </div>
-                <button class="ob-lev-close" onclick="obLevConfirm()">Применить</button>
-            </div>
-            <div class="vp-ctx-menu" id="vp-ctx-menu">
-                <div class="vp-ctx-item" data-ms="0"        onclick="setVPPeriod(0)">Maximize</div>
-                <div class="vp-ctx-item" data-ms="30000"    onclick="setVPPeriod(30000)">30s</div>
-                <div class="vp-ctx-item" data-ms="60000"    onclick="setVPPeriod(60000)">1m</div>
-                <div class="vp-ctx-item active" data-ms="300000" onclick="setVPPeriod(300000)">5m</div>
-                <div class="vp-ctx-item" data-ms="600000"   onclick="setVPPeriod(600000)">10m</div>
-                <div class="vp-ctx-item" data-ms="900000"   onclick="setVPPeriod(900000)">15m</div>
-                <div class="vp-ctx-item" data-ms="1800000"  onclick="setVPPeriod(1800000)">30m</div>
-                <div class="vp-ctx-item" data-ms="3600000"  onclick="setVPPeriod(3600000)">1h</div>
-                <div class="vp-ctx-item" data-ms="86400000" onclick="setVPPeriod(86400000)">1d</div>
-            </div>
-            <div class="ob-panels">
-                <div id="ob-pct-float" class="ob-pct-float"></div>
-                <div class="ob-vp-wrap" id="ob-vp-wrap" oncontextmenu="showVPCtxMenu(event)" onwheel="vpScroll(event)">
-                    <div class="ob-vp-scroll">
-                        <div class="ob-vp-cols" id="ob-vp-cols"></div>
-                    </div>
-                    <div class="ob-vp-footer" id="ob-vp-footer"></div>
-                </div>
-                <div class="ob-book">
-                    <div class="ob-scroll" id="ob-scroll">
-                        <div class="ob-asks" id="ob-asks"></div>
-                        <div class="ob-bids" id="ob-bids"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="ob-control">
-                <div class="ob-ctrl-top">
-                    <button class="ob-lev-btn" id="ob-lev-btn" ondblclick="toggleLevPopup()">20X</button>
-                    <div class="ob-pings" id="ob-pings">
-                        <span class="ob-ping-val none">—</span>
-                        <span class="ob-ping-val none">—</span>
-                        <span class="ob-ping-val none">—</span>
-                    </div>
-                </div>
-                <div class="ob-presets" id="ob-presets"></div>
-            </div>
-        </div><!-- /.orderbook -->
-
-        </div><!-- /.main-inner -->
 
     </div><!-- /.main-content -->
 
@@ -1579,7 +1833,49 @@
                 </div>
             </div>
             <div class="proj-tab-content hidden" id="proj-tab-accounts"><div class="proj-tab-empty">No accounts</div></div>
-            <div class="proj-tab-content hidden" id="proj-tab-pairs"><div class="proj-tab-empty">No pairs</div></div>
+            <div class="proj-tab-content hidden" id="proj-tab-pairs">
+                <div class="pairs-form">
+                    <div class="pairs-form-group">
+                        <label class="proj-form-label">Symbol</label>
+                        <input class="proj-form-input pairs-sym-input" id="pair-symbol" type="text" placeholder="X...X/Y...Y" autocomplete="off">
+                    </div>
+                    <div class="pairs-form-group">
+                        <label class="proj-form-label">Exchange</label>
+                        <select class="proj-form-input pairs-exch-select" id="pair-exchange">
+                            <option value=""></option>
+                            <option value="Binance">Binance</option>
+                            <option value="Bybit">Bybit</option>
+                            <option value="Bitget">Bitget</option>
+                            <option value="Gate">Gate</option>
+                            <option value="Mexc">Mexc</option>
+                            <option value="Kucoin">Kucoin</option>
+                        </select>
+                    </div>
+                    <div class="pairs-form-group">
+                        <label class="proj-form-label">Type</label>
+                        <select class="proj-form-input pairs-exch-select" id="pair-type">
+                            <option value=""></option>
+                            <option value="Spot">Spot</option>
+                            <option value="Perpetual">Perpetual</option>
+                        </select>
+                    </div>
+                    <button class="pairs-link-btn" onclick="addPair()">Link pair to project</button>
+                </div>
+                <table class="proj-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>CODE</th>
+                            <th>EXCHANGE</th>
+                            <th>TYPE</th>
+                            <th>LAST PRICE</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="pairs-tbody"></tbody>
+                </table>
+                <div class="proj-tab-empty hidden" id="pairs-empty">No pairs linked yet</div>
+            </div>
             <div class="proj-tab-content hidden" id="proj-tab-users"><div class="proj-tab-empty">No users</div></div>
             <div class="proj-tab-content hidden" id="proj-tab-logs"><div class="proj-tab-empty">No logs</div></div>
             <div class="proj-tab-content hidden" id="proj-tab-social"><div class="proj-tab-empty">No social data</div></div>
@@ -1587,6 +1883,9 @@
         </div>
     </div>
 </div>
+
+</div><!-- /.page-content -->
+</div><!-- /.page-layout -->
 
 <!-- ═══ LEVERAGE MODAL ═══ -->
 <div class="overlay" id="lev-overlay" onclick="closeLevModal(event)">
@@ -1697,66 +1996,10 @@ const PAIR_DB = [
 ];
 
 let currentSym = 'FOLKS';
-let pairCatFilter = 'ALL';
 
 function getPair(sym) { return PAIR_DB.find(p => p.sym === sym) || PAIR_DB[0]; }
 
-// ── Pair Dropdown ──────────────────────────────────────────────────
-
-function togglePairDD() {
-    const panel   = document.getElementById('pair-panel');
-    const trigger = document.getElementById('pair-trigger');
-    const open    = panel.classList.toggle('open');
-    trigger.classList.toggle('open', open);
-    if (open) {
-        setTimeout(() => document.getElementById('pair-search').focus(), 50);
-        renderPairItems('', pairCatFilter);
-    }
-}
-
-function closePairDD() {
-    document.getElementById('pair-panel').classList.remove('open');
-    document.getElementById('pair-trigger').classList.remove('open');
-}
-
-document.addEventListener('click', e => {
-    if (!document.getElementById('pair-dropdown').contains(e.target)) closePairDD();
-});
-
-function setPairCat(btn, cat) {
-    pairCatFilter = cat;
-    document.querySelectorAll('.pcat').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    renderPairItems(document.getElementById('pair-search').value, cat);
-}
-
-function filterPairs(q) {
-    renderPairItems(q, pairCatFilter);
-}
-
-function renderPairItems(q, cat) {
-    q = (q || '').toLowerCase();
-    const filtered = PAIR_DB.filter(p =>
-        (cat === 'ALL' || p.cat === cat) &&
-        (p.sym.toLowerCase().includes(q) || p.name.toLowerCase().includes(q))
-    );
-
-    document.getElementById('pair-items').innerHTML = filtered.map(p => `
-        <div class="pair-item ${p.sym === currentSym ? 'active' : ''}" onclick="selectPair('${p.sym}')">
-            <span class="pi-sym">${p.sym}/USDT</span>
-            <span class="pi-name">${p.name}</span>
-            <span class="pi-cat">${p.cat}</span>
-        </div>
-    `).join('') || '<div style="padding:12px;color:var(--muted);text-align:center">No pairs found</div>';
-}
-
-function selectPair(sym) {
-    currentSym = sym;
-    const p = getPair(sym);
-    document.getElementById('pt-name').textContent = p.sym + '/USDT';
-    closePairDD();
-    changePair(sym);
-}
+// (pair dropdown removed — pair is set per-orderbook via project pairs)
 
 // ══════════════════════════════════════════════════════════════════
 // THEME
@@ -1773,6 +2016,7 @@ function applyChartTheme(light) {
         rightPriceScale: { borderColor: border },
         timeScale:       { borderColor: border },
     });
+    cloneCharts.forEach(c => c && c.applyOptions({ layout: { background: { color: bg }, textColor: text }, grid: { vertLines: { color: grid }, horzLines: { color: grid } }, rightPriceScale: { borderColor: border }, timeScale: { borderColor: border } }));
 }
 
 function toggleTheme() {
@@ -1793,17 +2037,23 @@ function toggleTheme() {
 // STATE
 // ══════════════════════════════════════════════════════════════════
 
-let currentPrice = 67234.50;
-let leverage     = 20;
-let pendingLev   = 20;
-let binanceWS      = null;
+let currentPrice   = 67234.50;
+let leverage       = 20;
+let pendingLev     = 20;
+let activeWS       = null;
+let binanceWS      = null;          // legacy alias
+let obWS           = null;
+let chartWS        = null;
+let obSelectedPair = null; // { id, symbol, exchange, type } from project pairs
 let prevDepthAsks  = new Map();
 let prevDepthBids  = new Map();
-let realAsks     = [];
-let realBids     = [];
-let lastBarTime  = 0;
-let lastOpen     = currentPrice;
-let tfInterval   = 900;
+let realAsks       = [];
+let realBids       = [];
+let lastBarTime    = 0;
+let lastOpen       = currentPrice;
+let tfInterval     = 900;
+let currentExchange = 'binance';
+let currentType     = 'perp';
 
 // ══════════════════════════════════════════════════════════════════
 // DRAWING — declared early to avoid TDZ when loadChart fires
@@ -1847,6 +2097,31 @@ const volSeries = chart.addHistogramSeries({
 });
 chart.priceScale('vol').applyOptions({ scaleMargins: { top: 0.85, bottom: 0 } });
 
+// ── Clone charts (groups 2-4) ──
+const makeCloneChart = (id) => {
+    const el = document.getElementById(id);
+    if (!el) return null;
+    const c = LightweightCharts.createChart(el, {
+        autoSize: true,
+        layout: { background: { color: '#0d1117' }, textColor: '#8b949e' },
+        grid: { vertLines: { color: '#1c2128' }, horzLines: { color: '#1c2128' } },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+        rightPriceScale: { borderColor: '#30363d' },
+        timeScale: { borderColor: '#30363d', timeVisible: true, secondsVisible: false },
+        handleScroll: { mouseWheel: true, pressedMouseMove: true },
+        handleScale: { mouseWheel: true, pinch: true },
+    });
+    return c;
+};
+const chart2 = makeCloneChart('chart-container-2');
+const chart3 = makeCloneChart('chart-container-3');
+const chart4 = makeCloneChart('chart-container-4');
+const cloneCharts = [chart2, chart3, chart4].filter(Boolean);
+const addCloneCandles = c => c ? c.addCandlestickSeries({ upColor:'#5bba89', downColor:'#cd4141', borderUpColor:'#5bba89', borderDownColor:'#cd4141', wickUpColor:'#5bba89', wickDownColor:'#cd4141' }) : null;
+const cloneCandles = [chart2, chart3, chart4].map(c => c ? addCloneCandles(c) : null);
+const addCloneVol = c => c ? c.addHistogramSeries({ priceScaleId:'vol', scaleMargins:{top:0.85,bottom:0} }) : null;
+const cloneVols = [chart2, chart3, chart4].map(c => c ? addCloneVol(c) : null);
+
 chart.subscribeCrosshairMove(p => {
     if (!p.seriesData.size) return;
     const d = p.seriesData.get(candles);
@@ -1885,36 +2160,369 @@ function generateCandles(basePrice, count, intervalSec) {
 const TF_MAP       = { '1m':60,'5m':300,'15m':900,'1h':3600,'4h':14400,'1d':86400 };
 const TF_LABEL_MAP = { 60:'1m',300:'5m',900:'15m',3600:'1h',14400:'4h',86400:'1d' };
 
+// ══════════════════════════════════════════════════════════════════
+// EXCHANGE ADAPTERS
+// ══════════════════════════════════════════════════════════════════
+
+const TF_BYBIT  = { 60:1,300:5,900:15,3600:60,14400:240,86400:'D' };
+const TF_KUCOIN = { 60:'1min',300:'5min',900:'15min',3600:'1hour',14400:'4hour',86400:'1day' };
+const TF_BITGET = { 60:'1m',300:'5m',900:'15m',3600:'1H',14400:'4H',86400:'1D' };
+const TF_GATE   = { 60:'1m',300:'5m',900:'15m',3600:'1h',14400:'4h',86400:'1d' };
+
+const symPlain = s => s.toUpperCase() + 'USDT';
+const symDash  = s => s.toUpperCase() + '-USDT';
+const symUnder = s => s.toUpperCase() + '_USDT';
+
+// Callbacks shared by all adapters
+const WS_CBS = {
+    onDepth(asks, bids) {
+        realAsks = asks.filter(r=>r.size>0).sort((a,b)=>a.price-b.price);
+        realBids = bids.filter(r=>r.size>0).sort((a,b)=>b.price-a.price);
+        renderRealOB([...realAsks].reverse(), realBids);
+    },
+    onKline({ time, open, high, low, close, vol }) {
+        currentPrice = close;
+        candles.update({ time, open, high, low, close });
+        volSeries.update({ time, value: vol||0,
+            color: close >= open ? '#34d39930' : '#f8717130' });
+        // clone charts are fed independently via _connectCloneOBWS — not synced here
+        updatePriceDisplay();
+        vpRecord(close, vol||0, close >= open);
+    }
+};
+
+const ADAPTERS = {
+
+    'binance-perp': {
+        klineUrl: (sym, tf) => `https://fapi.binance.com/fapi/v1/klines?symbol=${symPlain(sym)}&interval=${TF_LABEL_MAP[tf]}&limit=500`,
+        klineNorm: r => Array.isArray(r) ? r.map(k=>({time:+k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4],vol:+k[5]})) : [],
+        wsConnect(sym, tf, cbs) {
+            const s = sym.toLowerCase()+'usdt', tl = TF_LABEL_MAP[tf];
+            const ws = new WebSocket(`wss://fstream.binance.com/stream?streams=${s}@depth20@100ms/${s}@kline_${tl}`);
+            ws.onmessage = e => {
+                const { stream, data } = JSON.parse(e.data);
+                if (stream?.includes('@depth20'))
+                    cbs.onDepth(data.a.map(([p,q])=>({price:+p,size:+q})), data.b.map(([p,q])=>({price:+p,size:+q})));
+                else if (stream?.includes('@kline_')) {
+                    const k = data.k;
+                    cbs.onKline({time:k.t/1000,open:+k.o,high:+k.h,low:+k.l,close:+k.c,vol:+k.v});
+                }
+            };
+            ws.onerror = e => console.error('binance-perp WS error', e);
+            return ws;
+        }
+    },
+
+    'binance-spot': {
+        klineUrl: (sym, tf) => `https://api.binance.com/api/v3/klines?symbol=${symPlain(sym)}&interval=${TF_LABEL_MAP[tf]}&limit=500`,
+        klineNorm: r => Array.isArray(r) ? r.map(k=>({time:+k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4],vol:+k[5]})) : [],
+        wsConnect(sym, tf, cbs) {
+            const s = sym.toLowerCase()+'usdt', tl = TF_LABEL_MAP[tf];
+            const ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${s}@depth20@100ms/${s}@kline_${tl}`);
+            ws.onmessage = e => {
+                const { stream, data } = JSON.parse(e.data);
+                if (stream?.includes('@depth20'))
+                    // Spot stream uses bids/asks fields (Futures uses a/b — different format)
+                    cbs.onDepth(data.asks.map(([p,q])=>({price:+p,size:+q})), data.bids.map(([p,q])=>({price:+p,size:+q})));
+                else if (stream?.includes('@kline_')) {
+                    const k = data.k;
+                    cbs.onKline({time:k.t/1000,open:+k.o,high:+k.h,low:+k.l,close:+k.c,vol:+k.v});
+                }
+            };
+            ws.onerror = e => console.error('binance-spot WS error', e);
+            return ws;
+        }
+    },
+
+    'bybit-perp': {
+        klineUrl: (sym, tf) => `https://api.bybit.com/v5/market/kline?category=linear&symbol=${symPlain(sym)}&interval=${TF_BYBIT[tf]}&limit=500`,
+        klineNorm: r => ((r.result?.list)||[]).slice().reverse().map(k=>({time:+k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4],vol:+k[5]})),
+        wsConnect(sym, tf, cbs) {
+            const ws = new WebSocket('wss://stream.bybit.com/v5/public/linear');
+            const S = symPlain(sym);
+            const book = { asks: new Map(), bids: new Map() };
+            ws.onopen = () => ws.send(JSON.stringify({op:'subscribe',args:[`orderbook.50.${S}`,`kline.${TF_BYBIT[tf]}.${S}`]}));
+            ws.onmessage = e => {
+                const d = JSON.parse(e.data);
+                if (d.op === 'subscribe' && d.success === false) { console.warn(`[bybit-perp] subscribe failed: ${d.ret_msg}`); return; }
+                if (d.topic?.startsWith('orderbook')) {
+                    const od = d.data||{};
+                    if (d.type === 'snapshot') { book.asks.clear(); book.bids.clear(); }
+                    (od.a||[]).forEach(([p,q]) => { if (+q === 0) book.asks.delete(p); else book.asks.set(p, +q); });
+                    (od.b||[]).forEach(([p,q]) => { if (+q === 0) book.bids.delete(p); else book.bids.set(p, +q); });
+                    cbs.onDepth(
+                        [...book.asks.entries()].map(([p,q])=>({price:+p,size:q})),
+                        [...book.bids.entries()].map(([p,q])=>({price:+p,size:q}))
+                    );
+                } else if (d.topic?.startsWith('kline')) {
+                    const k = d.data?.[0]; if(!k) return;
+                    cbs.onKline({time:+k.start/1000,open:+k.open,high:+k.high,low:+k.low,close:+k.close,vol:+k.volume});
+                }
+            };
+            const ping = setInterval(()=>ws.readyState===1&&ws.send(JSON.stringify({op:'ping'})),20000);
+            const _c = ws.close.bind(ws); ws.close = ()=>{clearInterval(ping);_c();};
+            return ws;
+        }
+    },
+
+    'bybit-spot': {
+        klineUrl: (sym, tf) => `https://api.bybit.com/v5/market/kline?category=spot&symbol=${symPlain(sym)}&interval=${TF_BYBIT[tf]}&limit=500`,
+        klineNorm: r => ((r.result?.list)||[]).slice().reverse().map(k=>({time:+k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4],vol:+k[5]})),
+        wsConnect(sym, tf, cbs) {
+            const ws = new WebSocket('wss://stream.bybit.com/v5/public/spot');
+            const S = symPlain(sym);
+            const book = { asks: new Map(), bids: new Map() };
+            ws.onopen = () => ws.send(JSON.stringify({op:'subscribe',args:[`orderbook.50.${S}`,`kline.${TF_BYBIT[tf]}.${S}`]}));
+            ws.onmessage = e => {
+                const d = JSON.parse(e.data);
+                if (d.op === 'subscribe' && d.success === false) { console.warn(`[bybit-spot] subscribe failed: ${d.ret_msg}`); return; }
+                if (d.topic?.startsWith('orderbook')) {
+                    const od = d.data||{};
+                    if (d.type === 'snapshot') { book.asks.clear(); book.bids.clear(); }
+                    (od.a||[]).forEach(([p,q]) => { if (+q === 0) book.asks.delete(p); else book.asks.set(p, +q); });
+                    (od.b||[]).forEach(([p,q]) => { if (+q === 0) book.bids.delete(p); else book.bids.set(p, +q); });
+                    cbs.onDepth(
+                        [...book.asks.entries()].map(([p,q])=>({price:+p,size:q})),
+                        [...book.bids.entries()].map(([p,q])=>({price:+p,size:q}))
+                    );
+                } else if (d.topic?.startsWith('kline')) {
+                    const k = d.data?.[0]; if(!k) return;
+                    cbs.onKline({time:+k.start/1000,open:+k.open,high:+k.high,low:+k.low,close:+k.close,vol:+k.volume});
+                }
+            };
+            const ping = setInterval(()=>ws.readyState===1&&ws.send(JSON.stringify({op:'ping'})),20000);
+            const _c = ws.close.bind(ws); ws.close = ()=>{clearInterval(ping);_c();};
+            return ws;
+        }
+    },
+
+    'kucoin-spot': {
+        klineUrl: (sym, tf) => {
+            const end = Math.floor(Date.now()/1000), start = end - 500*tf;
+            return `https://api.kucoin.com/api/v1/market/candles?type=${TF_KUCOIN[tf]}&symbol=${symDash(sym)}&startAt=${start}&endAt=${end}`;
+        },
+        // KuCoin candle: [time, open, close, high, low, vol, turnover]
+        klineNorm: r => ((r.data)||[]).slice().reverse().map(k=>({time:+k[0],open:+k[1],high:+k[3],low:+k[4],close:+k[2],vol:+k[5]})),
+        async wsConnect(sym, tf, cbs) {
+            try {
+                const t = await (await fetch('https://api.kucoin.com/api/v1/bullet-public',{method:'POST'})).json();
+                const { token, instanceServers } = t.data;
+                const ws = new WebSocket(`${instanceServers[0].endpoint}?token=${token}`);
+                const S = symDash(sym);
+                ws.onopen = () => {
+                    ws.send(JSON.stringify({id:1,type:'subscribe',topic:`/spotMarket/level2Depth50:${S}`,response:true}));
+                    ws.send(JSON.stringify({id:2,type:'subscribe',topic:`/market/candles:${S}_${TF_KUCOIN[tf]}`,response:true}));
+                };
+                ws.onmessage = e => {
+                    const d = JSON.parse(e.data);
+                    if (d.type==='pong'||d.type==='ack'||d.type==='welcome') return;
+                    if (d.subject==='level2') {
+                        const ch = d.data?.changes||{};
+                        cbs.onDepth((ch.asks||[]).map(([p,q])=>({price:+p,size:+q})),(ch.bids||[]).map(([p,q])=>({price:+p,size:+q})));
+                    } else if (d.subject==='trade.candles.update') {
+                        const k = d.data?.candles||[];
+                        cbs.onKline({time:+k[0],open:+k[1],high:+k[3],low:+k[4],close:+k[2],vol:+k[5]});
+                    }
+                };
+                const ping = setInterval(()=>ws.readyState===1&&ws.send(JSON.stringify({id:Date.now(),type:'ping'})),30000);
+                const _c = ws.close.bind(ws); ws.close=()=>{clearInterval(ping);_c();};
+                return ws;
+            } catch(e) { console.error('kucoin-spot WS error', e); return { close:()=>{} }; }
+        }
+    },
+
+    'kucoin-perp': {
+        klineUrl: (sym, tf) => {
+            const end = Date.now(), start = end - 500*tf*1000;
+            return `https://api-futures.kucoin.com/api/v1/kline/query?granularity=${tf/60}&symbol=${sym.toUpperCase()}USDTM&from=${start}&to=${end}`;
+        },
+        klineNorm: r => ((r.data)||[]).map(k=>({time:+k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4],vol:+k[5]})),
+        async wsConnect(sym, tf, cbs) {
+            try {
+                const t = await (await fetch('https://api-futures.kucoin.com/api/v1/bullet-public',{method:'POST'})).json();
+                const { token, instanceServers } = t.data;
+                const ws = new WebSocket(`${instanceServers[0].endpoint}?token=${token}`);
+                const S = sym.toUpperCase()+'USDTM';
+                ws.onopen = () => {
+                    ws.send(JSON.stringify({id:1,type:'subscribe',topic:`/contractMarket/level2Depth50:${S}`,response:true}));
+                    ws.send(JSON.stringify({id:2,type:'subscribe',topic:`/contractMarket/candle:${S}_${tf/60}`,response:true}));
+                };
+                ws.onmessage = e => {
+                    const d = JSON.parse(e.data);
+                    if (d.type==='pong'||d.type==='ack'||d.type==='welcome') return;
+                    if (d.subject==='level2') {
+                        const ch = d.data?.changes||{};
+                        cbs.onDepth((ch.asks||[]).map(([p,q])=>({price:+p,size:+q})),(ch.bids||[]).map(([p,q])=>({price:+p,size:+q})));
+                    } else if (d.subject==='candle.stick') {
+                        const k = d.data?.candles||[];
+                        cbs.onKline({time:+k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4],vol:+k[5]});
+                    }
+                };
+                const ping = setInterval(()=>ws.readyState===1&&ws.send(JSON.stringify({id:Date.now(),type:'ping'})),30000);
+                const _c = ws.close.bind(ws); ws.close=()=>{clearInterval(ping);_c();};
+                return ws;
+            } catch(e) { console.error('kucoin-perp WS error', e); return { close:()=>{} }; }
+        }
+    },
+
+    'bitget-spot': {
+        klineUrl: (sym, tf) => `https://api.bitget.com/api/v2/spot/market/candles?symbol=${symPlain(sym)}&granularity=${TF_BITGET[tf]}&limit=500`,
+        klineNorm: r => ((r.data)||[]).slice().reverse().map(k=>({time:+k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4],vol:+k[5]})),
+        wsConnect(sym, tf, cbs) {
+            const ws = new WebSocket('wss://ws.bitget.com/v2/ws/public');
+            const S = symPlain(sym);
+            ws.onopen = () => ws.send(JSON.stringify({op:'subscribe',args:[
+                {instType:'SPOT',channel:'books5',instId:S},
+                {instType:'SPOT',channel:`candle${TF_BITGET[tf]}`,instId:S}
+            ]}));
+            ws.onmessage = e => {
+                if (e.data==='pong') return;
+                const d = JSON.parse(e.data);
+                const ch = d.arg?.channel||'';
+                if (ch==='books5') {
+                    const od = d.data?.[0]||{};
+                    cbs.onDepth((od.asks||[]).map(([p,q])=>({price:+p,size:+q})),(od.bids||[]).map(([p,q])=>({price:+p,size:+q})));
+                } else if (ch.startsWith('candle')) {
+                    const k = d.data?.[0]; if(!k) return;
+                    cbs.onKline({time:+k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4],vol:+k[5]});
+                }
+            };
+            const ping = setInterval(()=>ws.readyState===1&&ws.send('ping'),25000);
+            const _c = ws.close.bind(ws); ws.close=()=>{clearInterval(ping);_c();};
+            return ws;
+        }
+    },
+
+    'bitget-perp': {
+        klineUrl: (sym, tf) => `https://api.bitget.com/api/v2/mix/market/candles?symbol=${symPlain(sym)}&productType=USDT-FUTURES&granularity=${TF_BITGET[tf]}&limit=500`,
+        klineNorm: r => ((r.data)||[]).slice().reverse().map(k=>({time:+k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4],vol:+k[5]})),
+        wsConnect(sym, tf, cbs) {
+            const ws = new WebSocket('wss://ws.bitget.com/v2/ws/public');
+            const S = symPlain(sym);
+            ws.onopen = () => ws.send(JSON.stringify({op:'subscribe',args:[
+                {instType:'USDT-FUTURES',channel:'books5',instId:S},
+                {instType:'USDT-FUTURES',channel:`candle${TF_BITGET[tf]}`,instId:S}
+            ]}));
+            ws.onmessage = e => {
+                if (e.data==='pong') return;
+                const d = JSON.parse(e.data);
+                const ch = d.arg?.channel||'';
+                if (ch==='books5') {
+                    const od = d.data?.[0]||{};
+                    cbs.onDepth((od.asks||[]).map(([p,q])=>({price:+p,size:+q})),(od.bids||[]).map(([p,q])=>({price:+p,size:+q})));
+                } else if (ch.startsWith('candle')) {
+                    const k = d.data?.[0]; if(!k) return;
+                    cbs.onKline({time:+k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4],vol:+k[5]});
+                }
+            };
+            const ping = setInterval(()=>ws.readyState===1&&ws.send('ping'),25000);
+            const _c = ws.close.bind(ws); ws.close=()=>{clearInterval(ping);_c();};
+            return ws;
+        }
+    },
+
+    'gate-spot': {
+        klineUrl: (sym, tf) => `https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair=${symUnder(sym)}&interval=${TF_GATE[tf]}&limit=500`,
+        klineNorm: r => (Array.isArray(r)?r:[]).map(k=>({time:+k.t,open:+k.o,high:+k.h,low:+k.l,close:+k.c,vol:+k.v})),
+        wsConnect(sym, tf, cbs) {
+            const ws = new WebSocket('wss://api.gateio.ws/ws/v4/');
+            const S = symUnder(sym), TF = TF_GATE[tf];
+            ws.onopen = () => {
+                const t = Math.floor(Date.now()/1000);
+                ws.send(JSON.stringify({time:t,channel:'spot.order_book',event:'subscribe',payload:[S,'20','100ms']}));
+                ws.send(JSON.stringify({time:t,channel:'spot.candlesticks',event:'subscribe',payload:[TF,S]}));
+            };
+            ws.onmessage = e => {
+                const d = JSON.parse(e.data);
+                if (d.channel==='spot.order_book'&&d.result) {
+                    cbs.onDepth((d.result.asks||[]).map(([p,q])=>({price:+p,size:+q})),(d.result.bids||[]).map(([p,q])=>({price:+p,size:+q})));
+                } else if (d.channel==='spot.candlesticks'&&d.result) {
+                    const k = d.result;
+                    cbs.onKline({time:+k.t,open:+k.o,high:+k.h,low:+k.l,close:+k.c,vol:+k.v});
+                }
+            };
+            const ping = setInterval(()=>ws.readyState===1&&ws.send(JSON.stringify({channel:'spot.ping',event:'',time:Math.floor(Date.now()/1000)})),10000);
+            const _c = ws.close.bind(ws); ws.close=()=>{clearInterval(ping);_c();};
+            return ws;
+        }
+    },
+
+    'gate-perp': {
+        klineUrl: (sym, tf) => `https://fx.gate.io/api/v4/futures/usdt/candlesticks?contract=${symUnder(sym)}&interval=${TF_GATE[tf]}&limit=500`,
+        klineNorm: r => (Array.isArray(r)?r:[]).map(k=>({time:+k.t,open:+k.o,high:+k.h,low:+k.l,close:+k.c,vol:+k.v})),
+        wsConnect(sym, tf, cbs) {
+            const ws = new WebSocket('wss://fx.gateio.ws/v4/ws/usdt');
+            const S = symUnder(sym), TF = TF_GATE[tf];
+            ws.onopen = () => {
+                const t = Math.floor(Date.now()/1000);
+                ws.send(JSON.stringify({time:t,channel:'futures.order_book',event:'subscribe',payload:[S,'20','100ms']}));
+                ws.send(JSON.stringify({time:t,channel:'futures.candlesticks',event:'subscribe',payload:[TF,S]}));
+            };
+            ws.onmessage = e => {
+                const d = JSON.parse(e.data);
+                if (d.channel==='futures.order_book'&&d.result) {
+                    cbs.onDepth((d.result.asks||[]).map(([p,q])=>({price:+p,size:+q})),(d.result.bids||[]).map(([p,q])=>({price:+p,size:+q})));
+                } else if (d.channel==='futures.candlesticks'&&d.result) {
+                    const k = d.result;
+                    cbs.onKline({time:+k.t,open:+k.o,high:+k.h,low:+k.l,close:+k.c,vol:+k.v});
+                }
+            };
+            const ping = setInterval(()=>ws.readyState===1&&ws.send(JSON.stringify({channel:'futures.ping',event:'',time:Math.floor(Date.now()/1000)})),10000);
+            const _c = ws.close.bind(ws); ws.close=()=>{clearInterval(ping);_c();};
+            return ws;
+        }
+    }
+};
+
+// ── Exchange selector ──────────────────────────────────────────────
+function selectExchange(exchange, type, el) {
+    currentExchange = exchange;
+    currentType     = type;
+    document.querySelectorAll('.exch-sel-btn').forEach(b => b.classList.remove('active'));
+    if (el) el.classList.add('active');
+    loadChart(currentSym, tfInterval);
+}
+
+// ── Generic loadChart ──────────────────────────────────────────────
+let obNeedCenter = true; // declared here so loadChart can reference it on first call
+
 async function loadChart(sym, interval) {
     tfInterval = interval || 900;
-    const bnSym   = sym.toUpperCase() + 'USDT';
-    const tfLabel = TF_LABEL_MAP[tfInterval] || '15m';
+    const id      = `${currentExchange}-${currentType}`;
+    const adapter = ADAPTERS[id] || ADAPTERS['binance-perp'];
 
-    if (binanceWS) { binanceWS.close(); binanceWS = null; }
+    if (activeWS) { try { activeWS.close(); } catch(e){} activeWS = null; }
+    binanceWS = null;
+    if (chartWS) { try { chartWS.close(); } catch(e){} chartWS = null; }
     obNeedCenter = true;
 
     try {
-        const res = await fetch(
-            `https://fapi.binance.com/fapi/v1/klines?symbol=${bnSym}&interval=${tfLabel}&limit=500`
-        );
-        const raw = await res.json();
-        if (!Array.isArray(raw)) throw new Error('Bad response: ' + JSON.stringify(raw).slice(0,120));
-        const cData = raw.map(k => ({ time:k[0]/1000, open:+k[1], high:+k[2], low:+k[3], close:+k[4] }));
-        const vData = raw.map(k => ({ time:k[0]/1000, value:+k[5],
-            color: +k[4] >= +k[1] ? '#5bba8930' : '#cd414130' }));
+        const res  = await fetch(adapter.klineUrl(sym, tfInterval));
+        const raw  = await res.json();
+        const data = adapter.klineNorm(raw);
+        if (!data.length) throw new Error('empty');
+        const cData = data.map(k=>({time:k.time,open:k.open,high:k.high,low:k.low,close:k.close}));
+        const vData = data.map(k=>({time:k.time,value:k.vol||0,
+            color:k.close>=k.open?'#34d39930':'#f8717130'}));
         candles.setData(cData);
         volSeries.setData(vData);
-        currentPrice = cData[cData.length - 1].close;
-        lastBarTime  = cData[cData.length - 1].time;
-        lastOpen     = cData[cData.length - 1].open;
+        currentPrice = cData[cData.length-1].close;
+        lastBarTime  = cData[cData.length-1].time;
+        lastOpen     = cData[cData.length-1].open;
         chart.timeScale().fitContent();
     } catch(e) {
-        console.error('Binance REST error:', e);
+        console.error(`${id} REST error:`, e);
+        const fb = generateCandles(currentPrice||100, 200, tfInterval);
+        candles.setData(fb.cData);
+        volSeries.setData(fb.vData);
     }
 
     clearInProgress();
     redrawCanvas();
-    connectBinanceWS(bnSym.toLowerCase(), tfLabel);
+
+    const wsResult = adapter.wsConnect(sym, tfInterval, WS_CBS);
+    activeWS = (wsResult instanceof Promise) ? (await wsResult) : wsResult;
+    binanceWS = activeWS;
 }
 
 function setTF(btn, tf) {
@@ -1924,7 +2532,6 @@ function setTF(btn, tf) {
 }
 
 applyChartTheme(document.documentElement.classList.contains('light'));
-changePair('FOLKS');
 
 // ══════════════════════════════════════════════════════════════════
 // FORMAT HELPERS
@@ -2272,7 +2879,6 @@ let orderPings = [];
 // ── OB leverage ──
 let obLeverage   = 20;
 let obLevPending = 20;
-let obNeedCenter = true;
 
 // ── Helpers ──
 function fmtK(v) {
@@ -2307,20 +2913,20 @@ function obLevConfirm() {
 }
 
 function obRefresh() {
-    if (binanceWS) { binanceWS.close(); binanceWS = null; }
     obNeedCenter = true;
     loadChart(currentSym, tfInterval);
 }
 
 // ── Presets ──
 function renderPresets() {
-    document.getElementById('ob-presets').innerHTML = orderPresets.map((v, i) => {
+    const html = orderPresets.map((v, i) => {
         const lbl = v >= 1000 ? (v / 1000).toFixed(v % 1000 ? 1 : 0) + 'K' : String(v);
-        return `<button class="ob-preset-btn${i === activePresetIdx ? ' active' : ''}"
-            onclick="selectPreset(${i})"
-            ondblclick="editPreset(event,${i})"
-        >${lbl}</button>`;
+        return `<button class="ob-preset-btn${i === activePresetIdx ? ' active' : ''}" onclick="selectPreset(${i})" ondblclick="editPreset(event,${i})">${lbl}</button>`;
     }).join('');
+    [1, 2, 3, 4].forEach(s => {
+        const el = document.getElementById(s === 1 ? 'ob-presets' : `ob-presets-${s}`);
+        if (el) el.innerHTML = html;
+    });
 }
 
 function selectPreset(i) {
@@ -2419,23 +3025,33 @@ function vpRecord(price, size, isBuy) {
 }
 
 // ── Placed orders ──
-function placeOrder(price, side) {
+function placeOrder(price, side, slot) {
     const size = orderPresets[activePresetIdx];
-    placedOrders.push({ id: nextOrderId++, price: +price, size, side });
+    placedOrders.push({ id: nextOrderId++, price: +price, size, side, slot: slot || 1 });
     setTimeout(() => addPing(Math.round(120 + Math.random() * 330)), 40);
-    if (realAsks.length || realBids.length)
-        renderRealOB([...realAsks].reverse(), realBids);
+    _refreshSlotOB(slot || 1);
 }
 
 function cancelOrder(id) {
+    const o = placedOrders.find(o => o.id === id);
     placedOrders = placedOrders.filter(o => o.id !== id);
-    if (realAsks.length || realBids.length)
-        renderRealOB([...realAsks].reverse(), realBids);
+    if (o) _refreshSlotOB(o.slot || 1);
 }
-function cancelOrdersAtPrice(price) {
+function cancelOrdersAtPrice(price, slot) {
     placedOrders = placedOrders.filter(o => o.price !== price);
-    if (realAsks.length || realBids.length)
-        renderRealOB([...realAsks].reverse(), realBids);
+    _refreshSlotOB(slot || 1);
+}
+
+function _refreshSlotOB(slot) {
+    if (slot === 1) {
+        if (realAsks.length || realBids.length) renderRealOB([...realAsks].reverse(), realBids);
+    } else {
+        const book = obSlotBook[slot];
+        if (!book) return;
+        const asks = [...book.asks.entries()].map(([p,q])=>({price:+p,size:q})).sort((a,b)=>a.price-b.price).slice(0,20);
+        const bids = [...book.bids.entries()].map(([p,q])=>({price:+p,size:q})).sort((a,b)=>b.price-a.price).slice(0,20);
+        if (asks.length || bids.length) _renderOBRowsIntoSlot(slot, [...asks].reverse(), bids);
+    }
 }
 
 // ── OB rendering ──
@@ -2481,6 +3097,7 @@ function renderRealOB(displayAsks, displayBids) {
     const scrollEl = document.getElementById('ob-scroll');
     asksEl.innerHTML = displayAsks.map((r, i) => rowHtml(r, 'ask-row', i === displayAsks.length - 1)).join('');
     bidsEl.innerHTML = displayBids.map((r, i) => rowHtml(r, 'bid-row', i === 0)).join('');
+
 
     if (obNeedCenter) {
         requestAnimationFrame(() => {
@@ -2558,46 +3175,13 @@ function renderVPCols(displayAsks, displayBids) {
 
     document.getElementById('ob-vp-cols').innerHTML   = colsHtml;
     document.getElementById('ob-vp-footer').innerHTML = footerHtml;
+    ['2','3','4'].forEach(n => {
+        const c = document.getElementById('ob-vp-cols-' + n);
+        const f = document.getElementById('ob-vp-footer-' + n);
+        if (c) c.innerHTML = colsHtml;
+        if (f) f.innerHTML = footerHtml;
+    });
     syncVPScroll();
-}
-
-// ══════════════════════════════════════════════════════════════════
-// BINANCE WEBSOCKET
-// ══════════════════════════════════════════════════════════════════
-
-function connectBinanceWS(symLow, tfLabel) {
-    const streams = [
-        `${symLow}@depth20@100ms`,
-        `${symLow}@kline_${tfLabel}`
-    ].join('/');
-
-    binanceWS = new WebSocket(`wss://fstream.binance.com/stream?streams=${streams}`);
-
-    binanceWS.onmessage = (e) => {
-        const msg    = JSON.parse(e.data);
-        const stream = msg.stream || '';
-        const data   = msg.data;
-        if (stream.includes('@depth20'))     onDepthMsg(data);
-        else if (stream.includes('@kline_')) onKlineMsg(data);
-    };
-
-    binanceWS.onerror = (e) => console.error('Binance WS error', e);
-    binanceWS.onclose = ()  => console.log('Binance WS closed');
-}
-
-function onDepthMsg(data) {
-    realBids = (data.b || []).map(([p,q]) => ({ price:+p, size:+q })).filter(r=>r.size>0);
-    realAsks = (data.a || []).map(([p,q]) => ({ price:+p, size:+q })).filter(r=>r.size>0);
-    renderRealOB([...realAsks].reverse(), realBids);
-}
-
-function onKlineMsg(data) {
-    const k = data.k;
-    currentPrice = +k.c;
-    candles.update({ time:k.t/1000, open:+k.o, high:+k.h, low:+k.l, close:+k.c });
-    volSeries.update({ time:k.t/1000, value:+k.v,
-        color: +k.c >= +k.o ? '#5bba8930' : '#cd414130' });
-    updatePriceDisplay();
 }
 
 function onAggTradeMsg(data) {
@@ -2606,13 +3190,17 @@ function onAggTradeMsg(data) {
 }
 
 function updatePriceDisplay() {
-    const p   = getPair(currentSym);
-    const pct = (currentPrice - p.base) / p.base * 100;
-    document.getElementById('header-price').textContent = '$' + fmt(currentPrice);
+    const p    = getPair(currentSym);
+    const pct  = (currentPrice - p.base) / p.base * 100;
+    const hpEl = document.getElementById('header-price');
+    if (hpEl) hpEl.textContent = '$' + fmt(currentPrice);
     const chEl = document.getElementById('header-change');
-    chEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
-    chEl.style.color  = pct >= 0 ? 'var(--green)' : 'var(--red)';
-    document.getElementById('pos-mark').textContent = '$' + fmt(currentPrice);
+    if (chEl) {
+        chEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+        chEl.style.color  = pct >= 0 ? 'var(--green)' : 'var(--red)';
+    }
+    const pmEl = document.getElementById('pos-mark');
+    if (pmEl) pmEl.textContent = '$' + fmt(currentPrice);
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -3103,6 +3691,12 @@ function syncVPScroll() {
     const scrollEl = document.getElementById('ob-scroll');
     const cols     = document.getElementById('ob-vp-cols');
     if (scrollEl && cols) cols.style.transform = `translateY(-${scrollEl.scrollTop}px)`;
+    // Sync clone VP cols too
+    ['2','3','4'].forEach(n => {
+        const s = document.getElementById('ob-scroll-' + n);
+        const c = document.getElementById('ob-vp-cols-' + n);
+        if (s && c) c.style.transform = `translateY(-${s.scrollTop}px)`;
+    });
 }
 
 function setupOBHover() {
@@ -3111,6 +3705,12 @@ function setupOBHover() {
     const obBook   = document.querySelector('.ob-book');
     if (!scrollEl || !float || !obBook) return;
     scrollEl.addEventListener('scroll', syncVPScroll);
+    // Sync clone scroll → VP col transform
+    ['2','3','4'].forEach(n => {
+        const s = document.getElementById('ob-scroll-' + n);
+        const c = document.getElementById('ob-vp-cols-' + n);
+        if (s && c) s.addEventListener('scroll', () => { c.style.transform = `translateY(-${s.scrollTop}px)`; });
+    });
     scrollEl.addEventListener('mouseover', function(e) {
         const row = e.target.closest('.ob-row');
         if (!row) return;
@@ -3132,6 +3732,76 @@ function setupOBHover() {
 }
 
 // ══ SIDEBAR ══
+function toggleSidebar() {
+    const sb  = document.getElementById('global-sidebar');
+    const btn = document.getElementById('sb-toggle-btn');
+    sb.classList.toggle('collapsed');
+    btn.textContent = sb.classList.contains('collapsed') ? '›' : '‹';
+}
+
+// ── PROJECT PICKER ──
+let currentProject = null;
+function _initProjPicker() {
+    const savedId = parseInt(localStorage.getItem('ndb_current_project'));
+    if (savedId) {
+        const pr = projectsList.find(p => p.id === savedId);
+        if (pr) { currentProject = pr; const el = document.getElementById('sb-proj-name'); if (el) el.textContent = pr.title; }
+    }
+}
+
+function toggleProjPicker(e) {
+    e.stopPropagation();
+    const dd    = document.getElementById('sb-proj-dropdown');
+    const arrow = document.getElementById('sb-proj-arrow');
+    const isOpen = !dd.classList.contains('hidden');
+    if (isOpen) {
+        dd.classList.add('hidden');
+        arrow.classList.remove('open');
+    } else {
+        _renderProjList('');
+        dd.classList.remove('hidden');
+        arrow.classList.add('open');
+        const inp = document.getElementById('sb-proj-search');
+        inp.value = '';
+        setTimeout(() => inp.focus(), 50);
+    }
+}
+
+function _renderProjList(filter) {
+    const list = document.getElementById('sb-proj-list');
+    const q = filter.toLowerCase();
+    const filtered = projectsList.filter(p => p.title.toLowerCase().includes(q));
+    if (!filtered.length) {
+        list.innerHTML = '<div class="sb-proj-empty">No projects</div>';
+        return;
+    }
+    list.innerHTML = filtered.map(p => `
+        <div class="sb-proj-option${currentProject?.id === p.id ? ' selected' : ''}" onclick="selectProject(${p.id})">${p.title}</div>
+    `).join('');
+}
+
+function filterProjList(val) { _renderProjList(val); }
+
+function selectProject(id) {
+    const pr = projectsList.find(p => p.id === id);
+    if (!pr) return;
+    currentProject = pr;
+    localStorage.setItem('ndb_current_project', id);
+    document.getElementById('sb-proj-name').textContent = pr.title;
+    document.getElementById('sb-proj-dropdown').classList.add('hidden');
+    document.getElementById('sb-proj-arrow').classList.remove('open');
+    showPage('trading');
+}
+
+document.addEventListener('click', function() {
+    const dd = document.getElementById('sb-proj-dropdown');
+    if (dd && !dd.classList.contains('hidden')) {
+        dd.classList.add('hidden');
+        const arrow = document.getElementById('sb-proj-arrow');
+        if (arrow) arrow.classList.remove('open');
+    }
+});
+
 function toggleSbStats() {
     const sub = document.getElementById('sb-stats-sub');
     const arrow = document.getElementById('sb-stats-arrow');
@@ -3294,10 +3964,316 @@ function showPage(p) {
     if (p === 'projects') renderProjectsList();
 }
 
+// ══ ORDERBOOK PAIR PICKER ══
+
+let _obPickerSlot = 1; // which OB slot (1-4) the picker was opened for
+// per-slot state: { pair, ws, chartWS }
+const obSlots = { 2: { ws: null, chartWS: null }, 3: { ws: null, chartWS: null }, 4: { ws: null, chartWS: null } };
+// per-slot live orderbook state (for snapshot+delta exchanges like Bybit)
+const obSlotBook = {
+    2: { asks: new Map(), bids: new Map() },
+    3: { asks: new Map(), bids: new Map() },
+    4: { asks: new Map(), bids: new Map() }
+};
+
+function openOBPairPicker(slot) {
+    _obPickerSlot = slot || 1;
+    document.getElementById('ob-pp-overlay').classList.remove('hidden');
+    _renderOBPairList();
+}
+
+function closeOBPairPickerOverlay(e) {
+    if (e.target === document.getElementById('ob-pp-overlay'))
+        closeOBPairPickerBtn();
+}
+
+function closeOBPairPickerBtn() {
+    document.getElementById('ob-pp-overlay').classList.add('hidden');
+}
+
+function _renderOBPairList() {
+    const body = document.getElementById('ob-pp-body');
+    const pr   = currentProject;
+    if (!pr) {
+        body.innerHTML = '<div class="ob-pp-empty">Select a project in the sidebar first</div>';
+        return;
+    }
+    const pairs = pr.pairs || [];
+    if (!pairs.length) {
+        body.innerHTML = `<div class="ob-pp-empty">No pairs in project <b>${pr.title}</b>.<br>Add pairs on the Projects → Pairs page.</div>`;
+        return;
+    }
+    body.innerHTML = pairs.map(p => {
+        const isPerp  = (p.type || '').toLowerCase() === 'perpetual';
+        const badgeCls = isPerp ? 'ob-pp-badge-perp' : 'ob-pp-badge-spot';
+        return `<div class="ob-pp-item" onclick="selectOBPair(${p.id})">
+            <div>
+                <div class="ob-pp-item-name">${p.symbol}</div>
+                <div class="ob-pp-item-exchange">${p.exchange}</div>
+            </div>
+            <span class="ob-pp-badge ${badgeCls}">${isPerp ? 'PERP' : 'SPOT'}</span>
+        </div>`;
+    }).join('');
+}
+
+function selectOBPair(pairId) {
+    const pr = currentProject;
+    if (!pr) return;
+    const pair = (pr.pairs || []).find(p => p.id === pairId);
+    if (!pair) return;
+    const slot  = _obPickerSlot;
+    const isPerp = (pair.type || '').toLowerCase() === 'perpetual';
+    const [base, qt] = pair.symbol.split('/');
+
+    // Update header label + color
+    const label = document.getElementById(`ob-pair-label-${slot}`);
+    const hdr   = document.getElementById(`ob-hdr-${slot}`);
+    if (label) {
+        label.textContent = `${pair.symbol} · ${pair.exchange.toUpperCase()} · ${isPerp ? 'PERPETUAL' : 'SPOT'}`;
+        label.classList.remove('ob-set-pair');
+    }
+    if (hdr) {
+        hdr.classList.remove('ob-hdr-spot', 'ob-hdr-perp');
+        hdr.classList.add(isPerp ? 'ob-hdr-perp' : 'ob-hdr-spot');
+    }
+
+    // Show/hide leverage button based on pair type
+    const levBtn = document.getElementById(slot === 1 ? 'ob-lev-btn' : `ob-lev-btn-${slot}`);
+    if (levBtn) levBtn.style.display = isPerp ? '' : 'none';
+
+    if (slot === 1) {
+        // Primary slot — use adapter system (handles both OB + chart 1)
+        obSelectedPair   = pair;
+        currentSym       = base;
+        currentExchange  = pair.exchange.toLowerCase();
+        currentType      = isPerp ? 'perp' : 'spot';
+        document.querySelectorAll('.exch-sel-btn').forEach(b => {
+            b.classList.toggle('active',
+                b.dataset.exch === currentExchange && b.dataset.type === currentType);
+        });
+        loadChart(base, tfInterval);
+    } else {
+        // Clone slots 2-4 — separate OB WebSocket per slot
+        obSlots[slot].pair = pair;
+        _connectCloneOBWS(slot, pair, base, qt);
+    }
+
+    closeOBPairPickerBtn();
+}
+
+function setCloneTF(slot, btn, tfStr) {
+    const toolbar = btn.closest('.chart-toolbar');
+    if (toolbar) toolbar.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const pair = obSlots[slot]?.pair;
+    if (!pair) return;
+
+    const newTf  = TF_MAP[tfStr];
+    obSlots[slot].tf = newTf;
+    const isPerp = (pair.type || '').toLowerCase() === 'perpetual';
+    const [base] = pair.symbol.split('/');
+    const ci     = slot - 2;
+
+    if (obSlots[slot].chartWS) { try { obSlots[slot].chartWS.close(); } catch(e){} obSlots[slot].chartWS = null; }
+
+    const adapter = ADAPTERS[`${pair.exchange.toLowerCase()}-${isPerp ? 'perp' : 'spot'}`];
+    if (!adapter) return;
+
+    fetch(adapter.klineUrl(base, newTf))
+        .then(r => r.json())
+        .then(raw => {
+            const data  = adapter.klineNorm(raw);
+            if (!data.length) return;
+            const cData = data.map(k => ({ time:k.time, open:k.open, high:k.high, low:k.low, close:k.close }));
+            const vData = data.map(k => ({ time:k.time, value:k.vol||0, color:k.close>=k.open?'#34d39930':'#f8717130' }));
+            if (cloneCandles[ci]) { cloneCandles[ci].setData(cData); }
+            if (cloneVols[ci])    { cloneVols[ci].setData(vData); }
+            if (cloneCharts[ci])  { cloneCharts[ci].timeScale().fitContent(); }
+        })
+        .catch(() => {});
+
+    const chartCBS = {
+        onDepth() {},
+        onKline({ time, open, high, low, close, vol }) {
+            if (cloneCandles[ci]) cloneCandles[ci].update({ time, open, high, low, close });
+            if (cloneVols[ci])    cloneVols[ci].update({ time, value:vol||0, color:close>=open?'#34d39930':'#f8717130' });
+            const ohlcEl = document.getElementById(`chart-ohlc-${slot}`);
+            if (ohlcEl) ohlcEl.textContent = `O ${fmt(open)}  H ${fmt(high)}  L ${fmt(low)}  C ${fmt(close)}`;
+        }
+    };
+    const r = adapter.wsConnect(base, newTf, chartCBS);
+    Promise.resolve(r).then(cws => { obSlots[slot].chartWS = cws; });
+}
+
+// Render asks/bids into any OB slot using the same HTML as renderRealOB
+function _renderOBRowsIntoSlot(slot, displayAsks, displayBids) {
+    const sfx    = slot === 1 ? '' : '-' + slot;
+    const asksEl = document.getElementById('ob-asks' + sfx);
+    const bidsEl = document.getElementById('ob-bids' + sfx);
+    const scrollEl = document.getElementById('ob-scroll' + sfx);
+    if (!asksEl || !bidsEl) return;
+
+    const { fillUSD, largeUSD1, largeUSD2 } = obSettings;
+    const bestAsk = displayAsks.length ? displayAsks[displayAsks.length - 1].price : 0;
+    const bestBid = displayBids.length ? displayBids[0].price : 0;
+
+    function rowHtml(r, cls, isBest) {
+        const usdVal = r.price * r.size;
+        const lc = usdVal >= largeUSD2 ? ' ob-large-2' : usdVal >= largeUSD1 ? ' ob-large-1' : '';
+        const bc = isBest ? (cls === 'ask-row' ? ' best-ask' : ' best-bid') : '';
+        const barW = Math.min(100, usdVal / fillUSD * 100).toFixed(1);
+        const refPrice = cls === 'ask-row' ? bestAsk : bestBid;
+        const pctDist  = refPrice > 0 ? Math.abs((r.price - refPrice) / refPrice * 100) : 0;
+        const pctStr   = pctDist < 0.001 ? '—' : pctDist.toFixed(2) + '%';
+        const ordersAtPrice = placedOrders.filter(o => o.price === r.price);
+        let badge = '';
+        if (ordersAtPrice.length > 0) {
+            const total = ordersAtPrice.reduce((s, o) => s + o.size, 0);
+            const side  = ordersAtPrice[0].side;
+            badge = `<span class="ob-order-badge${side === 'buy' ? ' ob-order-buy' : ' ob-order-sell'}"><span>${fmtK(total)}</span><span class="ob-order-x" onclick="event.stopPropagation();cancelOrdersAtPrice(${r.price},${slot})">×</span></span>`;
+        }
+        return `<div class="ob-row ${cls}${lc}${bc}"
+            onclick="placeOrder(${r.price},'buy',${slot})"
+            oncontextmenu="event.preventDefault();placeOrder(${r.price},'sell',${slot})">
+            <span class="ob-pct">${pctStr}</span>
+            <span class="ob-vol">${fmtK(usdVal)}</span>
+            <span class="ob-spacer"></span>
+            ${badge}
+            <span class="ob-price">${fmt(r.price)}</span>
+            <div class="ob-bar" style="width:${barW}%"></div>
+        </div>`;
+    }
+
+    asksEl.innerHTML = displayAsks.map((r, i) => rowHtml(r, 'ask-row', i === displayAsks.length - 1)).join('');
+    bidsEl.innerHTML = displayBids.map((r, i) => rowHtml(r, 'bid-row', i === 0)).join('');
+
+    if (obNeedCenter && slot === 1) {
+        requestAnimationFrame(() => { if (scrollEl) scrollEl.scrollTop = asksEl.offsetHeight - scrollEl.clientHeight / 2; });
+    }
+}
+
+function _connectCloneOBWS(slot, pair, base, qt) {
+    if (obSlots[slot].ws) { try { obSlots[slot].ws.close(); } catch(e){} obSlots[slot].ws = null; }
+    if (obSlots[slot].chartWS) { try { obSlots[slot].chartWS.close(); } catch(e){} obSlots[slot].chartWS = null; }
+    obSlotBook[slot] = { asks: new Map(), bids: new Map() };
+
+    const sym    = (base + (qt || 'USDT')).toLowerCase();
+    const symUp  = sym.toUpperCase();
+    const exch   = pair.exchange.toLowerCase();
+    const isPerp = (pair.type || '').toLowerCase() === 'perpetual';
+    const ci     = slot - 2; // chart index: slot 2→0, 3→1, 4→2
+
+    // Apply OB update: type='snapshot' clears book first, type='delta' merges
+    function applyOBBook(type, rawA, rawB) {
+        const book = obSlotBook[slot];
+        if (type === 'snapshot') { book.asks.clear(); book.bids.clear(); }
+        (rawA || []).forEach(([p,q]) => { if (+q === 0) book.asks.delete(p); else book.asks.set(p, +q); });
+        (rawB || []).forEach(([p,q]) => { if (+q === 0) book.bids.delete(p); else book.bids.set(p, +q); });
+        const asks = [...book.asks.entries()].map(([p,q])=>({price:+p,size:q})).sort((a,b)=>a.price-b.price).slice(0,20);
+        const bids = [...book.bids.entries()].map(([p,q])=>({price:+p,size:q})).sort((a,b)=>b.price-a.price).slice(0,20);
+        _renderOBRowsIntoSlot(slot, [...asks].reverse(), bids);
+    }
+
+    // Connect chart data (REST history + WS klines) via the exchange adapter
+    const adapterId = `${exch}-${isPerp ? 'perp' : 'spot'}`;
+    const adapter   = ADAPTERS[adapterId];
+    if (adapter) {
+        fetch(adapter.klineUrl(base, tfInterval))
+            .then(r => r.json())
+            .then(raw => {
+                const data  = adapter.klineNorm(raw);
+                if (!data.length) return;
+                const cData = data.map(k => ({ time:k.time, open:k.open, high:k.high, low:k.low, close:k.close }));
+                const vData = data.map(k => ({ time:k.time, value:k.vol||0, color:k.close>=k.open?'#34d39930':'#f8717130' }));
+                if (cloneCandles[ci]) { cloneCandles[ci].setData(cData); }
+                if (cloneVols[ci])    { cloneVols[ci].setData(vData); }
+                if (cloneCharts[ci])  { cloneCharts[ci].timeScale().fitContent(); }
+            })
+            .catch(() => {});
+
+        const chartCBS = {
+            onDepth() {},
+            onKline({ time, open, high, low, close, vol }) {
+                if (cloneCandles[ci]) cloneCandles[ci].update({ time, open, high, low, close });
+                if (cloneVols[ci])    cloneVols[ci].update({ time, value:vol||0, color:close>=open?'#34d39930':'#f8717130' });
+                const ohlcEl = document.getElementById(`chart-ohlc-${slot}`);
+                if (ohlcEl) ohlcEl.textContent = `O ${fmt(open)}  H ${fmt(high)}  L ${fmt(low)}  C ${fmt(close)}`;
+            }
+        };
+        const chartWSResult = adapter.wsConnect(base, tfInterval, chartCBS);
+        Promise.resolve(chartWSResult).then(cws => { obSlots[slot].chartWS = cws; });
+    }
+
+    let ws;
+    if (exch === 'binance') {
+        if (isPerp) {
+            ws = new WebSocket(`wss://fstream.binance.com/stream?streams=${sym}@depth20@100ms`);
+            ws.onmessage = e => {
+                const msg = JSON.parse(e.data);
+                const d   = msg.data || msg;
+                applyOBBook('snapshot', d.a || [], d.b || []);
+            };
+        } else {
+            ws = new WebSocket(`wss://stream.binance.com:9443/ws/${sym}@depth20@100ms`);
+            ws.onmessage = e => {
+                const d = JSON.parse(e.data);
+                applyOBBook('snapshot', d.asks || [], d.bids || []);
+            };
+        }
+    } else if (exch === 'bybit') {
+        const cat = isPerp ? 'linear' : 'spot';
+        ws = new WebSocket(`wss://stream.bybit.com/v5/public/${cat}`);
+        ws.onopen = () => ws.send(JSON.stringify({op:'subscribe',args:[`orderbook.50.${symUp}`]}));
+        ws.onmessage = e => {
+            const msg = JSON.parse(e.data);
+            if (msg.op === 'subscribe' && msg.success === false) {
+                console.warn(`[OB slot${slot}] Bybit subscribe failed: ${msg.ret_msg} (symbol: ${symUp})`);
+                return;
+            }
+            if (!msg.data || !msg.topic) return;
+            // Bybit sends snapshot first, then delta increments — maintain book state
+            applyOBBook(msg.type || 'delta', msg.data.a || [], msg.data.b || []);
+        };
+    } else {
+        _fetchCloneOBSnapshot(slot, pair, symUp, (rawAsks, rawBids) => {
+            applyOBBook('snapshot', rawAsks, rawBids);
+        });
+        return;
+    }
+    ws.onerror = e => console.error(`ob-slot${slot} WS error`, e);
+    ws.onclose = () => {};
+    obSlots[slot].ws = ws;
+}
+
+async function _fetchCloneOBSnapshot(slot, pair, symUp, onDataFn) {
+    try {
+        const exch = pair.exchange.toLowerCase();
+        let rawAsks = [], rawBids = [];
+        if (exch === 'gate') {
+            const base = symUp.replace('USDT','');
+            const d = await fetch(`https://api.gateio.ws/api/v4/spot/order_book?currency_pair=${base}_USDT&limit=20`).then(r=>r.json());
+            rawAsks = d.asks || []; rawBids = d.bids || [];
+        } else if (exch === 'mexc') {
+            const d = await fetch(`https://api.mexc.com/api/v3/depth?symbol=${symUp}&limit=20`).then(r=>r.json());
+            rawAsks = d.asks || []; rawBids = d.bids || [];
+        } else if (exch === 'bitget') {
+            const d = await fetch(`https://api.bitget.com/api/v2/spot/market/orderbook?symbol=${symUp}&limit=20`).then(r=>r.json());
+            rawAsks = d.data?.asks || []; rawBids = d.data?.bids || [];
+        } else if (exch === 'kucoin') {
+            const base = symUp.replace('USDT','');
+            const d = await fetch(`https://api.kucoin.com/api/v1/market/orderbook/level2_20?symbol=${base}-USDT`).then(r=>r.json());
+            rawAsks = d.data?.asks || []; rawBids = d.data?.bids || [];
+        }
+        if (rawAsks.length || rawBids.length) onDataFn(rawAsks, rawBids);
+    } catch(e) { console.error('clone OB snapshot error', e); }
+}
+
 // ══ PROJECTS ══
 let projectsList = JSON.parse(localStorage.getItem('ndb_projects') || '[]');
 let currentProjectId = null;
 let _projIdSeq = projectsList.length ? Math.max(...projectsList.map(pr => pr.id)) + 1 : 1;
+_initProjPicker();
 
 function renderProjectsList() {
     const tbody = document.getElementById('projects-tbody');
@@ -3363,6 +4339,133 @@ function switchProjTab(btn, tabName) {
     btn.classList.add('active');
     document.querySelectorAll('.proj-tab-content').forEach(c => c.classList.add('hidden'));
     document.getElementById('proj-tab-' + tabName).classList.remove('hidden');
+    if (tabName === 'pairs') renderPairsTab();
+}
+
+// ── PAIRS ──
+let _pairIdSeq = (() => {
+    let max = 0;
+    projectsList.forEach(pr => (pr.pairs || []).forEach(p => { if (p.id > max) max = p.id; }));
+    return max + 1;
+})();
+
+function _symFormat(symbol, exchange) {
+    const [base, quote] = symbol.split('/');
+    if (!base || !quote) return null;
+    switch(exchange) {
+        case 'Gate':   return { pair: `${base}_${quote}` };
+        case 'Kucoin': return { pair: `${base}-${quote}` };
+        default:       return { pair: `${base}${quote}` };
+    }
+}
+
+async function fetchPrice(symbol, exchange) {
+    const fmt = _symFormat(symbol, exchange);
+    if (!fmt) return '—';
+    const { pair } = fmt;
+    try {
+        let url, price;
+        switch(exchange) {
+            case 'Binance': {
+                const r = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${pair}`);
+                const d = await r.json();
+                price = d.price;
+                break;
+            }
+            case 'Bybit': {
+                const r = await fetch(`https://api.bybit.com/v5/market/tickers?category=spot&symbol=${pair}`);
+                const d = await r.json();
+                price = d?.result?.list?.[0]?.lastPrice;
+                break;
+            }
+            case 'Bitget': {
+                const r = await fetch(`https://api.bitget.com/api/v2/spot/market/tickers?symbol=${pair}`);
+                const d = await r.json();
+                price = d?.data?.[0]?.lastPr;
+                break;
+            }
+            case 'Gate': {
+                const r = await fetch(`https://api.gateio.ws/api/v4/spot/tickers?currency_pair=${pair}`);
+                const d = await r.json();
+                price = d?.[0]?.last;
+                break;
+            }
+            case 'Mexc': {
+                const r = await fetch(`https://api.mexc.com/api/v3/ticker/price?symbol=${pair}`);
+                const d = await r.json();
+                price = d.price;
+                break;
+            }
+            case 'Kucoin': {
+                const r = await fetch(`https://api.kucoin.com/api/v1/market/stats?symbol=${pair}`);
+                const d = await r.json();
+                price = d?.data?.last;
+                break;
+            }
+        }
+        const n = parseFloat(price);
+        if (!price || isNaN(n)) return '—';
+        if (n >= 1000) return n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+        if (n >= 1)    return n.toFixed(4);
+        if (n >= 0.01) return n.toFixed(6);
+        return n.toFixed(8);
+    } catch(e) { return '—'; }
+}
+
+function addPair() {
+    const symbol   = document.getElementById('pair-symbol').value.trim().toUpperCase();
+    const exchange = document.getElementById('pair-exchange').value;
+    const type     = document.getElementById('pair-type').value;
+    if (!symbol || !exchange || !type || !symbol.includes('/')) return;
+    const pr = projectsList.find(x => x.id === currentProjectId);
+    if (!pr) return;
+    if (!pr.pairs) pr.pairs = [];
+    if (pr.pairs.find(p => p.symbol === symbol && p.exchange === exchange && p.type === type)) return;
+    pr.pairs.push({ id: _pairIdSeq++, symbol, exchange, type });
+    localStorage.setItem('ndb_projects', JSON.stringify(projectsList));
+    document.getElementById('pair-symbol').value = '';
+    document.getElementById('pair-exchange').value = '';
+    document.getElementById('pair-type').value = '';
+    renderPairsTab();
+}
+
+function deletePair(pairId) {
+    const pr = projectsList.find(x => x.id === currentProjectId);
+    if (!pr) return;
+    pr.pairs = (pr.pairs || []).filter(p => p.id !== pairId);
+    localStorage.setItem('ndb_projects', JSON.stringify(projectsList));
+    renderPairsTab();
+}
+
+function renderPairsTab() {
+    const pr    = projectsList.find(x => x.id === currentProjectId);
+    const pairs = pr?.pairs || [];
+    const tbody = document.getElementById('pairs-tbody');
+    const empty = document.getElementById('pairs-empty');
+    if (!pairs.length) {
+        tbody.innerHTML = '';
+        if (empty) empty.classList.remove('hidden');
+        return;
+    }
+    if (empty) empty.classList.add('hidden');
+    tbody.innerHTML = pairs.map(p => `
+        <tr>
+            <td>${p.id}</td>
+            <td>${p.symbol}</td>
+            <td>${p.exchange}</td>
+            <td>${p.type || '—'}</td>
+            <td class="pairs-price loading" id="price-${p.id}">...</td>
+            <td class="proj-actions">
+                <button class="proj-icon-btn danger" onclick="deletePair(${p.id})" title="Delete">✕</button>
+            </td>
+        </tr>
+    `).join('');
+    pairs.forEach(p => {
+        fetchPrice(p.symbol, p.exchange).then(price => {
+            const el = document.getElementById('price-' + p.id);
+            if (el) { el.textContent = price; el.classList.remove('loading'); }
+        });
+    });
 }
 
 function setAnTF(tf, btn) {
@@ -3689,9 +4792,22 @@ setInterval(() => {
     renderBots();
     const total = bots.reduce((s,b) => s + b.pnl, 0) + 4230;
     const el = document.getElementById('total-pnl');
-    el.textContent = fmtD(total);
-    el.style.color = total >= 0 ? 'var(--green)' : 'var(--red)';
+    if (el) { el.textContent = fmtD(total); el.style.color = total >= 0 ? 'var(--green)' : 'var(--red)'; }
 }, 1000);
 </script>
+
+<!-- ═══ ORDERBOOK PAIR PICKER ═══ -->
+<div class="ob-pp-overlay hidden" id="ob-pp-overlay" onclick="closeOBPairPickerOverlay(event)">
+    <div class="ob-pp-card" onclick="event.stopPropagation()">
+        <div class="ob-pp-hdr">
+            <span>Select Pair for Order Book</span>
+            <button class="ob-pp-close" onclick="closeOBPairPickerBtn()">×</button>
+        </div>
+        <div class="ob-pp-body" id="ob-pp-body">
+            <div class="ob-pp-empty">No project selected</div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
