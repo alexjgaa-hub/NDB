@@ -222,6 +222,13 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); font-si
                     <option value="4h">4h</option>
                     <option value="1d">1D</option>
                 </select>
+                <select class="blk-sel" onchange="liqState.minDelta=+this.value;loadLiqHeat()" title="Min OI increase per candle">
+                    <option value="0">All</option>
+                    <option value="10000000">$10M+</option>
+                    <option value="50000000" selected>$50M+</option>
+                    <option value="200000000">$200M+</option>
+                    <option value="500000000">$500M+</option>
+                </select>
             </div>
             <span class="ab-legend">
                 <span class="ab-leg"><i style="background:#cd4141"></i> Long 5x</span>
@@ -300,7 +307,7 @@ let livePrice  = 0;
 // Per-block state
 const oiState  = { exchange: 'ALL', tf: '1h' };
 const lsState  = { exchange: 'ALL', tf: '1h' };
-const liqState = { exchange: 'ALL', tf: '1h' };
+const liqState = { exchange: 'ALL', tf: '1h', minDelta: 50_000_000 };
 
 // TF mappings per exchange for OI endpoints
 const OI_TF = {
@@ -694,29 +701,42 @@ async function loadLiqHeat() {
     document.getElementById('liq-val').textContent = '';
 
     const exchanges = exch === 'ALL' ? ['binance','bybit'] : [exch];
-    const results = await Promise.allSettled(exchanges.map(e => {
-        if (e === 'binance') return fetchKlines_Binance(sym, itf, 500);
-        if (e === 'bybit')   return fetchKlines_Bybit(sym, itf, 500);
-    }));
-    results.forEach((r,i) => { if (r.status==='rejected') console.warn(`Klines ${exchanges[i]}:`, r.reason?.message); });
 
-    // Merge klines by timestamp (sum volumes, average OHLC from first source)
+    // Step 1: klines — needed for price structure and Bybit OI price conversion
+    const klRes = await Promise.allSettled(exchanges.map(e =>
+        e === 'binance' ? fetchKlines_Binance(sym, itf, 500)
+                        : fetchKlines_Bybit(sym, itf, 500)
+    ));
+    klRes.forEach((r,i) => r.status==='rejected' && console.warn(`Klines ${exchanges[i]}:`, r.reason?.message));
+
     const kMap = new Map();
-    results.filter(r => r.status==='fulfilled').forEach(r => {
-        r.value.forEach(k => {
-            if (kMap.has(k.t)) kMap.get(k.t).v += k.v;
-            else kMap.set(k.t, {...k});
-        });
-    });
+    klRes.filter(r => r.status==='fulfilled').forEach(r =>
+        r.value.forEach(k => kMap.has(k.t) ? (kMap.get(k.t).v += k.v) : kMap.set(k.t, {...k}))
+    );
     const klines = Array.from(kMap.values()).sort((a,b) => a.t - b.t);
-
     if (!klines.length) { emEl.textContent = 'No data'; return; }
+
+    const priceMap = {};
+    klines.forEach(k => { priceMap[k.t] = k.c; });
+
+    // Step 2: OI history — delta per candle = new positions opened (real leverage exposure)
+    const oiRes = await Promise.allSettled(exchanges.map(e =>
+        e === 'binance' ? fetchOI_Binance(sym, itf)
+                        : fetchOI_Bybit(sym, itf, priceMap)
+    ));
+    oiRes.forEach((r,i) => r.status==='rejected' && console.warn(`OI ${exchanges[i]}:`, r.reason?.message));
+
+    const oiMap = new Map();
+    oiRes.filter(r => r.status==='fulfilled').forEach(r =>
+        r.value.forEach(x => oiMap.set(x.time, (oiMap.get(x.time) || 0) + x.value))
+    );
+
     emEl.style.display = 'none';
-    renderLiqHeat(klines);
+    renderLiqHeat(klines, oiMap);
     document.getElementById('liq-val').textContent = klines.length + ' candles · ' + exchanges.join('+');
 }
 
-function renderLiqHeat(klines) {
+function renderLiqHeat(klines, oiMap) {
     const cvs = document.getElementById('liq-canvas');
     if (!cvs) return;
     const W = cvs.width, H = cvs.height;
@@ -724,79 +744,125 @@ function renderLiqHeat(klines) {
     const ctx = cvs.getContext('2d');
     ctx.clearRect(0, 0, W, H);
 
-    const NUM_BINS = 250;
+    // Price range: cover 5x liq levels (±20% of extremes)
     const allP = klines.flatMap(k => [k.h, k.l]);
     const rawMin = Math.min(...allP), rawMax = Math.max(...allP);
-    // Extend range to include liq levels (5x longs go 20% below, shorts 20% above)
-    const pMin = rawMin * 0.75;
-    const pMax = rawMax * 1.25;
-    const pRange = pMax - pMin;
+    const pMin = rawMin * 0.78;
+    const pMax = rawMax * 1.22;
 
-    // Accumulate liq volumes per price bin × lever
-    const bins = Array.from({length:NUM_BINS}, () => new Float32Array(LIQ_LEVERS.length));
-    klines.forEach(k => {
-        LIQ_LEVERS.forEach(([,, factor,], li) => {
-            const liqPrice = k.c * factor;
-            const bi = Math.floor((liqPrice - pMin) / pRange * NUM_BINS);
-            if (bi >= 0 && bi < NUM_BINS) bins[bi][li] += k.v;
+    // 1% logarithmic bins
+    const LOG_STEP = Math.log(1.01);
+    const logPMin  = Math.log(pMin);
+    const logRange = Math.log(pMax / pMin);
+    const totalBins = Math.ceil(logRange / LOG_STEP) + 1;
+    const priceToBin = p => Math.floor((Math.log(p) - logPMin) / LOG_STEP);
+    const binToY     = b => H - (b / totalBins) * H;
+    const priceToY   = p => H - (Math.log(p) - logPMin) / logRange * H;
+
+    // Accumulate liq volume per bin — using OI delta (new positions opened)
+    const rowTotals = new Float64Array(totalBins);
+    const rowR = new Float64Array(totalBins);
+    const rowG = new Float64Array(totalBins);
+    const rowB = new Float64Array(totalBins);
+
+    const minDelta = liqState.minDelta || 0;
+    const hasOI = oiMap && oiMap.size > 0;
+
+    klines.forEach((k, i) => {
+        if (i === 0) return;
+        let posVol;
+        if (hasOI) {
+            const oiCurr = oiMap.get(k.t);
+            const oiPrev = oiMap.get(klines[i-1].t);
+            if (oiCurr === undefined || oiPrev === undefined) return;
+            const delta = oiCurr - oiPrev;
+            if (delta <= 0 || delta < minDelta) return; // only new net positions
+            posVol = delta;
+        } else {
+            posVol = k.v; // fallback: quote volume
+            if (posVol < minDelta) return;
+        }
+
+        LIQ_LEVERS.forEach(([, , factor, rgb]) => {
+            const bin = priceToBin(k.c * factor);
+            if (bin < 0 || bin >= totalBins) return;
+            const vol = posVol * 0.5; // 50% to each lever side (long/short ratio unknown)
+            rowTotals[bin] += vol;
+            rowR[bin] += rgb[0] * vol;
+            rowG[bin] += rgb[1] * vol;
+            rowB[bin] += rgb[2] * vol;
         });
     });
 
-    // Max per lever for normalization
-    const maxByLev = LIQ_LEVERS.map((_, li) => Math.max(...bins.map(b => b[li])) || 1);
-    const MARGIN_R = 56; // right price axis
+    const maxRow = Math.max(...rowTotals) || 1;
+    const MARGIN_R = 80;
     const CW = W - MARGIN_R;
+    const bandH = H / totalBins;
 
-    // Draw heatmap bands
-    const bandH = H / NUM_BINS;
-    for (let bi = 0; bi < NUM_BINS; bi++) {
-        const y = H - ((bi + 0.5) / NUM_BINS) * H;
-        LIQ_LEVERS.forEach(([,, , rgb], li) => {
-            const v = bins[bi][li];
-            if (!v) return;
-            const intensity = Math.pow(v / maxByLev[li], 0.35); // gamma — small values still visible
-            const [r, g, b] = rgb;
-            ctx.fillStyle = `rgba(${r},${g},${b},${(0.05 + 0.85 * intensity).toFixed(2)})`;
-            ctx.fillRect(0, y - bandH * 0.5, CW, bandH + 1);
-        });
+    // Heatmap bands
+    for (let bin = 0; bin < totalBins; bin++) {
+        const tot = rowTotals[bin];
+        if (!tot) continue;
+        const intensity = Math.pow(tot / maxRow, 0.35);
+        const r = Math.round(rowR[bin] / tot);
+        const g = Math.round(rowG[bin] / tot);
+        const b = Math.round(rowB[bin] / tot);
+        ctx.fillStyle = `rgba(${r},${g},${b},${(0.05 + 0.80 * intensity).toFixed(2)})`;
+        const y = binToY(bin);
+        ctx.fillRect(0, y - bandH * 0.5, CW, bandH + 1);
     }
 
-    // Price line
-    const py = p => H - (p - pMin) / pRange * H;
+    // Price line (close path)
     ctx.strokeStyle = 'rgba(217,173,112,0.9)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     klines.forEach((k, i) => {
         const x = (i / (klines.length - 1)) * CW;
-        i === 0 ? ctx.moveTo(x, py(k.c)) : ctx.lineTo(x, py(k.c));
+        i === 0 ? ctx.moveTo(x, priceToY(k.c)) : ctx.lineTo(x, priceToY(k.c));
     });
     ctx.stroke();
 
-    // Current price dashed line
+    // Current price dashed horizontal
     const lastP = klines[klines.length-1].c;
-    const ly = py(lastP);
-    ctx.setLineDash([4, 3]);
-    ctx.strokeStyle = '#d9ad70'; ctx.lineWidth = 1;
+    const ly = priceToY(lastP);
+    ctx.setLineDash([4,3]); ctx.strokeStyle = '#d9ad70'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(W, ly); ctx.stroke();
     ctx.setLineDash([]);
 
-    // Price axis (right)
-    ctx.fillStyle = '#6a7a8e'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
-    for (let i = 0; i <= 8; i++) {
-        const p = pMin + pRange * i / 8;
-        const y = H - (i / 8) * H;
-        ctx.fillText(fmtNum(p), CW + 3, y + 3);
+    // Right margin — price axis ticks (left-aligned from CW+3)
+    ctx.font = '9px monospace'; ctx.textAlign = 'left';
+    for (let i = 0; i <= 6; i++) {
+        const p = Math.exp(logPMin + (i / 6) * logRange);
+        ctx.fillStyle = '#3e4e60';
+        ctx.fillText(fmtNum(p), CW + 3, H - (i / 6) * H + 3);
     }
     ctx.fillStyle = '#d9ad70'; ctx.font = 'bold 9px monospace';
     ctx.fillText(fmtNum(lastP), CW + 3, ly + 3);
 
+    // Right margin — liq totals (right-aligned to W-2), colored per lever blend
+    const sigMin = maxRow * 0.04;
+    let lastLY = -99;
+    ctx.font = '8px monospace'; ctx.textAlign = 'right';
+    for (let bin = totalBins - 1; bin >= 0; bin--) {
+        const tot = rowTotals[bin];
+        if (tot < sigMin) continue;
+        const y = binToY(bin);
+        if (Math.abs(y - lastLY) < 9) continue;
+        const r = Math.round(rowR[bin] / tot);
+        const g = Math.round(rowG[bin] / tot);
+        const b = Math.round(rowB[bin] / tot);
+        ctx.fillStyle = `rgba(${r},${g},${b},0.85)`;
+        ctx.fillText(fmtUSD(tot), W - 2, y + 3);
+        lastLY = y;
+    }
+
     // Time axis labels
     ctx.fillStyle = '#6a7a8e'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
-    const fmt = t => new Date(t*1000).toLocaleDateString('en', {month:'numeric',day:'numeric'});
+    const fmtDate = t => new Date(t*1000).toLocaleDateString('en', {month:'numeric',day:'numeric'});
     if (klines.length > 1) {
-        ctx.fillText(fmt(klines[0].t), 4, H - 4);
+        ctx.fillText(fmtDate(klines[0].t), 4, H - 4);
         ctx.textAlign = 'right';
-        ctx.fillText(fmt(klines[klines.length-1].t), CW - 4, H - 4);
+        ctx.fillText(fmtDate(klines[klines.length-1].t), CW - 4, H - 4);
     }
 }
 
@@ -924,6 +990,12 @@ function fmtNum(p) {
     if (p >= 10)   return p.toFixed(3);
     if (p >= 1)    return p.toFixed(4);
     return p.toFixed(6);
+}
+function fmtUSD(v) {
+    if (v >= 1e9) return '$' + (v/1e9).toFixed(1) + 'B';
+    if (v >= 1e6) return '$' + (v/1e6).toFixed(1) + 'M';
+    if (v >= 1e3) return '$' + (v/1e3).toFixed(0) + 'K';
+    return '$' + Math.round(v);
 }
 function fmtK(v) {
     if (v >= 1e6) return (v/1e6).toFixed(1) + 'M';
