@@ -918,6 +918,32 @@
         .pairs-price { font-weight:500; }
         .pairs-price.loading { color:var(--muted); font-style:italic; }
 
+        /* DEX Pools tab */
+        .dex-create-btn { padding:8px 18px; border:none; border-radius:6px; background:#34d399; color:#0b0f17; font-family:var(--font); font-size:12px; font-weight:700; cursor:pointer; transition:opacity 0.15s; margin-bottom:20px; }
+        .dex-create-btn:hover { opacity:0.82; }
+        .dex-addr { font-family:monospace; font-size:11px; color:var(--muted); }
+        .dex-link-cell a { color:var(--blue); text-decoration:none; font-size:11px; }
+        .dex-link-cell a:hover { text-decoration:underline; }
+        .dex-expand-btn { background:transparent; border:1px solid var(--border); border-radius:4px; color:var(--muted); font-size:11px; cursor:pointer; padding:2px 8px; transition:all 0.15s; }
+        .dex-expand-btn:hover { color:var(--text); border-color:var(--muted); }
+        .dex-detail-row td { background:var(--surface2); padding:14px 20px !important; }
+        .dex-detail-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; }
+        .dex-detail-item { display:flex; flex-direction:column; gap:3px; }
+        .dex-detail-label { font-size:10px; font-weight:600; color:var(--muted); letter-spacing:0.5px; text-transform:uppercase; }
+        .dex-detail-value { font-size:12px; color:var(--text); font-family:monospace; word-break:break-all; }
+
+        /* DEX Pool modal */
+        .dex-modal { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:28px 28px 24px; min-width:460px; max-width:600px; width:100%; max-height:90vh; overflow-y:auto; }
+        .dex-modal-title { font-size:15px; font-weight:700; color:var(--text); margin-bottom:20px; }
+        .dex-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+        .dex-form-full { grid-column:1/-1; }
+        .dex-form-group { display:flex; flex-direction:column; gap:5px; }
+        .dex-form-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
+        .dex-submit-btn { padding:8px 20px; border:none; border-radius:6px; background:#34d399; color:#0b0f17; font-family:var(--font); font-size:13px; font-weight:700; cursor:pointer; }
+        .dex-submit-btn:hover { opacity:0.85; }
+        .dex-cancel-btn { padding:8px 16px; border:1px solid var(--border); border-radius:6px; background:transparent; color:var(--muted); font-family:var(--font); font-size:13px; cursor:pointer; }
+        .dex-cancel-btn:hover { color:var(--text); }
+
         /* ── PAGE LAYOUT ── */
         .page-layout { display:flex; flex:1; overflow:hidden; min-height:0; }
         .page-content { display:flex; flex:1; flex-direction:column; overflow-y:auto; overflow-x:hidden; min-height:0; }
@@ -1796,6 +1822,7 @@
                 <button class="proj-tab active" id="ptab-info" onclick="switchProjTab(this,'info')">Info</button>
                 <button class="proj-tab" onclick="switchProjTab(this,'accounts')">Accounts</button>
                 <button class="proj-tab" onclick="switchProjTab(this,'pairs')">Pairs</button>
+                <button class="proj-tab" onclick="switchProjTab(this,'dexpools')">DEX pools</button>
                 <button class="proj-tab" onclick="switchProjTab(this,'users')">Users</button>
                 <button class="proj-tab" onclick="switchProjTab(this,'logs')">Logs</button>
                 <button class="proj-tab" onclick="switchProjTab(this,'social')">Social</button>
@@ -1865,6 +1892,27 @@
                 </table>
                 <div class="proj-tab-empty hidden" id="pairs-empty">No pairs linked yet</div>
             </div>
+            <div class="proj-tab-content hidden" id="proj-tab-dexpools">
+                <button class="dex-create-btn" onclick="openDexPoolModal()">Create pool connection</button>
+                <table class="proj-table" id="dex-pools-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>PAIR</th>
+                            <th>SWAP</th>
+                            <th>CHAIN</th>
+                            <th>LAST PRICE</th>
+                            <th>FEES</th>
+                            <th>LINK</th>
+                            <th>POOL ADDRESS</th>
+                            <th>DEPLOYER</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="dex-pools-tbody"></tbody>
+                </table>
+                <div class="proj-tab-empty hidden" id="dex-pools-empty">No DEX pools connected yet</div>
+            </div>
             <div class="proj-tab-content hidden" id="proj-tab-users"><div class="proj-tab-empty">No users</div></div>
             <div class="proj-tab-content hidden" id="proj-tab-logs"><div class="proj-tab-empty">No logs</div></div>
             <div class="proj-tab-content hidden" id="proj-tab-social"><div class="proj-tab-empty">No social data</div></div>
@@ -1875,6 +1923,47 @@
 
 </div><!-- /.page-content -->
 </div><!-- /.page-layout -->
+
+<!-- ═══ DEX POOL MODAL ═══ -->
+<div class="overlay" id="dex-pool-overlay" onclick="closeDexPoolModal(event)" style="display:none">
+    <div class="dex-modal" onclick="event.stopPropagation()">
+        <div class="dex-modal-title">Create pool connection</div>
+        <div class="dex-form-grid">
+            <div class="dex-form-group">
+                <label class="proj-form-label">Pair</label>
+                <input class="proj-form-input" id="dex-f-pair" type="text" placeholder="e.g. WBTC/USDC" autocomplete="off">
+            </div>
+            <div class="dex-form-group">
+                <label class="proj-form-label">Swap (DEX name)</label>
+                <input class="proj-form-input" id="dex-f-swap" type="text" placeholder="e.g. Uniswap v3" autocomplete="off">
+            </div>
+            <div class="dex-form-group">
+                <label class="proj-form-label">Chain</label>
+                <input class="proj-form-input" id="dex-f-chain" type="text" placeholder="e.g. Ethereum" autocomplete="off">
+            </div>
+            <div class="dex-form-group">
+                <label class="proj-form-label">Fees (%)</label>
+                <input class="proj-form-input" id="dex-f-fees" type="text" placeholder="e.g. 0.3%" autocomplete="off">
+            </div>
+            <div class="dex-form-group dex-form-full">
+                <label class="proj-form-label">Pool address</label>
+                <input class="proj-form-input" id="dex-f-pool-addr" type="text" placeholder="0x..." autocomplete="off">
+            </div>
+            <div class="dex-form-group dex-form-full">
+                <label class="proj-form-label">Deployer wallet</label>
+                <input class="proj-form-input" id="dex-f-deployer" type="text" placeholder="0x..." autocomplete="off">
+            </div>
+            <div class="dex-form-group dex-form-full">
+                <label class="proj-form-label">Link (optional)</label>
+                <input class="proj-form-input" id="dex-f-link" type="text" placeholder="https://..." autocomplete="off">
+            </div>
+        </div>
+        <div class="dex-form-actions">
+            <button class="dex-cancel-btn" onclick="closeDexPoolModal()">Cancel</button>
+            <button class="dex-submit-btn" onclick="addDexPool()">Add pool</button>
+        </div>
+    </div>
+</div>
 
 <!-- ═══ LEVERAGE MODAL ═══ -->
 <div class="overlay" id="lev-overlay" onclick="closeLevModal(event)">
@@ -4329,6 +4418,7 @@ function switchProjTab(btn, tabName) {
     document.querySelectorAll('.proj-tab-content').forEach(c => c.classList.add('hidden'));
     document.getElementById('proj-tab-' + tabName).classList.remove('hidden');
     if (tabName === 'pairs') renderPairsTab();
+    if (tabName === 'dexpools') renderDexPoolsTab();
 }
 
 // ── PAIRS ──
@@ -4455,6 +4545,109 @@ function renderPairsTab() {
             if (el) { el.textContent = price; el.classList.remove('loading'); }
         });
     });
+}
+
+// ── DEX POOLS ──
+let _dexIdSeq = (() => {
+    let max = 0;
+    projectsList.forEach(pr => (pr.dexPools || []).forEach(p => { if (p.id > max) max = p.id; }));
+    return max + 1;
+})();
+
+function _shortAddr(addr) {
+    if (!addr || addr.length < 12) return addr || '—';
+    return addr.slice(0, 6) + '…' + addr.slice(-4);
+}
+
+function openDexPoolModal() {
+    ['pair','swap','chain','fees','pool-addr','deployer','link'].forEach(f => {
+        document.getElementById('dex-f-' + f).value = '';
+    });
+    const ov = document.getElementById('dex-pool-overlay');
+    ov.style.display = 'flex';
+    ov.style.alignItems = 'center';
+    ov.style.justifyContent = 'center';
+}
+
+function closeDexPoolModal(e) {
+    if (e && e.target !== document.getElementById('dex-pool-overlay')) return;
+    document.getElementById('dex-pool-overlay').style.display = 'none';
+}
+
+function addDexPool() {
+    const pair      = document.getElementById('dex-f-pair').value.trim();
+    const swap      = document.getElementById('dex-f-swap').value.trim();
+    const chain     = document.getElementById('dex-f-chain').value.trim();
+    const fees      = document.getElementById('dex-f-fees').value.trim();
+    const poolAddr  = document.getElementById('dex-f-pool-addr').value.trim();
+    const deployer  = document.getElementById('dex-f-deployer').value.trim();
+    const link      = document.getElementById('dex-f-link').value.trim();
+    if (!pair || !swap || !chain || !poolAddr) return;
+    const pr = projectsList.find(x => x.id === currentProjectId);
+    if (!pr) return;
+    if (!pr.dexPools) pr.dexPools = [];
+    pr.dexPools.push({ id: _dexIdSeq++, pair, swap, chain, fees, poolAddr, deployer, link, lastPrice: '—' });
+    localStorage.setItem('ndb_projects', JSON.stringify(projectsList));
+    document.getElementById('dex-pool-overlay').style.display = 'none';
+    renderDexPoolsTab();
+}
+
+function deleteDexPool(poolId) {
+    const pr = projectsList.find(x => x.id === currentProjectId);
+    if (!pr) return;
+    pr.dexPools = (pr.dexPools || []).filter(p => p.id !== poolId);
+    localStorage.setItem('ndb_projects', JSON.stringify(projectsList));
+    renderDexPoolsTab();
+}
+
+function toggleDexDetail(poolId) {
+    const row = document.getElementById('dex-detail-' + poolId);
+    if (!row) return;
+    row.classList.toggle('hidden');
+    const btn = document.getElementById('dex-expand-btn-' + poolId);
+    if (btn) btn.textContent = row.classList.contains('hidden') ? '▸' : '▾';
+}
+
+function renderDexPoolsTab() {
+    const pr    = projectsList.find(x => x.id === currentProjectId);
+    const pools = pr?.dexPools || [];
+    const tbody = document.getElementById('dex-pools-tbody');
+    const empty = document.getElementById('dex-pools-empty');
+    if (!pools.length) {
+        tbody.innerHTML = '';
+        if (empty) empty.classList.remove('hidden');
+        return;
+    }
+    if (empty) empty.classList.add('hidden');
+    tbody.innerHTML = pools.map(p => `
+        <tr>
+            <td>${p.id}</td>
+            <td>${p.pair}</td>
+            <td>${p.swap}</td>
+            <td>${p.chain}</td>
+            <td class="pairs-price" id="dex-price-${p.id}">${p.lastPrice || '—'}</td>
+            <td>${p.fees || '—'}</td>
+            <td class="dex-link-cell">${p.link ? `<a href="${p.link}" target="_blank" rel="noopener">↗ Open</a>` : '—'}</td>
+            <td class="dex-addr" title="${p.poolAddr}">${_shortAddr(p.poolAddr)}</td>
+            <td class="dex-addr" title="${p.deployer}">${_shortAddr(p.deployer)}</td>
+            <td class="proj-actions" style="display:flex;gap:6px;align-items:center">
+                <button class="dex-expand-btn" id="dex-expand-btn-${p.id}" onclick="toggleDexDetail(${p.id})" title="Details">▸</button>
+                <button class="proj-icon-btn danger" onclick="deleteDexPool(${p.id})" title="Delete">✕</button>
+            </td>
+        </tr>
+        <tr class="dex-detail-row hidden" id="dex-detail-${p.id}">
+            <td colspan="10">
+                <div class="dex-detail-grid">
+                    <div class="dex-detail-item"><span class="dex-detail-label">Pool address</span><span class="dex-detail-value">${p.poolAddr || '—'}</span></div>
+                    <div class="dex-detail-item"><span class="dex-detail-label">Deployer</span><span class="dex-detail-value">${p.deployer || '—'}</span></div>
+                    <div class="dex-detail-item"><span class="dex-detail-label">Swap</span><span class="dex-detail-value">${p.swap}</span></div>
+                    <div class="dex-detail-item"><span class="dex-detail-label">Chain</span><span class="dex-detail-value">${p.chain}</span></div>
+                    <div class="dex-detail-item"><span class="dex-detail-label">Fees</span><span class="dex-detail-value">${p.fees || '—'}</span></div>
+                    ${p.link ? `<div class="dex-detail-item"><span class="dex-detail-label">Link</span><span class="dex-detail-value"><a href="${p.link}" target="_blank" rel="noopener" style="color:var(--blue)">${p.link}</a></span></div>` : ''}
+                </div>
+            </td>
+        </tr>
+    `).join('');
 }
 
 function setAnTF(tf, btn) {
