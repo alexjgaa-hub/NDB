@@ -949,6 +949,13 @@
         .dex-status.warn { background:rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.3); color:#fbbf24; }
         .dex-status.err  { background:rgba(248,113,113,0.1); border:1px solid rgba(248,113,113,0.3); color:#f87171; }
         .dex-hint { font-size:11px; color:var(--muted); margin-top:4px; }
+        .dex-refresh-btn { background:transparent; border:1px solid var(--border); border-radius:4px; color:var(--muted); font-size:12px; cursor:pointer; padding:2px 7px; transition:all 0.15s; }
+        .dex-refresh-btn:hover { color:var(--blue); border-color:var(--blue); }
+        .dex-refresh-btn.spinning { color:var(--blue); opacity:0.6; cursor:not-allowed; }
+        .dex-fetch-note { font-size:11px; margin-top:8px; padding:6px 10px; border-radius:4px; }
+        .dex-fetch-note.ok   { background:rgba(52,211,153,0.08); color:#34d399; }
+        .dex-fetch-note.warn { background:rgba(251,191,36,0.08); color:#fbbf24; }
+        .dex-fetch-note.err  { background:rgba(248,113,113,0.08); color:#f87171; }
 
         /* ── PAGE LAYOUT ── */
         .page-layout { display:flex; flex:1; overflow:hidden; min-height:0; }
@@ -4585,6 +4592,36 @@ function closeDexPoolModal(e) {
     document.getElementById('dex-pool-overlay').style.display = 'none';
 }
 
+async function _dexScreenerFetch(poolAddr, network) {
+    try {
+        const r = await fetch(`https://api.dexscreener.com/latest/dex/pairs/${network}/${poolAddr}`);
+        if (!r.ok) return { ok: false, msg: `HTTP ${r.status}` };
+        const d = await r.json();
+        const p = d?.pair ?? d?.pairs?.[0];
+        if (!p) return { ok: false, msg: 'Pool not found on DexScreener' };
+
+        const pair = `${p.baseToken?.symbol || '?'}/${p.quoteToken?.symbol || '?'}`;
+        const swap = p.dexId || '—';
+        let lastPrice = '—';
+        const pUsd = parseFloat(p.priceUsd);
+        if (!isNaN(pUsd)) {
+            if (pUsd >= 1000)      lastPrice = pUsd.toLocaleString('en-US', { maximumFractionDigits: 2 });
+            else if (pUsd >= 1)    lastPrice = pUsd.toFixed(4);
+            else if (pUsd >= 0.01) lastPrice = pUsd.toFixed(6);
+            else                   lastPrice = pUsd.toFixed(8);
+        }
+        let fees = '—';
+        const ft = p.feeTier ?? p.info?.feeTier ?? p.feePercent ?? p.fee;
+        if (ft != null && ft !== '') {
+            const fNum = parseFloat(ft);
+            fees = isNaN(fNum) ? String(ft) : (fNum < 1 ? (fNum * 100).toFixed(2) + '%' : fNum.toFixed(2) + '%');
+        }
+        return { ok: true, pair, swap, fees, lastPrice };
+    } catch(e) {
+        return { ok: false, msg: 'Network error — check console' };
+    }
+}
+
 async function addDexPool() {
     const poolAddr = document.getElementById('dex-f-pool-addr').value.trim();
     const network  = document.getElementById('dex-f-network').value;
@@ -4601,45 +4638,53 @@ async function addDexPool() {
     st.className = 'dex-status'; st.style.display = 'block';
     st.textContent = 'Fetching pool data from DexScreener…';
 
-    let pair = '—', swap = '—', fees = '—', lastPrice = '—';
     const chainLabel = _dexNetLabels[network] || network;
+    const res = await _dexScreenerFetch(poolAddr, network);
 
-    try {
-        const r = await fetch(`https://api.dexscreener.com/latest/dex/pairs/${network}/${poolAddr}`);
-        const d = await r.json();
-        const p = d?.pair ?? d?.pairs?.[0];
-        if (p) {
-            pair      = `${p.baseToken?.symbol || '?'}/${p.quoteToken?.symbol || '?'}`;
-            swap      = p.dexId || '—';
-            const pUsd = parseFloat(p.priceUsd);
-            if (!isNaN(pUsd)) {
-                if (pUsd >= 1000)      lastPrice = pUsd.toLocaleString('en-US', { maximumFractionDigits: 2 });
-                else if (pUsd >= 1)    lastPrice = pUsd.toFixed(4);
-                else if (pUsd >= 0.01) lastPrice = pUsd.toFixed(6);
-                else                   lastPrice = pUsd.toFixed(8);
-            }
-            const ft = p.feeTier ?? p.info?.feeTier ?? p.feePercent ?? p.fee;
-            if (ft != null && ft !== '') {
-                const fNum = parseFloat(ft);
-                fees = isNaN(fNum) ? String(ft) : (fNum < 1 ? (fNum * 100).toFixed(2) + '%' : fNum.toFixed(2) + '%');
-            }
-            st.className = 'dex-status ok';
-            st.textContent = `✓ ${pair} · ${swap} · ${chainLabel}${fees !== '—' ? ' · fee ' + fees : ''}`;
-        } else {
-            st.className = 'dex-status warn';
-            st.textContent = 'Pool not found on DexScreener — saved without auto-detection';
-        }
-    } catch(e) {
-        st.className = 'dex-status err';
-        st.textContent = 'Network error — saved without auto-detection';
+    let pair = '—', swap = '—', fees = '—', lastPrice = '—', fetchNote = '', fetchNoteClass = 'warn';
+    if (res.ok) {
+        ({ pair, swap, fees, lastPrice } = res);
+        st.className = 'dex-status ok';
+        st.textContent = `✓ ${pair} · ${swap} · ${chainLabel}${fees !== '—' ? ' · fee ' + fees : ''}`;
+        fetchNote = `✓ Auto-detected: ${pair} on ${swap}${fees !== '—' ? ', fee ' + fees : ''}`;
+        fetchNoteClass = 'ok';
+    } else {
+        st.className = 'dex-status warn';
+        st.textContent = res.msg + ' — saved without auto-detection';
+        fetchNote = res.msg;
+        fetchNoteClass = 'warn';
     }
 
     if (!pr.dexPools) pr.dexPools = [];
-    pr.dexPools.push({ id: _dexIdSeq++, pair, swap, chain: chainLabel, fees, poolAddr, deployer, link, lastPrice });
+    pr.dexPools.push({ id: _dexIdSeq++, pair, swap, chain: chainLabel, fees, poolAddr, deployer, link, lastPrice, fetchNote, fetchNoteClass });
     localStorage.setItem('ndb_projects', JSON.stringify(projectsList));
 
     btn.textContent = 'Add pool'; btn.disabled = false;
     document.getElementById('dex-pool-overlay').style.display = 'none';
+    renderDexPoolsTab();
+}
+
+async function refreshDexPool(poolId) {
+    const pr = projectsList.find(x => x.id === currentProjectId);
+    if (!pr) return;
+    const pool = (pr.dexPools || []).find(p => p.id === poolId);
+    if (!pool) return;
+
+    const netKey = Object.entries(_dexNetLabels).find(([k,v]) => v === pool.chain)?.[0] || pool.chain.toLowerCase();
+    const btn = document.getElementById('dex-refresh-' + poolId);
+    if (btn) { btn.classList.add('spinning'); btn.textContent = '↻'; btn.disabled = true; }
+
+    const res = await _dexScreenerFetch(pool.poolAddr, netKey);
+    if (res.ok) {
+        pool.pair = res.pair; pool.swap = res.swap;
+        pool.fees = res.fees; pool.lastPrice = res.lastPrice;
+        pool.fetchNote = `✓ Auto-detected: ${res.pair} on ${res.swap}${res.fees !== '—' ? ', fee ' + res.fees : ''}`;
+        pool.fetchNoteClass = 'ok';
+    } else {
+        pool.fetchNote = res.msg;
+        pool.fetchNoteClass = 'err';
+    }
+    localStorage.setItem('ndb_projects', JSON.stringify(projectsList));
     renderDexPoolsTab();
 }
 
@@ -4676,12 +4721,13 @@ function renderDexPoolsTab() {
             <td>${p.pair}</td>
             <td>${p.swap}</td>
             <td>${p.chain}</td>
-            <td class="pairs-price" id="dex-price-${p.id}">${p.lastPrice || '—'}</td>
+            <td class="pairs-price">${p.lastPrice || '—'}</td>
             <td>${p.fees || '—'}</td>
             <td class="dex-link-cell">${p.link ? `<a href="${p.link}" target="_blank" rel="noopener">↗ Open</a>` : '—'}</td>
             <td class="dex-addr" title="${p.poolAddr}">${_shortAddr(p.poolAddr)}</td>
             <td class="dex-addr" title="${p.deployer}">${_shortAddr(p.deployer)}</td>
             <td class="proj-actions" style="display:flex;gap:6px;align-items:center">
+                <button class="dex-refresh-btn" id="dex-refresh-${p.id}" onclick="refreshDexPool(${p.id})" title="Re-fetch from DexScreener">↺</button>
                 <button class="dex-expand-btn" id="dex-expand-btn-${p.id}" onclick="toggleDexDetail(${p.id})" title="Details">▸</button>
                 <button class="proj-icon-btn danger" onclick="deleteDexPool(${p.id})" title="Delete">✕</button>
             </td>
@@ -4696,6 +4742,7 @@ function renderDexPoolsTab() {
                     <div class="dex-detail-item"><span class="dex-detail-label">Fees</span><span class="dex-detail-value">${p.fees || '—'}</span></div>
                     ${p.link ? `<div class="dex-detail-item"><span class="dex-detail-label">Link</span><span class="dex-detail-value"><a href="${p.link}" target="_blank" rel="noopener" style="color:var(--blue)">${p.link}</a></span></div>` : ''}
                 </div>
+                ${p.fetchNote ? `<div class="dex-fetch-note ${p.fetchNoteClass || 'warn'}">${p.fetchNote}</div>` : ''}
             </td>
         </tr>
     `).join('');
