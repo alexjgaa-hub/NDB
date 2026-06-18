@@ -933,16 +933,22 @@
         .dex-detail-value { font-size:12px; color:var(--text); font-family:monospace; word-break:break-all; }
 
         /* DEX Pool modal */
-        .dex-modal { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:28px 28px 24px; min-width:460px; max-width:600px; width:100%; max-height:90vh; overflow-y:auto; }
+        .dex-modal { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:28px 28px 24px; min-width:460px; max-width:560px; width:100%; max-height:90vh; overflow-y:auto; }
         .dex-modal-title { font-size:15px; font-weight:700; color:var(--text); margin-bottom:20px; }
         .dex-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
         .dex-form-full { grid-column:1/-1; }
         .dex-form-group { display:flex; flex-direction:column; gap:5px; }
         .dex-form-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
-        .dex-submit-btn { padding:8px 20px; border:none; border-radius:6px; background:#34d399; color:#0b0f17; font-family:var(--font); font-size:13px; font-weight:700; cursor:pointer; }
+        .dex-submit-btn { padding:8px 20px; border:none; border-radius:6px; background:#34d399; color:#0b0f17; font-family:var(--font); font-size:13px; font-weight:700; cursor:pointer; transition:opacity 0.15s; }
         .dex-submit-btn:hover { opacity:0.85; }
+        .dex-submit-btn:disabled { opacity:0.5; cursor:not-allowed; }
         .dex-cancel-btn { padding:8px 16px; border:1px solid var(--border); border-radius:6px; background:transparent; color:var(--muted); font-family:var(--font); font-size:13px; cursor:pointer; }
         .dex-cancel-btn:hover { color:var(--text); }
+        .dex-status { margin-top:14px; padding:10px 14px; border-radius:6px; font-size:12px; font-family:monospace; }
+        .dex-status.ok   { background:rgba(52,211,153,0.1); border:1px solid rgba(52,211,153,0.3); color:#34d399; }
+        .dex-status.warn { background:rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.3); color:#fbbf24; }
+        .dex-status.err  { background:rgba(248,113,113,0.1); border:1px solid rgba(248,113,113,0.3); color:#f87171; }
+        .dex-hint { font-size:11px; color:var(--muted); margin-top:4px; }
 
         /* ── PAGE LAYOUT ── */
         .page-layout { display:flex; flex:1; overflow:hidden; min-height:0; }
@@ -1929,38 +1935,36 @@
     <div class="dex-modal" onclick="event.stopPropagation()">
         <div class="dex-modal-title">Create pool connection</div>
         <div class="dex-form-grid">
-            <div class="dex-form-group">
-                <label class="proj-form-label">Pair</label>
-                <input class="proj-form-input" id="dex-f-pair" type="text" placeholder="e.g. WBTC/USDC" autocomplete="off">
-            </div>
-            <div class="dex-form-group">
-                <label class="proj-form-label">Swap (DEX name)</label>
-                <input class="proj-form-input" id="dex-f-swap" type="text" placeholder="e.g. Uniswap v3" autocomplete="off">
-            </div>
-            <div class="dex-form-group">
-                <label class="proj-form-label">Chain</label>
-                <input class="proj-form-input" id="dex-f-chain" type="text" placeholder="e.g. Ethereum" autocomplete="off">
-            </div>
-            <div class="dex-form-group">
-                <label class="proj-form-label">Fees (%)</label>
-                <input class="proj-form-input" id="dex-f-fees" type="text" placeholder="e.g. 0.3%" autocomplete="off">
-            </div>
             <div class="dex-form-group dex-form-full">
                 <label class="proj-form-label">Pool address</label>
-                <input class="proj-form-input" id="dex-f-pool-addr" type="text" placeholder="0x..." autocomplete="off">
+                <input class="proj-form-input" id="dex-f-pool-addr" type="text" placeholder="0x…" autocomplete="off" spellcheck="false">
             </div>
-            <div class="dex-form-group dex-form-full">
+            <div class="dex-form-group">
+                <label class="proj-form-label">Network</label>
+                <select class="proj-form-input" id="dex-f-network">
+                    <option value="">— select —</option>
+                    <option value="bsc">BSC</option>
+                    <option value="ethereum">ERC</option>
+                    <option value="base">BASE</option>
+                    <option value="solana">SOL</option>
+                    <option value="ton">TON</option>
+                    <option value="tron">TRON</option>
+                </select>
+            </div>
+            <div class="dex-form-group">
                 <label class="proj-form-label">Deployer wallet</label>
-                <input class="proj-form-input" id="dex-f-deployer" type="text" placeholder="0x..." autocomplete="off">
+                <input class="proj-form-input" id="dex-f-deployer" type="text" placeholder="0x…" autocomplete="off" spellcheck="false">
             </div>
             <div class="dex-form-group dex-form-full">
-                <label class="proj-form-label">Link (optional)</label>
-                <input class="proj-form-input" id="dex-f-link" type="text" placeholder="https://..." autocomplete="off">
+                <label class="proj-form-label">Link <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+                <input class="proj-form-input" id="dex-f-link" type="text" placeholder="https://…" autocomplete="off">
             </div>
         </div>
+        <div class="dex-hint">Pair, Swap, Fees and Last price will be auto-detected via DexScreener after adding.</div>
+        <div class="dex-status" id="dex-fetch-status" style="display:none"></div>
         <div class="dex-form-actions">
             <button class="dex-cancel-btn" onclick="closeDexPoolModal()">Cancel</button>
-            <button class="dex-submit-btn" onclick="addDexPool()">Add pool</button>
+            <button class="dex-submit-btn" id="dex-submit-btn" onclick="addDexPool()">Add pool</button>
         </div>
     </div>
 </div>
@@ -4559,10 +4563,17 @@ function _shortAddr(addr) {
     return addr.slice(0, 6) + '…' + addr.slice(-4);
 }
 
+const _dexNetLabels = { bsc:'BSC', ethereum:'ERC', base:'BASE', solana:'SOL', ton:'TON', tron:'TRON' };
+
 function openDexPoolModal() {
-    ['pair','swap','chain','fees','pool-addr','deployer','link'].forEach(f => {
-        document.getElementById('dex-f-' + f).value = '';
-    });
+    document.getElementById('dex-f-pool-addr').value = '';
+    document.getElementById('dex-f-network').value   = '';
+    document.getElementById('dex-f-deployer').value  = '';
+    document.getElementById('dex-f-link').value      = '';
+    const st = document.getElementById('dex-fetch-status');
+    st.style.display = 'none'; st.className = 'dex-status';
+    const btn = document.getElementById('dex-submit-btn');
+    btn.textContent = 'Add pool'; btn.disabled = false;
     const ov = document.getElementById('dex-pool-overlay');
     ov.style.display = 'flex';
     ov.style.alignItems = 'center';
@@ -4574,20 +4585,60 @@ function closeDexPoolModal(e) {
     document.getElementById('dex-pool-overlay').style.display = 'none';
 }
 
-function addDexPool() {
-    const pair      = document.getElementById('dex-f-pair').value.trim();
-    const swap      = document.getElementById('dex-f-swap').value.trim();
-    const chain     = document.getElementById('dex-f-chain').value.trim();
-    const fees      = document.getElementById('dex-f-fees').value.trim();
-    const poolAddr  = document.getElementById('dex-f-pool-addr').value.trim();
-    const deployer  = document.getElementById('dex-f-deployer').value.trim();
-    const link      = document.getElementById('dex-f-link').value.trim();
-    if (!pair || !swap || !chain || !poolAddr) return;
+async function addDexPool() {
+    const poolAddr = document.getElementById('dex-f-pool-addr').value.trim();
+    const network  = document.getElementById('dex-f-network').value;
+    const deployer = document.getElementById('dex-f-deployer').value.trim();
+    const link     = document.getElementById('dex-f-link').value.trim();
+    if (!poolAddr || !network) return;
+
     const pr = projectsList.find(x => x.id === currentProjectId);
     if (!pr) return;
+
+    const btn = document.getElementById('dex-submit-btn');
+    const st  = document.getElementById('dex-fetch-status');
+    btn.textContent = 'Fetching…'; btn.disabled = true;
+    st.className = 'dex-status'; st.style.display = 'block';
+    st.textContent = 'Fetching pool data from DexScreener…';
+
+    let pair = '—', swap = '—', fees = '—', lastPrice = '—';
+    const chainLabel = _dexNetLabels[network] || network;
+
+    try {
+        const r = await fetch(`https://api.dexscreener.com/latest/dex/pairs/${network}/${poolAddr}`);
+        const d = await r.json();
+        const p = d?.pair ?? d?.pairs?.[0];
+        if (p) {
+            pair      = `${p.baseToken?.symbol || '?'}/${p.quoteToken?.symbol || '?'}`;
+            swap      = p.dexId || '—';
+            const pUsd = parseFloat(p.priceUsd);
+            if (!isNaN(pUsd)) {
+                if (pUsd >= 1000)      lastPrice = pUsd.toLocaleString('en-US', { maximumFractionDigits: 2 });
+                else if (pUsd >= 1)    lastPrice = pUsd.toFixed(4);
+                else if (pUsd >= 0.01) lastPrice = pUsd.toFixed(6);
+                else                   lastPrice = pUsd.toFixed(8);
+            }
+            const ft = p.feeTier ?? p.info?.feeTier ?? p.feePercent ?? p.fee;
+            if (ft != null && ft !== '') {
+                const fNum = parseFloat(ft);
+                fees = isNaN(fNum) ? String(ft) : (fNum < 1 ? (fNum * 100).toFixed(2) + '%' : fNum.toFixed(2) + '%');
+            }
+            st.className = 'dex-status ok';
+            st.textContent = `✓ ${pair} · ${swap} · ${chainLabel}${fees !== '—' ? ' · fee ' + fees : ''}`;
+        } else {
+            st.className = 'dex-status warn';
+            st.textContent = 'Pool not found on DexScreener — saved without auto-detection';
+        }
+    } catch(e) {
+        st.className = 'dex-status err';
+        st.textContent = 'Network error — saved without auto-detection';
+    }
+
     if (!pr.dexPools) pr.dexPools = [];
-    pr.dexPools.push({ id: _dexIdSeq++, pair, swap, chain, fees, poolAddr, deployer, link, lastPrice: '—' });
+    pr.dexPools.push({ id: _dexIdSeq++, pair, swap, chain: chainLabel, fees, poolAddr, deployer, link, lastPrice });
     localStorage.setItem('ndb_projects', JSON.stringify(projectsList));
+
+    btn.textContent = 'Add pool'; btn.disabled = false;
     document.getElementById('dex-pool-overlay').style.display = 'none';
     renderDexPoolsTab();
 }
