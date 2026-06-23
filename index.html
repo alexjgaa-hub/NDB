@@ -4999,27 +4999,43 @@ function _dexGetSim() {
 function _dexSaveSim(s) { localStorage.setItem('ndb_dex_sim', JSON.stringify(s)); }
 
 function _dexSimInit(pool) {
-    const sim = _dexGetSim();
-    if (sim[pool.id]) return sim[pool.id];
-    const pair = pool.pair || '?/?';
+    const sim     = _dexGetSim();
+    const existing = sim[pool.id];
+    if (existing) {
+        if (existing.tok2 === undefined) {
+            existing.tok2     = 0.5 + Math.random() * 4.5;
+            existing.bnbPrice = 555 + Math.random() * 60;
+            existing.sym2     = 'BNB';
+            if (existing.hist) existing.hist.forEach(h => {
+                if (h.tok2 === undefined) h.tok2 = existing.tok2 * (0.88 + Math.random() * 0.24);
+            });
+            _dexSaveSim(sim);
+        }
+        return existing;
+    }
+    const pair  = pool.pair || '?/?';
     const [base, quote] = pair.split('/');
-    const tok0 = 8000 + Math.floor(Math.random() * 42000);
-    const tok1 = 2000 + Math.floor(Math.random() * 8000);
-    const entry = { tok0, tok1, sym0: base || '?', sym1: quote || '?',
-                    hist: _dexGenHist(tok0, tok1, parseFloat(pool.lastPrice) || 1) };
+    const tok0     = 8000 + Math.floor(Math.random() * 42000);
+    const tok1     = 2000 + Math.floor(Math.random() * 8000);
+    const tok2     = 0.5  + Math.random() * 4.5;
+    const bnbPrice = 555  + Math.random() * 60;
+    const entry = { tok0, tok1, tok2, bnbPrice,
+                    sym0: base || '?', sym1: quote || '?', sym2: 'BNB',
+                    hist: _dexGenHist(tok0, tok1, tok2, parseFloat(pool.lastPrice) || 1) };
     sim[pool.id] = entry;
     _dexSaveSim(sim);
     return entry;
 }
 
-function _dexGenHist(tok0, tok1, price) {
+function _dexGenHist(tok0, tok1, tok2, price) {
     const hist = [];
-    let v0 = tok0, v1 = tok1;
+    let v0 = tok0, v1 = tok1, v2 = tok2;
     const now = Math.floor(Date.now() / 1000);
     for (let i = 23; i >= 0; i--) {
         v0 *= (1 + (Math.random() - 0.5) * 0.04);
         v1 *= (1 + (Math.random() - 0.5) * 0.03);
-        hist.push({ time: now - i * 3600, tok0: v0, tok1: v1, usd: v0 * price + v1 });
+        v2 *= (1 + (Math.random() - 0.5) * 0.035);
+        hist.push({ time: now - i * 3600, tok0: v0, tok1: v1, tok2: v2 });
     }
     return hist;
 }
@@ -5033,10 +5049,10 @@ function _dexSimTick() {
         if (!s) return;
         s.tok0 *= (1 + (Math.random() - 0.5) * 0.025);
         s.tok1 *= (1 + (Math.random() - 0.5) * 0.02);
-        const price = parseFloat(pool.lastPrice) || 1;
-        const now   = Math.floor(Date.now() / 1000);
+        s.tok2  = (s.tok2 || 1) * (1 + (Math.random() - 0.5) * 0.022);
+        const now = Math.floor(Date.now() / 1000);
         if (!s.hist) s.hist = [];
-        s.hist.push({ time: now, tok0: s.tok0, tok1: s.tok1, usd: s.tok0 * price + s.tok1 });
+        s.hist.push({ time: now, tok0: s.tok0, tok1: s.tok1, tok2: s.tok2 });
         if (s.hist.length > 48) s.hist.shift();
     });
     _dexSaveSim(sim);
@@ -5087,16 +5103,18 @@ function renderDexPoolCards() {
     const sim   = _dexGetSim();
 
     row.innerHTML = pools.map(pool => {
-        const s     = sim[pool.id];
-        const price = parseFloat(pool.lastPrice) || 1;
+        const s        = sim[pool.id];
+        const price    = parseFloat(pool.lastPrice) || 1;
+        const bnbPrice = s?.bnbPrice || 575;
         const tok0  = s?.tok0 || 0;
         const tok1  = s?.tok1 || 0;
+        const tok2  = s?.tok2 || 0;
         const usd0  = tok0 * price;
         const usd1  = tok1;
-        const total = usd0 + usd1 || 1;
-        const pct0  = usd0 / total;
-        const pct1  = usd1 / total;
-        const deg0  = Math.round(pct0 * 360);
+        const usd2  = tok2 * bnbPrice;
+        const total = usd0 + usd1 + usd2 || 1;
+        const deg0  = Math.round((usd0 / total) * 360);
+        const deg2  = Math.round((usd2 / total) * 360);
         const sym0  = s?.sym0 || (pool.pair?.split('/')[0] || '?');
         const sym1  = s?.sym1 || (pool.pair?.split('/')[1] || '?');
         const isActive = pool.id === _dexActivePoolId;
@@ -5105,11 +5123,12 @@ function renderDexPoolCards() {
             if (!n) return '—';
             if (n >= 1000000) return (n/1000000).toFixed(2) + 'M';
             if (n >= 1000)    return (n/1000).toFixed(1) + 'K';
-            return n.toFixed(2);
+            return n.toFixed(4);
         };
         const fmtUsd = n => n >= 1000 ? '$' + (n/1000).toFixed(1) + 'K' : '$' + n.toFixed(0);
 
-        const gradient = `conic-gradient(#d9ad70 0deg ${deg0}deg, #60a5fa ${deg0}deg 360deg)`;
+        const d1 = deg0, d2 = deg0 + deg2;
+        const gradient = `conic-gradient(#d9ad70 0deg ${d1}deg, #fb923c ${d1}deg ${d2}deg, #60a5fa ${d2}deg 360deg)`;
         const title    = [pool.swap, pool.chain, pool.fees].filter(Boolean).join(' / ') || pool.poolAddr.slice(0,10) + '…';
 
         return `<div class="dex-pool-card ${isActive ? 'active' : ''}" onclick="selectDexPool(${pool.id})">
@@ -5121,12 +5140,12 @@ function renderDexPoolCards() {
                         <span class="dex-card-amt">${fmtAmt(tok0)} <span class="dex-card-usd">(${fmtUsd(usd0)})</span></span>
                     </div>
                     <div class="dex-card-bal-row">
-                        <span class="dex-card-sym">${sym1}</span>
-                        <span class="dex-card-amt">${fmtAmt(tok1)} <span class="dex-card-usd">(${fmtUsd(usd1)})</span></span>
+                        <span class="dex-card-sym">BNB</span>
+                        <span class="dex-card-amt">${fmtAmt(tok2)} <span class="dex-card-usd">(${fmtUsd(usd2)})</span></span>
                     </div>
                     <div class="dex-card-bal-row">
-                        <span class="dex-card-sym">Total</span>
-                        <span class="dex-card-amt"><span class="dex-card-usd">${fmtUsd(total)}</span></span>
+                        <span class="dex-card-sym">${sym1}</span>
+                        <span class="dex-card-amt">${fmtAmt(tok1)} <span class="dex-card-usd">(${fmtUsd(usd1)})</span></span>
                     </div>
                 </div>
             </div>
@@ -5392,9 +5411,8 @@ function _dexInitBalChart(pool) {
     const s   = sim[pool.id];
     if (!s?.hist?.length) return;
 
-    const price = parseFloat(pool.lastPrice) || 1;
-    const sym0  = s.sym0 || '?';
-    const sym1  = s.sym1 || '?';
+    const sym0     = s.sym0 || '?';
+    const sym1     = s.sym1 || '?';
 
     _dexBalChart = LightweightCharts.createChart(el, {
         width: el.clientWidth || 600, height: 160,
@@ -5407,20 +5425,20 @@ function _dexInitBalChart(pool) {
     });
 
     const serTok0 = _dexBalChart.addLineSeries({ color: '#d9ad70', lineWidth: 2, title: sym0 });
+    const serTok2 = _dexBalChart.addLineSeries({ color: '#fb923c', lineWidth: 2, title: 'BNB' });
     const serTok1 = _dexBalChart.addLineSeries({ color: '#60a5fa', lineWidth: 2, title: sym1 });
-    const serUsd  = _dexBalChart.addLineSeries({ color: '#34d399', lineWidth: 2, title: 'USD' });
-    _dexBalSeries  = [serTok0, serTok1, serUsd];
+    _dexBalSeries  = [serTok0, serTok2, serTok1];
 
     const d0 = s.hist.map(h => ({ time: h.time, value: h.tok0 }));
+    const d2 = s.hist.map(h => ({ time: h.time, value: h.tok2 || 0 }));
     const d1 = s.hist.map(h => ({ time: h.time, value: h.tok1 }));
-    const dU = s.hist.map(h => ({ time: h.time, value: h.tok0 * price + h.tok1 }));
-    serTok0.setData(d0); serTok1.setData(d1); serUsd.setData(dU);
+    serTok0.setData(d0); serTok2.setData(d2); serTok1.setData(d1);
 
     const legend = document.getElementById('dex-balhist-legend');
     if (legend) legend.innerHTML = [
         { color:'#d9ad70', sym: sym0 },
+        { color:'#fb923c', sym: 'BNB' },
         { color:'#60a5fa', sym: sym1 },
-        { color:'#34d399', sym: 'USD total' },
     ].map(l => `<div class="dex-balhist-leg"><i style="background:${l.color}"></i>${l.sym}</div>`).join('');
 }
 
@@ -5434,8 +5452,8 @@ function _dexUpdateBalChart() {
     const price = parseFloat(pool.lastPrice) || 1;
     const last  = s.hist[s.hist.length - 1];
     _dexBalSeries[0].update({ time: last.time, value: last.tok0 });
-    _dexBalSeries[1].update({ time: last.time, value: last.tok1 });
-    _dexBalSeries[2].update({ time: last.time, value: last.tok0 * price + last.tok1 });
+    _dexBalSeries[1].update({ time: last.time, value: last.tok2 || 0 });
+    _dexBalSeries[2].update({ time: last.time, value: last.tok1 });
 }
 
 // ─── End DEX PAGE ─────────────────────────────────────
