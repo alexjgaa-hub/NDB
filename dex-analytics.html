@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fibonacci MM — DEX Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+    --bg:#0d1117; --surface:#131c2e; --surface2:#0f1623;
+    --border:#1f2a3d; --green:#5bba89; --red:#cd4141;
+    --gold:#d9ad70; --blue:#60a5fa; --text:#e5edf6; --muted:#8594a8;
+    --font:'Figtree',ui-sans-serif,system-ui,sans-serif;
+}
+body { background:var(--bg); color:var(--text); font-family:var(--font); font-size:13px; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+
+/* ── HEADER ── */
+.header { height:48px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 14px; gap:10px; flex-shrink:0; }
+.logo { color:var(--gold); font-weight:700; font-size:14px; letter-spacing:1px; display:flex; flex-direction:column; line-height:1.2; }
+.logo span { font-size:10px; font-weight:500; opacity:.75; letter-spacing:1.5px; }
+.v-div { width:1px; height:24px; background:var(--border); flex-shrink:0; }
+.page-label { font-size:13px; font-weight:600; color:var(--text); }
+.back-btn { padding:4px 12px; border:1px solid var(--border); border-radius:6px; color:var(--muted); font-size:12px; font-weight:500; text-decoration:none; transition:all .15s; }
+.back-btn:hover { border-color:var(--gold); color:var(--gold); }
+.hdr-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+
+/* ── POOL SELECTOR ── */
+.pool-sel-wrap { position:relative; }
+.pool-sel-trigger { display:flex; align-items:center; gap:8px; padding:5px 10px; border:1px solid var(--border); border-radius:5px; cursor:pointer; background:var(--surface2); transition:border-color .15s; min-width:180px; }
+.pool-sel-trigger:hover { border-color:var(--gold); }
+.pst-name { font-size:13px; font-weight:700; }
+.pst-arrow { margin-left:auto; color:var(--muted); font-size:10px; }
+.pool-sel-dropdown { display:none; position:absolute; top:calc(100% + 6px); left:0; min-width:280px; background:var(--surface); border:1px solid var(--border); border-radius:6px; box-shadow:0 8px 32px rgba(0,0,0,.5); z-index:200; }
+.pool-sel-dropdown.open { display:block; }
+.pool-sel-item { padding:8px 14px; cursor:pointer; font-size:12px; }
+.pool-sel-item:hover { background:var(--surface2); }
+.pool-sel-item.active { color:var(--gold); }
+
+/* ── TF BAR ── */
+.tf-bar { display:flex; align-items:center; gap:4px; background:var(--surface); border-bottom:1px solid var(--border); padding:6px 14px; flex-shrink:0; }
+.tf-label { color:var(--muted); font-size:10px; letter-spacing:.5px; margin-right:4px; }
+.tf-btn { padding:3px 10px; border:1px solid var(--border); border-radius:4px; background:transparent; color:var(--muted); font-family:var(--font); font-size:11px; cursor:pointer; transition:all .1s; }
+.tf-btn:hover:not(.active) { color:var(--text); border-color:var(--muted); }
+.tf-btn.active { border-color:var(--gold); color:var(--gold); background:rgba(217,173,112,.1); }
+.tf-refresh { padding:3px 9px; border:1px solid var(--border); border-radius:4px; background:transparent; color:var(--muted); font-size:13px; cursor:pointer; margin-left:6px; }
+.tf-refresh:hover { color:var(--text); }
+.tf-pool-label { margin-left:auto; font-size:11px; color:var(--muted); font-style:italic; }
+
+/* ── GRID ── */
+.an-scroll { flex:1; overflow-y:auto; padding:12px; }
+.an-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.an-block { background:var(--surface); border:1px solid var(--border); border-radius:6px; overflow:hidden; display:flex; flex-direction:column; height:300px; }
+.an-block.wide { grid-column:1/-1; height:460px; }
+.ab-hdr { display:flex; align-items:center; gap:6px; padding:7px 12px; border-bottom:1px solid var(--border); font-size:10px; font-weight:600; letter-spacing:.6px; color:var(--muted); flex-shrink:0; white-space:nowrap; overflow:hidden; }
+.ab-val { color:var(--text); font-size:12px; font-weight:700; }
+.ab-body { flex:1; position:relative; min-height:0; overflow:hidden; }
+.ab-body > div { position:absolute; inset:0; }
+.ab-body canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
+.ab-empty { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--muted); }
+
+/* ── METRICS BLOCK ── */
+.ab-metrics { flex:1; display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); }
+.ab-metric { background:var(--surface); padding:18px 20px; display:flex; flex-direction:column; gap:6px; }
+.ab-metric-label { font-size:10px; font-weight:600; color:var(--muted); letter-spacing:.5px; text-transform:uppercase; }
+.ab-metric-val { font-size:20px; font-weight:700; color:var(--text); }
+.ab-metric-sub { font-size:11px; color:var(--muted); }
+.ab-metric-pos { color:var(--green); }
+.ab-metric-neg { color:var(--red); }
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="header">
+    <div class="logo">Fibonacci<span>MARKET MAKER</span></div>
+    <div class="v-div"></div>
+    <div class="page-label">DEX Analytics</div>
+    <div class="v-div"></div>
+    <a href="index.html" class="back-btn">← Back to dashboard</a>
+    <div class="hdr-right">
+        <!-- Pool selector -->
+        <div class="pool-sel-wrap" id="pool-sel-wrap">
+            <div class="pool-sel-trigger" onclick="togglePoolSel()">
+                <span class="pst-name" id="pst-name">Select pool</span>
+                <span class="pst-arrow">▾</span>
+            </div>
+            <div class="pool-sel-dropdown" id="pool-sel-dropdown">
+                <div id="pool-sel-list"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── TF BAR ── -->
+<div class="tf-bar">
+    <span class="tf-label">TF</span>
+    <button class="tf-btn" onclick="setTF(this,'5m')">5m</button>
+    <button class="tf-btn" onclick="setTF(this,'15m')">15m</button>
+    <button class="tf-btn active" onclick="setTF(this,'1h')">1h</button>
+    <button class="tf-btn" onclick="setTF(this,'4h')">4h</button>
+    <button class="tf-btn" onclick="setTF(this,'1D')">1D</button>
+    <button class="tf-refresh" onclick="refresh()" title="Refresh">↺</button>
+    <span class="tf-pool-label" id="tf-pool-label">—</span>
+</div>
+
+<!-- ── GRID ── -->
+<div class="an-scroll">
+    <div class="an-grid">
+
+        <!-- Price chart (DexScreener embed, wide) -->
+        <div class="an-block wide">
+            <div class="ab-hdr">PRICE CHART <span id="price-pair" style="color:var(--text);margin-left:6px"></span></div>
+            <div class="ab-body" style="height:100%">
+                <iframe id="dex-an-chart" style="width:100%;height:100%;border:none;display:none"></iframe>
+                <div class="ab-empty" id="dex-an-chart-empty">Select a pool to load chart</div>
+            </div>
+        </div>
+
+        <!-- Pool metrics -->
+        <div class="an-block">
+            <div class="ab-hdr">POOL METRICS</div>
+            <div class="ab-metrics" id="pool-metrics">
+                <div class="ab-metric"><div class="ab-metric-label">Last Price</div><div class="ab-metric-val" id="m-price">—</div><div class="ab-metric-sub" id="m-price-sub">USD</div></div>
+                <div class="ab-metric"><div class="ab-metric-label">Fee Tier</div><div class="ab-metric-val" id="m-fee">—</div><div class="ab-metric-sub">per swap</div></div>
+                <div class="ab-metric"><div class="ab-metric-label">Chain</div><div class="ab-metric-val" id="m-chain">—</div><div class="ab-metric-sub" id="m-swap">—</div></div>
+                <div class="ab-metric"><div class="ab-metric-label">Pair</div><div class="ab-metric-val" id="m-pair">—</div><div class="ab-metric-sub">base / quote</div></div>
+            </div>
+        </div>
+
+        <!-- Balance simulation -->
+        <div class="an-block">
+            <div class="ab-hdr">SIMULATED BALANCES</div>
+            <div class="ab-metrics" id="bal-metrics">
+                <div class="ab-metric"><div class="ab-metric-label">Token A</div><div class="ab-metric-val" id="m-bal0">—</div><div class="ab-metric-sub" id="m-bal0-usd">$—</div></div>
+                <div class="ab-metric"><div class="ab-metric-label">Token B</div><div class="ab-metric-val" id="m-bal1">—</div><div class="ab-metric-sub" id="m-bal1-usd">$—</div></div>
+                <div class="ab-metric" style="grid-column:1/-1"><div class="ab-metric-label">Total USD</div><div class="ab-metric-val" id="m-bal-total">—</div><div class="ab-metric-sub">simulated portfolio value</div></div>
+            </div>
+        </div>
+
+        <!-- Pool address info -->
+        <div class="an-block wide" style="height:auto;min-height:120px">
+            <div class="ab-hdr">POOL INFO</div>
+            <div style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+                <div><div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px">Pool Address</div><div style="font-family:monospace;font-size:12px;color:var(--text);word-break:break-all" id="info-pool-addr">—</div></div>
+                <div><div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px">Deployer</div><div style="font-family:monospace;font-size:12px;color:var(--text);word-break:break-all" id="info-deployer">—</div></div>
+                <div><div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px">Explorer Link</div><div style="font-size:12px" id="info-link">—</div></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+let _projects = [];
+let _activePool = null;
+let _currentTF = '1h';
+
+try { _projects = JSON.parse(localStorage.getItem('ndb_projects') || '[]'); } catch(e) {}
+
+function _getAllPools() {
+    const pools = [];
+    _projects.forEach(pr => (pr.dexPools || []).forEach(p => pools.push({ ...p, _project: pr.title })));
+    return pools;
+}
+
+function togglePoolSel() {
+    document.getElementById('pool-sel-dropdown').classList.toggle('open');
+}
+
+document.addEventListener('click', e => {
+    const wrap = document.getElementById('pool-sel-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+        document.getElementById('pool-sel-dropdown').classList.remove('open');
+    }
+});
+
+function buildPoolList() {
+    const pools = _getAllPools();
+    const list  = document.getElementById('pool-sel-list');
+    if (!pools.length) {
+        list.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:12px">No DEX pools found.<br>Add pools via Projects → DEX pools.</div>';
+        return;
+    }
+    list.innerHTML = pools.map(p => {
+        const title = [p.swap, p.chain, p.fees].filter(Boolean).join(' / ') || p.poolAddr?.slice(0,12) + '…';
+        return `<div class="pool-sel-item" onclick="selectPool(${p.id})">[${p._project}] ${title}</div>`;
+    }).join('');
+    if (!_activePool && pools.length) selectPool(pools[0].id);
+}
+
+function selectPool(poolId) {
+    const pool = _getAllPools().find(p => p.id === poolId);
+    if (!pool) return;
+    _activePool = pool;
+
+    document.getElementById('pool-sel-dropdown').classList.remove('open');
+    const title = [pool.swap, pool.chain, pool.fees].filter(Boolean).join(' / ') || 'Pool';
+    document.getElementById('pst-name').textContent = title;
+    document.getElementById('tf-pool-label').textContent = pool.pair || '—';
+    document.getElementById('price-pair').textContent = pool.pair || '';
+
+    // Pool metrics
+    document.getElementById('m-price').textContent  = pool.lastPrice || '—';
+    document.getElementById('m-fee').textContent     = pool.fees || '—';
+    document.getElementById('m-chain').textContent   = pool.chain || '—';
+    document.getElementById('m-swap').textContent    = pool.swap || '—';
+    document.getElementById('m-pair').textContent    = pool.pair || '—';
+
+    // Simulated balances
+    let sim = {};
+    try { sim = JSON.parse(localStorage.getItem('ndb_dex_sim') || '{}'); } catch(e) {}
+    const s     = sim[pool.id];
+    const price = parseFloat(pool.lastPrice) || 1;
+    const fmt   = n => n >= 1000 ? (n/1000).toFixed(1)+'K' : n.toFixed(2);
+    const fmtU  = n => n >= 1000 ? '$'+(n/1000).toFixed(1)+'K' : '$'+n.toFixed(0);
+    if (s) {
+        document.getElementById('m-bal0').textContent      = fmt(s.tok0) + ' ' + (s.sym0 || '');
+        document.getElementById('m-bal0-usd').textContent  = fmtU(s.tok0 * price);
+        document.getElementById('m-bal1').textContent      = fmt(s.tok1) + ' ' + (s.sym1 || '');
+        document.getElementById('m-bal1-usd').textContent  = fmtU(s.tok1);
+        document.getElementById('m-bal-total').textContent = fmtU(s.tok0 * price + s.tok1);
+    } else {
+        ['m-bal0','m-bal1','m-bal-total','m-bal0-usd','m-bal1-usd'].forEach(id => {
+            document.getElementById(id).textContent = '—';
+        });
+    }
+
+    // Pool info
+    document.getElementById('info-pool-addr').textContent = pool.poolAddr || '—';
+    document.getElementById('info-deployer').textContent  = pool.deployer || '—';
+    const linkEl = document.getElementById('info-link');
+    if (pool.link) {
+        linkEl.innerHTML = `<a href="${pool.link}" target="_blank" rel="noopener" style="color:var(--blue)">${pool.link}</a>`;
+    } else {
+        linkEl.textContent = '—';
+    }
+
+    // Chart
+    const chainMap = { BSC:'bsc', ERC:'ethereum', BASE:'base', SOL:'solana', TON:'ton', TRON:'tron' };
+    const chainId  = chainMap[pool.chain] || pool.chain?.toLowerCase();
+    const iframe   = document.getElementById('dex-an-chart');
+    const empty    = document.getElementById('dex-an-chart-empty');
+    if (pool.poolAddr && chainId) {
+        iframe.src = `https://dexscreener.com/${chainId}/${pool.poolAddr}?embed=1&theme=dark&info=0`;
+        iframe.style.display = 'block';
+        empty.style.display  = 'none';
+    } else {
+        iframe.style.display = 'none';
+        empty.style.display  = 'flex';
+    }
+
+    document.querySelectorAll('.pool-sel-item').forEach(el => el.classList.remove('active'));
+}
+
+function setTF(btn, tf) {
+    _currentTF = tf;
+    document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (_activePool) selectPool(_activePool.id);
+}
+
+function refresh() {
+    if (_activePool) selectPool(_activePool.id);
+}
+
+buildPoolList();
+</script>
+</body>
+</html>

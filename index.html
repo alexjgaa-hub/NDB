@@ -957,6 +957,104 @@
         .dex-fetch-note.warn { background:rgba(251,191,36,0.08); color:#fbbf24; }
         .dex-fetch-note.err  { background:rgba(248,113,113,0.08); color:#f87171; }
 
+        /* ── DEX PAGE ── */
+        .dex-page { flex:1; display:flex; flex-direction:column; background:var(--bg); overflow:hidden; min-height:0; }
+        .dex-page.hidden { display:none; }
+
+        /* Pool cards */
+        .dex-cards-row { display:flex; gap:10px; padding:14px 18px 10px; overflow-x:auto; flex-shrink:0; border-bottom:1px solid var(--border); }
+        .dex-pool-card { display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 16px; cursor:pointer; transition:border-color 0.15s; min-width:240px; flex-shrink:0; }
+        .dex-pool-card:hover { border-color:var(--border2); }
+        .dex-pool-card.active { border-color:var(--blue); }
+        .dex-card-info { flex:1; min-width:0; }
+        .dex-card-title { font-size:12px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:6px; }
+        .dex-card-bal { display:flex; flex-direction:column; gap:2px; }
+        .dex-card-bal-row { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+        .dex-card-sym { font-size:11px; color:var(--muted); font-weight:500; }
+        .dex-card-amt { font-size:11px; color:var(--text); font-weight:600; text-align:right; font-family:monospace; }
+        .dex-card-usd { font-size:10px; color:var(--muted); font-family:monospace; }
+        .dex-donut-wrap { width:52px; height:52px; flex-shrink:0; }
+        .dex-donut { width:52px; height:52px; border-radius:50%; position:relative; }
+        .dex-donut::after { content:''; position:absolute; inset:10px; border-radius:50%; background:var(--surface); }
+        .dex-empty { display:flex; align-items:center; justify-content:center; flex:1; color:var(--muted); font-size:14px; }
+        .dex-empty.hidden { display:none; }
+
+        /* Workspace layout */
+        .dex-workspace { display:flex; flex:1; overflow:hidden; min-height:0; }
+        .dex-left { flex:1; display:flex; flex-direction:column; overflow-y:auto; min-width:0; }
+        .dex-right { width:300px; flex-shrink:0; border-left:1px solid var(--border); display:flex; flex-direction:column; overflow-y:auto; background:var(--surface); }
+
+        /* Chart */
+        .dex-chart-wrap { height:450px; flex-shrink:0; background:#000; position:relative; }
+        .dex-chart-wrap iframe { width:100%; height:100%; border:none; display:block; }
+        .dex-chart-placeholder { display:flex; align-items:center; justify-content:center; height:100%; color:var(--muted); font-size:13px; }
+
+        /* Section titles */
+        .dex-section-hdr { padding:10px 16px 8px; font-size:11px; font-weight:700; color:var(--muted); letter-spacing:0.6px; text-transform:uppercase; border-bottom:1px solid var(--border); background:var(--surface2); flex-shrink:0; }
+
+        /* Algo tabs */
+        .dex-algo-wrap { flex-shrink:0; }
+        .dex-algo-tabs-row { display:flex; gap:2px; padding:8px 12px; background:var(--surface2); border-bottom:1px solid var(--border); overflow-x:auto; }
+        .dex-algo-tab { padding:4px 12px; border:1px solid var(--border); border-radius:4px; background:transparent; color:var(--muted); font-family:var(--font); font-size:11px; font-weight:600; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+        .dex-algo-tab.active { border-color:var(--blue); color:var(--blue); background:rgba(96,165,250,0.10); }
+        .dex-algo-tab:hover:not(.active) { color:var(--text); border-color:var(--muted); }
+        .dex-tasks-wrap { overflow-x:auto; }
+
+        /* Balance history chart */
+        .dex-balhist-wrap { padding:14px 16px; border-top:1px solid var(--border); }
+        .dex-balhist-title { font-size:11px; font-weight:700; color:var(--muted); letter-spacing:0.5px; text-transform:uppercase; margin-bottom:8px; }
+        .dex-balhist-legend { display:flex; gap:14px; margin-bottom:8px; }
+        .dex-balhist-leg { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); }
+        .dex-balhist-leg i { width:14px; height:2px; border-radius:1px; display:inline-block; }
+        #dex-balhist-chart { height:160px; }
+
+        /* Wallets */
+        .dex-wallets-section { flex-shrink:0; }
+        .dex-wtree { padding:10px 12px; display:flex; flex-direction:column; gap:3px; }
+        .dex-wnode { display:flex; align-items:flex-start; gap:6px; padding:5px 6px; border-radius:5px; }
+        .dex-wnode:hover { background:var(--surface2); }
+        .dex-wnode-indent { padding-left:16px; }
+        .dex-wnode-indent2 { padding-left:32px; }
+        .dex-wnode-icon { font-size:12px; flex-shrink:0; margin-top:1px; }
+        .dex-wnode-body { flex:1; min-width:0; }
+        .dex-wnode-title { font-size:11px; font-weight:700; color:var(--text); }
+        .dex-wnode-addr { font-size:10px; color:var(--muted); font-family:monospace; }
+        .dex-wnode-badge { display:inline-block; font-size:9px; font-weight:700; padding:1px 5px; border-radius:3px; margin-left:5px; vertical-align:middle; }
+        .dex-badge-sys { background:rgba(96,165,250,0.15); color:#60a5fa; }
+        .dex-badge-mm { background:rgba(251,191,36,0.15); color:#fbbf24; }
+        .dex-badge-ok { background:rgba(52,211,153,0.15); color:#34d399; }
+        .dex-badge-no { background:rgba(248,113,113,0.15); color:#f87171; }
+        .dex-cluster-table { width:100%; border-collapse:collapse; font-size:10px; margin-top:4px; }
+        .dex-cluster-table th { padding:4px 8px; text-align:left; color:var(--muted); font-size:9px; font-weight:700; letter-spacing:0.4px; text-transform:uppercase; border-bottom:1px solid var(--border); }
+        .dex-cluster-table td { padding:5px 8px; border-bottom:1px solid rgba(255,255,255,0.04); color:var(--text); font-family:monospace; }
+        .dex-cluster-table tr:hover td { background:rgba(255,255,255,0.03); }
+        .dex-approvals { display:flex; gap:3px; flex-wrap:wrap; }
+
+        /* Swap panel */
+        .dex-swap-section { flex:1; padding:14px 12px; display:flex; flex-direction:column; gap:10px; }
+        .dex-swap-token-box { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
+        .dex-swap-label { font-size:10px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:6px; }
+        .dex-swap-row { display:flex; align-items:center; gap:8px; }
+        .dex-swap-input { flex:1; background:transparent; border:none; outline:none; font-family:var(--font); font-size:20px; font-weight:700; color:var(--text); min-width:0; }
+        .dex-swap-input::placeholder { color:var(--muted); }
+        .dex-swap-token-btn { display:flex; align-items:center; gap:5px; background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:5px 10px; cursor:pointer; font-size:12px; font-weight:700; color:var(--text); white-space:nowrap; flex-shrink:0; }
+        .dex-swap-token-btn:hover { border-color:var(--blue); }
+        .dex-swap-bal { font-size:10px; color:var(--muted); margin-top:5px; }
+        .dex-swap-arrow-row { display:flex; justify-content:center; }
+        .dex-swap-arrow { width:28px; height:28px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); cursor:pointer; font-size:15px; color:var(--muted); display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+        .dex-swap-arrow:hover { color:var(--blue); border-color:var(--blue); }
+        .dex-swap-info { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; gap:6px; }
+        .dex-swap-info-row { display:flex; justify-content:space-between; font-size:11px; }
+        .dex-swap-info-label { color:var(--muted); }
+        .dex-swap-info-val { color:var(--text); font-weight:500; }
+        .dex-slip-row { display:flex; gap:4px; align-items:center; }
+        .dex-slip-label { font-size:11px; color:var(--muted); margin-right:4px; }
+        .dex-slip-btn { padding:3px 9px; border:1px solid var(--border); border-radius:4px; background:transparent; color:var(--muted); font-family:var(--font); font-size:11px; cursor:pointer; transition:all 0.15s; }
+        .dex-slip-btn.active { border-color:var(--blue); color:var(--blue); background:rgba(96,165,250,0.1); }
+        .dex-slip-btn:hover:not(.active) { color:var(--text); }
+        .dex-swap-btn { width:100%; padding:13px; border:none; border-radius:10px; background:var(--blue); color:#fff; font-family:var(--font); font-size:14px; font-weight:700; cursor:pointer; transition:opacity 0.15s; margin-top:4px; }
+        .dex-swap-btn:hover { opacity:0.85; }
+
         /* ── PAGE LAYOUT ── */
         .page-layout { display:flex; flex:1; overflow:hidden; min-height:0; }
         .page-content { display:flex; flex:1; flex-direction:column; overflow-y:auto; overflow-x:hidden; min-height:0; }
@@ -1310,6 +1408,8 @@
                 <div class="sb-item active" onclick="showPage('trading')"><span class="sb-icon"></span>Trading Panel</div>
                 <div class="sb-item"><span class="sb-icon"></span>Tasks</div>
                 <div class="sb-item" onclick="showPage('analytics')"><span class="sb-icon"></span>Stats</div>
+                <div class="sb-item" onclick="showPage('dex')"><span class="sb-icon"></span>DEX</div>
+                <a href="dex-analytics.html" class="sb-item" style="text-decoration:none"><span class="sb-icon"></span>DEX Analytics</a>
             </div>
         </div>
     </div>
@@ -1933,6 +2033,133 @@
         </div>
     </div>
 </div>
+
+<!-- ═══ DEX PAGE ═══ -->
+<div class="dex-page hidden" id="dex-page">
+
+    <!-- Pool selector cards -->
+    <div class="dex-cards-row" id="dex-cards-row"></div>
+
+    <!-- Empty state (no pools in project) -->
+    <div class="dex-empty hidden" id="dex-empty">No DEX pools in this project. Add pools via Projects → DEX pools.</div>
+
+    <!-- Main workspace -->
+    <div class="dex-workspace hidden" id="dex-workspace">
+
+        <!-- Left column: chart + algorithms + balance history -->
+        <div class="dex-left">
+
+            <!-- DexScreener chart -->
+            <div class="dex-chart-wrap" id="dex-chart-wrap">
+                <div class="dex-chart-placeholder" id="dex-chart-placeholder">Select a pool to load chart</div>
+                <iframe id="dex-chart-iframe" style="display:none" allowfullscreen></iframe>
+            </div>
+
+            <!-- Algorithms / Tasks -->
+            <div class="dex-algo-wrap">
+                <div class="dex-section-hdr">Tasks</div>
+                <div class="dex-algo-tabs-row">
+                    <button class="dex-algo-tab active" onclick="filterDexTasks(this,'all')">All</button>
+                    <button class="dex-algo-tab" onclick="filterDexTasks(this,'cex-dex')">CEX/DEX Arbitrage</button>
+                    <button class="dex-algo-tab" onclick="filterDexTasks(this,'hft')">HFT</button>
+                    <button class="dex-algo-tab" onclick="filterDexTasks(this,'counter')">Counter Trade</button>
+                    <button class="dex-algo-tab" onclick="filterDexTasks(this,'limit')">Limit</button>
+                    <button class="dex-algo-tab" onclick="filterDexTasks(this,'dex-dex')">DEX/DEX Arbitrage</button>
+                </div>
+                <div class="dex-tasks-wrap tasks-table-wrap">
+                    <table class="tasks-table" id="dex-tasks-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>PAIR</th>
+                                <th>EXCHANGES</th>
+                                <th>REGION</th>
+                                <th>STATUS</th>
+                                <th>SIDE</th>
+                                <th>CREATED AT</th>
+                                <th>STARTED AT</th>
+                                <th>OWNER</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="dex-tasks-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Balance history chart -->
+            <div class="dex-balhist-wrap">
+                <div class="dex-balhist-title">Balance History</div>
+                <div class="dex-balhist-legend" id="dex-balhist-legend"></div>
+                <div id="dex-balhist-chart"></div>
+            </div>
+
+        </div><!-- /.dex-left -->
+
+        <!-- Right column: wallets + swap -->
+        <div class="dex-right">
+
+            <!-- Wallets -->
+            <div class="dex-wallets-section">
+                <div class="dex-section-hdr">Wallets</div>
+                <div id="dex-wallets-tree" class="dex-wtree"></div>
+            </div>
+
+            <!-- Swap -->
+            <div class="dex-swap-section" id="dex-swap-section">
+                <div class="dex-section-hdr" style="margin:-14px -12px 10px;">Swap</div>
+
+                <div class="dex-swap-token-box">
+                    <div class="dex-swap-label">You pay</div>
+                    <div class="dex-swap-row">
+                        <input class="dex-swap-input" id="dex-swap-in" type="number" placeholder="0" oninput="dexSwapCalc()">
+                        <button class="dex-swap-token-btn" id="dex-swap-tok0">— ▾</button>
+                    </div>
+                    <div class="dex-swap-bal" id="dex-swap-bal0">Balance: —</div>
+                </div>
+
+                <div class="dex-swap-arrow-row">
+                    <button class="dex-swap-arrow" onclick="dexSwapFlip()" title="Flip tokens">⇅</button>
+                </div>
+
+                <div class="dex-swap-token-box">
+                    <div class="dex-swap-label">You receive</div>
+                    <div class="dex-swap-row">
+                        <input class="dex-swap-input" id="dex-swap-out" type="number" placeholder="0" readonly style="opacity:0.7">
+                        <button class="dex-swap-token-btn" id="dex-swap-tok1">— ▾</button>
+                    </div>
+                    <div class="dex-swap-bal" id="dex-swap-bal1">Balance: —</div>
+                </div>
+
+                <div class="dex-swap-info" id="dex-swap-info">
+                    <div class="dex-swap-info-row">
+                        <span class="dex-swap-info-label">Rate</span>
+                        <span class="dex-swap-info-val" id="dex-swap-rate">—</span>
+                    </div>
+                    <div class="dex-swap-info-row">
+                        <span class="dex-swap-info-label">Price impact</span>
+                        <span class="dex-swap-info-val" id="dex-swap-impact">—</span>
+                    </div>
+                    <div class="dex-swap-info-row">
+                        <span class="dex-swap-info-label">Min. received</span>
+                        <span class="dex-swap-info-val" id="dex-swap-minrcv">—</span>
+                    </div>
+                </div>
+
+                <div class="dex-slip-row">
+                    <span class="dex-slip-label">Slippage</span>
+                    <button class="dex-slip-btn active" onclick="dexSetSlip(this,'0.1')">0.1%</button>
+                    <button class="dex-slip-btn" onclick="dexSetSlip(this,'0.5')">0.5%</button>
+                    <button class="dex-slip-btn" onclick="dexSetSlip(this,'1.0')">1.0%</button>
+                </div>
+
+                <button class="dex-swap-btn">Swap</button>
+            </div>
+
+        </div><!-- /.dex-right -->
+    </div><!-- /.dex-workspace -->
+
+</div><!-- /#dex-page -->
 
 </div><!-- /.page-content -->
 </div><!-- /.page-layout -->
@@ -4026,7 +4253,7 @@ let liqWS        = null;
 const anCharts   = {};
 
 function showPage(p) {
-    const altPages = ['analytics', 'projects', 'project-create', 'project-detail'];
+    const altPages = ['analytics', 'projects', 'project-create', 'project-detail', 'dex'];
     const isMain = !altPages.includes(p);
     document.querySelectorAll('.app-body, .main, .bot-panel, .tasks-panel')
         .forEach(el => el.classList.toggle('an-hidden', !isMain));
@@ -4034,12 +4261,14 @@ function showPage(p) {
     document.getElementById('projects-page').classList.toggle('hidden', p !== 'projects');
     document.getElementById('project-create-page').classList.toggle('hidden', p !== 'project-create');
     document.getElementById('project-detail-page').classList.toggle('hidden', p !== 'project-detail');
+    document.getElementById('dex-page').classList.toggle('hidden', p !== 'dex');
     const ptabT = document.getElementById('ptab-trading');
     if (ptabT) ptabT.classList.toggle('active', isMain);
     const ptabA = document.getElementById('ptab-analytics');
     if (ptabA) ptabA.classList.toggle('active', p === 'analytics');
     document.querySelectorAll('.sb-item').forEach(el => el.classList.remove('active'));
     const sbSel = p === 'analytics' ? '[onclick*="analytics"]'
+                : p === 'dex' ? '[onclick*="dex"]'
                 : ['projects','project-create','project-detail'].includes(p) ? '[onclick*="projects"]'
                 : '[onclick*="trading"]';
     const sbEl = document.querySelector('.sb-item' + sbSel);
@@ -4051,6 +4280,7 @@ function showPage(p) {
         refreshAnalytics();
     }
     if (p === 'projects') renderProjectsList();
+    if (p === 'dex') renderDexPage();
 }
 
 // ══ ORDERBOOK PAIR PICKER ══
@@ -4747,6 +4977,468 @@ function renderDexPoolsTab() {
         </tr>
     `).join('');
 }
+
+// ══════════════════════════════════════════════════════
+// ── DEX PAGE ──────────────────────────────────────────
+// ══════════════════════════════════════════════════════
+
+let _dexActivePoolId   = null;
+let _dexSimTimer       = null;
+let _dexBalChart       = null;
+let _dexBalSeries      = [];
+let _dexSwapFlipped    = false;
+let _dexSlippage       = 0.1;
+
+const _dexChainMap = { BSC:'bsc', ERC:'ethereum', BASE:'base', SOL:'solana', TON:'ton', TRON:'tron' };
+
+// ─── Simulation helpers ────────────────────────────────
+
+function _dexGetSim() {
+    try { return JSON.parse(localStorage.getItem('ndb_dex_sim') || '{}'); } catch(e) { return {}; }
+}
+function _dexSaveSim(s) { localStorage.setItem('ndb_dex_sim', JSON.stringify(s)); }
+
+function _dexSimInit(pool) {
+    const sim = _dexGetSim();
+    if (sim[pool.id]) return sim[pool.id];
+    const pair = pool.pair || '?/?';
+    const [base, quote] = pair.split('/');
+    const tok0 = 8000 + Math.floor(Math.random() * 42000);
+    const tok1 = 2000 + Math.floor(Math.random() * 8000);
+    const entry = { tok0, tok1, sym0: base || '?', sym1: quote || '?',
+                    hist: _dexGenHist(tok0, tok1, parseFloat(pool.lastPrice) || 1) };
+    sim[pool.id] = entry;
+    _dexSaveSim(sim);
+    return entry;
+}
+
+function _dexGenHist(tok0, tok1, price) {
+    const hist = [];
+    let v0 = tok0, v1 = tok1;
+    const now = Math.floor(Date.now() / 1000);
+    for (let i = 23; i >= 0; i--) {
+        v0 *= (1 + (Math.random() - 0.5) * 0.04);
+        v1 *= (1 + (Math.random() - 0.5) * 0.03);
+        hist.push({ time: now - i * 3600, tok0: v0, tok1: v1, usd: v0 * price + v1 });
+    }
+    return hist;
+}
+
+function _dexSimTick() {
+    const sim = _dexGetSim();
+    const pr  = projectsList.find(x => x.id === currentProjectId);
+    const pools = pr?.dexPools || [];
+    pools.forEach(pool => {
+        const s = sim[pool.id];
+        if (!s) return;
+        s.tok0 *= (1 + (Math.random() - 0.5) * 0.025);
+        s.tok1 *= (1 + (Math.random() - 0.5) * 0.02);
+        const price = parseFloat(pool.lastPrice) || 1;
+        const now   = Math.floor(Date.now() / 1000);
+        if (!s.hist) s.hist = [];
+        s.hist.push({ time: now, tok0: s.tok0, tok1: s.tok1, usd: s.tok0 * price + s.tok1 });
+        if (s.hist.length > 48) s.hist.shift();
+    });
+    _dexSaveSim(sim);
+    renderDexPoolCards();
+    if (_dexActivePoolId !== null) {
+        _dexUpdateBalChart();
+    }
+}
+
+// ─── Main render ──────────────────────────────────────
+
+function renderDexPage() {
+    const pr    = projectsList.find(x => x.id === currentProjectId);
+    const pools = pr?.dexPools || [];
+
+    const empty     = document.getElementById('dex-empty');
+    const workspace = document.getElementById('dex-workspace');
+
+    if (!pools.length) {
+        empty.classList.remove('hidden');
+        workspace.classList.add('hidden');
+        document.getElementById('dex-cards-row').innerHTML = '';
+        return;
+    }
+    empty.classList.add('hidden');
+    workspace.classList.remove('hidden');
+
+    pools.forEach(p => _dexSimInit(p));
+    renderDexPoolCards();
+
+    if (_dexActivePoolId === null || !pools.find(p => p.id === _dexActivePoolId)) {
+        selectDexPool(pools[0].id);
+    } else {
+        selectDexPool(_dexActivePoolId);
+    }
+
+    if (_dexSimTimer) clearInterval(_dexSimTimer);
+    _dexSimTimer = setInterval(_dexSimTick, 60000);
+}
+
+// ─── Pool cards ───────────────────────────────────────
+
+function renderDexPoolCards() {
+    const pr    = projectsList.find(x => x.id === currentProjectId);
+    const pools = pr?.dexPools || [];
+    const row   = document.getElementById('dex-cards-row');
+    if (!row) return;
+    const sim   = _dexGetSim();
+
+    row.innerHTML = pools.map(pool => {
+        const s     = sim[pool.id];
+        const price = parseFloat(pool.lastPrice) || 1;
+        const tok0  = s?.tok0 || 0;
+        const tok1  = s?.tok1 || 0;
+        const usd0  = tok0 * price;
+        const usd1  = tok1;
+        const total = usd0 + usd1 || 1;
+        const pct0  = usd0 / total;
+        const pct1  = usd1 / total;
+        const deg0  = Math.round(pct0 * 360);
+        const sym0  = s?.sym0 || (pool.pair?.split('/')[0] || '?');
+        const sym1  = s?.sym1 || (pool.pair?.split('/')[1] || '?');
+        const isActive = pool.id === _dexActivePoolId;
+
+        const fmtAmt = n => {
+            if (!n) return '—';
+            if (n >= 1000000) return (n/1000000).toFixed(2) + 'M';
+            if (n >= 1000)    return (n/1000).toFixed(1) + 'K';
+            return n.toFixed(2);
+        };
+        const fmtUsd = n => n >= 1000 ? '$' + (n/1000).toFixed(1) + 'K' : '$' + n.toFixed(0);
+
+        const gradient = `conic-gradient(#d9ad70 0deg ${deg0}deg, #60a5fa ${deg0}deg 360deg)`;
+        const title    = [pool.swap, pool.chain, pool.fees].filter(Boolean).join(' / ') || pool.poolAddr.slice(0,10) + '…';
+
+        return `<div class="dex-pool-card ${isActive ? 'active' : ''}" onclick="selectDexPool(${pool.id})">
+            <div class="dex-card-info">
+                <div class="dex-card-title">${title}</div>
+                <div class="dex-card-bal">
+                    <div class="dex-card-bal-row">
+                        <span class="dex-card-sym">${sym0}</span>
+                        <span class="dex-card-amt">${fmtAmt(tok0)} <span class="dex-card-usd">(${fmtUsd(usd0)})</span></span>
+                    </div>
+                    <div class="dex-card-bal-row">
+                        <span class="dex-card-sym">${sym1}</span>
+                        <span class="dex-card-amt">${fmtAmt(tok1)} <span class="dex-card-usd">(${fmtUsd(usd1)})</span></span>
+                    </div>
+                    <div class="dex-card-bal-row">
+                        <span class="dex-card-sym">Total</span>
+                        <span class="dex-card-amt"><span class="dex-card-usd">${fmtUsd(total)}</span></span>
+                    </div>
+                </div>
+            </div>
+            <div class="dex-donut-wrap">
+                <div class="dex-donut" style="background:${gradient}"></div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ─── Select pool ──────────────────────────────────────
+
+function selectDexPool(poolId) {
+    _dexActivePoolId = poolId;
+    const pr   = projectsList.find(x => x.id === currentProjectId);
+    const pool = (pr?.dexPools || []).find(p => p.id === poolId);
+    if (!pool) return;
+
+    renderDexPoolCards();
+    _dexLoadChart(pool);
+    renderDexWallets(pool);
+    renderDexSwap(pool);
+    renderDexTasks(pool, 'all');
+    _dexInitBalChart(pool);
+}
+
+// ─── Chart ────────────────────────────────────────────
+
+function _dexLoadChart(pool) {
+    const iframe      = document.getElementById('dex-chart-iframe');
+    const placeholder = document.getElementById('dex-chart-placeholder');
+    const chainId     = _dexChainMap[pool.chain] || pool.chain.toLowerCase();
+
+    if (pool.poolAddr) {
+        const src = `https://dexscreener.com/${chainId}/${pool.poolAddr}?embed=1&theme=dark&info=0`;
+        iframe.src = src;
+        iframe.style.display = 'block';
+        placeholder.style.display = 'none';
+    } else {
+        iframe.style.display = 'none';
+        placeholder.style.display = 'flex';
+    }
+}
+
+// ─── Wallets ──────────────────────────────────────────
+
+function renderDexWallets(pool) {
+    const tree = document.getElementById('dex-wallets-tree');
+    if (!tree) return;
+    const chain = pool.chain || 'BSC';
+
+    const walletSeed = pool.id;
+    const rng = n => { let x = Math.sin(walletSeed * 9301 + n * 49297) * 233280; return Math.abs(x - Math.floor(x)); };
+    const rAddr = (n) => {
+        const hex = '0123456789abcdef';
+        let a = '0x';
+        for (let i = 0; i < 4; i++) a += hex[Math.floor(rng(n*10+i) * 16)];
+        a += '…';
+        for (let i = 0; i < 4; i++) a += hex[Math.floor(rng(n*10+i+100) * 16)];
+        return a;
+    };
+
+    const deployerAddr = pool.deployer ? _shortAddr(pool.deployer) : rAddr(1);
+    const mainAddr     = rAddr(2);
+    const gasAddr      = rAddr(3);
+    const txCounts     = [Math.floor(rng(4)*1200)+50, Math.floor(rng(5)*500)+30, Math.floor(rng(6)*300)+10];
+    const daysAgo      = [Math.floor(rng(7)*60)+1, Math.floor(rng(8)*30)+1, Math.floor(rng(9)*10)+1];
+    const gasBal       = (rng(10)*0.12+0.01).toFixed(4);
+    const tok0sym      = pool.pair?.split('/')[0] || '?';
+    const tok1sym      = pool.pair?.split('/')[1] || '?';
+
+    const clusterWallets = [
+        { addr: rAddr(11), chain, txns: txCounts[0], ago: daysAgo[0], ps3: true,  ps2: true  },
+        { addr: rAddr(12), chain, txns: txCounts[1], ago: daysAgo[1], ps3: true,  ps2: false },
+        { addr: rAddr(13), chain, txns: txCounts[2], ago: daysAgo[2], ps3: false, ps2: true  },
+    ];
+
+    const badge = (ok, label) => `<span class="dex-wnode-badge ${ok ? 'dex-badge-ok' : 'dex-badge-no'}">${label} ${ok ? '✓' : '✗'}</span>`;
+    const swapName = pool.swap ? pool.swap.split(' ')[0] : 'DEX';
+
+    tree.innerHTML = `
+        <div class="dex-wnode">
+            <div class="dex-wnode-icon">🔑</div>
+            <div class="dex-wnode-body">
+                <div class="dex-wnode-title">DEPLOYER <span class="dex-wnode-badge dex-badge-mm">MetaMask</span></div>
+                <div class="dex-wnode-addr">${deployerAddr}</div>
+            </div>
+        </div>
+        <div class="dex-wnode dex-wnode-indent">
+            <div class="dex-wnode-icon">└</div>
+            <div class="dex-wnode-body">
+                <div class="dex-wnode-title">MAIN WALLET <span class="dex-wnode-badge dex-badge-sys">system-managed</span></div>
+                <div class="dex-wnode-addr">${mainAddr}</div>
+            </div>
+        </div>
+        <div class="dex-wnode dex-wnode-indent2">
+            <div class="dex-wnode-icon">├</div>
+            <div class="dex-wnode-body">
+                <div class="dex-wnode-title">GAS FEEDER</div>
+                <div class="dex-wnode-addr">${gasAddr} &nbsp;·&nbsp; balance: ${gasBal} ${chain === 'ERC' ? 'ETH' : chain === 'BSC' ? 'BNB' : 'native'}</div>
+            </div>
+        </div>
+        <div class="dex-wnode dex-wnode-indent2" style="flex-direction:column;align-items:flex-start">
+            <div style="display:flex;align-items:center;gap:6px;padding-left:0">
+                <span class="dex-wnode-icon">└</span>
+                <span class="dex-wnode-title">CLUSTER <span class="dex-wnode-badge dex-badge-sys">${chain}</span></span>
+            </div>
+            <table class="dex-cluster-table" style="margin-left:12px">
+                <thead><tr>
+                    <th>ADDRESS</th><th>TXNS</th><th>LAST ACTIVE</th><th>APPROVALS</th>
+                </tr></thead>
+                <tbody>
+                ${clusterWallets.map(w => `
+                    <tr>
+                        <td>${w.addr}</td>
+                        <td>${w.txns}</td>
+                        <td>${w.ago}d ago</td>
+                        <td><div class="dex-approvals">${badge(w.ps3, swapName+' V3')} ${badge(w.ps2, swapName+' V2')}</div></td>
+                    </tr>
+                `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+// ─── Swap panel ───────────────────────────────────────
+
+function renderDexSwap(pool) {
+    _dexSwapFlipped = false;
+    const sim   = _dexGetSim();
+    const s     = sim[pool.id];
+    const sym0  = s?.sym0 || pool.pair?.split('/')[0] || '?';
+    const sym1  = s?.sym1 || pool.pair?.split('/')[1] || '?';
+    const tok0  = s?.tok0 || 0;
+    const tok1  = s?.tok1 || 0;
+    const fmtAmt = n => n >= 1000 ? (n/1000).toFixed(2)+'K' : n.toFixed(2);
+
+    document.getElementById('dex-swap-tok0').textContent = sym0 + ' ▾';
+    document.getElementById('dex-swap-tok1').textContent = sym1 + ' ▾';
+    document.getElementById('dex-swap-bal0').textContent = 'Balance: ' + fmtAmt(tok0) + ' ' + sym0;
+    document.getElementById('dex-swap-bal1').textContent = 'Balance: ' + fmtAmt(tok1) + ' ' + sym1;
+    document.getElementById('dex-swap-in').value = '';
+    document.getElementById('dex-swap-out').value = '';
+    const price = parseFloat(pool.lastPrice) || 1;
+    const rate  = _dexSwapFlipped ? (1 / price).toFixed(6) : price.toFixed(6);
+    document.getElementById('dex-swap-rate').textContent = `1 ${sym0} = ${rate} ${sym1}`;
+    document.getElementById('dex-swap-impact').textContent = '—';
+    document.getElementById('dex-swap-minrcv').textContent = '—';
+}
+
+function dexSwapCalc() {
+    const pr   = projectsList.find(x => x.id === currentProjectId);
+    const pool = (pr?.dexPools || []).find(p => p.id === _dexActivePoolId);
+    if (!pool) return;
+    const amtIn = parseFloat(document.getElementById('dex-swap-in').value);
+    if (isNaN(amtIn) || amtIn <= 0) {
+        document.getElementById('dex-swap-out').value = '';
+        document.getElementById('dex-swap-impact').textContent = '—';
+        document.getElementById('dex-swap-minrcv').textContent = '—';
+        return;
+    }
+    const price  = parseFloat(pool.lastPrice) || 1;
+    const rate   = _dexSwapFlipped ? 1 / price : price;
+    const impact = (0.05 + Math.random() * 0.25).toFixed(2) + '%';
+    const amtOut = (amtIn * rate * (1 - _dexSlippage / 100)).toFixed(6);
+    const minRcv = (amtIn * rate * (1 - _dexSlippage / 100 - 0.002)).toFixed(6);
+    const sym1   = _dexSwapFlipped
+        ? (pool.pair?.split('/')[0] || '?')
+        : (pool.pair?.split('/')[1] || '?');
+    document.getElementById('dex-swap-out').value = amtOut;
+    document.getElementById('dex-swap-impact').textContent = impact;
+    document.getElementById('dex-swap-minrcv').textContent = minRcv + ' ' + sym1;
+}
+
+function dexSwapFlip() {
+    _dexSwapFlipped = !_dexSwapFlipped;
+    const pr   = projectsList.find(x => x.id === currentProjectId);
+    const pool = (pr?.dexPools || []).find(p => p.id === _dexActivePoolId);
+    if (pool) {
+        const t0   = document.getElementById('dex-swap-tok0').textContent;
+        const t1   = document.getElementById('dex-swap-tok1').textContent;
+        const b0   = document.getElementById('dex-swap-bal0').textContent;
+        const b1   = document.getElementById('dex-swap-bal1').textContent;
+        document.getElementById('dex-swap-tok0').textContent = t1;
+        document.getElementById('dex-swap-tok1').textContent = t0;
+        document.getElementById('dex-swap-bal0').textContent = b1;
+        document.getElementById('dex-swap-bal1').textContent = b0;
+        const price = parseFloat(pool.lastPrice) || 1;
+        const rate  = _dexSwapFlipped ? (1 / price).toFixed(6) : price.toFixed(6);
+        const sym0  = _dexSwapFlipped ? (pool.pair?.split('/')[1] || '?') : (pool.pair?.split('/')[0] || '?');
+        const sym1  = _dexSwapFlipped ? (pool.pair?.split('/')[0] || '?') : (pool.pair?.split('/')[1] || '?');
+        document.getElementById('dex-swap-rate').textContent = `1 ${sym0} = ${rate} ${sym1}`;
+    }
+    document.getElementById('dex-swap-in').value  = '';
+    document.getElementById('dex-swap-out').value = '';
+}
+
+function dexSetSlip(btn, val) {
+    _dexSlippage = parseFloat(val);
+    document.querySelectorAll('.dex-slip-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    dexSwapCalc();
+}
+
+// ─── Tasks ────────────────────────────────────────────
+
+const _DEX_TASKS_SIM = [
+    { id:1001, strat:'cex-dex', pair:'FOLKS/USDT', exch:'Binance / PancakeSwap', region:'hq', status:'InWork', side:'Buy', createdAt:'23-06-2026 10:01', startedAt:'23-06-2026 10:02', owner:'Eugene' },
+    { id:1002, strat:'cex-dex', pair:'FOLKS/USDT', exch:'Bybit / PancakeSwap',   region:'hq', status:'InWork', side:'Sell', createdAt:'23-06-2026 10:12', startedAt:'23-06-2026 10:13', owner:'Eugene' },
+    { id:1003, strat:'hft',     pair:'FOLKS/USDT', exch:'PancakeSwap V3',         region:'hq', status:'InWork', side:'—',    createdAt:'23-06-2026 09:45', startedAt:'23-06-2026 09:46', owner:'Eugene' },
+    { id:1004, strat:'limit',   pair:'FOLKS/USDT', exch:'PancakeSwap V3',         region:'hq', status:'Paused', side:'Buy',  createdAt:'22-06-2026 18:00', startedAt:'22-06-2026 18:01', owner:'Eugene' },
+    { id:1005, strat:'dex-dex', pair:'FOLKS/BNB',  exch:'PancakeSwap / ApeSwap',  region:'hq', status:'InWork', side:'—',    createdAt:'23-06-2026 08:30', startedAt:'23-06-2026 08:31', owner:'Eugene' },
+    { id:1006, strat:'counter', pair:'FOLKS/USDT', exch:'PancakeSwap V3',         region:'hq', status:'InWork', side:'Sell', createdAt:'23-06-2026 11:00', startedAt:'23-06-2026 11:01', owner:'Eugene' },
+];
+
+function renderDexTasks(pool, filter) {
+    const tbody = document.getElementById('dex-tasks-tbody');
+    if (!tbody) return;
+    const sym0 = pool.pair?.split('/')[0] || 'TOKEN';
+    const sym1 = pool.pair?.split('/')[1] || 'USDT';
+    const tasks = _DEX_TASKS_SIM.map(t => ({
+        ...t,
+        pair: `${sym0}/${sym1}`,
+        exch: t.exch.replace('FOLKS', sym0)
+    }));
+    const filtered = filter === 'all' ? tasks : tasks.filter(t => t.strat === filter);
+    if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="10" style="color:var(--muted);padding:12px">No tasks</td></tr>'; return; }
+    const statusColor = s => s === 'InWork' ? 'color:#34d399' : s === 'Paused' ? 'color:#fbbf24' : 'color:var(--muted)';
+    tbody.innerHTML = filtered.map(t => `
+        <tr>
+            <td>${t.id}</td>
+            <td>${t.pair}</td>
+            <td>${t.exch}</td>
+            <td>${t.region}</td>
+            <td style="${statusColor(t.status)}">${t.status}</td>
+            <td>${t.side}</td>
+            <td>${t.createdAt}</td>
+            <td>${t.startedAt}</td>
+            <td>${t.owner}</td>
+            <td><button class="proj-icon-btn" style="font-size:13px" title="Stop">⏸</button></td>
+        </tr>
+    `).join('');
+}
+
+function filterDexTasks(btn, filter) {
+    document.querySelectorAll('.dex-algo-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const pr   = projectsList.find(x => x.id === currentProjectId);
+    const pool = (pr?.dexPools || []).find(p => p.id === _dexActivePoolId);
+    if (pool) renderDexTasks(pool, filter);
+}
+
+// ─── Balance history chart ─────────────────────────────
+
+function _dexInitBalChart(pool) {
+    const el = document.getElementById('dex-balhist-chart');
+    if (!el || typeof LightweightCharts === 'undefined') return;
+
+    if (_dexBalChart) { _dexBalChart.remove(); _dexBalChart = null; _dexBalSeries = []; }
+
+    const sim = _dexGetSim();
+    const s   = sim[pool.id];
+    if (!s?.hist?.length) return;
+
+    const price = parseFloat(pool.lastPrice) || 1;
+    const sym0  = s.sym0 || '?';
+    const sym1  = s.sym1 || '?';
+
+    _dexBalChart = LightweightCharts.createChart(el, {
+        width: el.clientWidth || 600, height: 160,
+        layout: { background: { color: 'transparent' }, textColor: '#8594a8' },
+        grid: { vertLines: { color: 'rgba(255,255,255,0.04)' }, horzLines: { color: 'rgba(255,255,255,0.04)' } },
+        timeScale: { borderColor: '#223047', timeVisible: true },
+        rightPriceScale: { borderColor: '#223047' },
+        crosshair: { mode: 1 },
+        handleScroll: false, handleScale: false,
+    });
+
+    const serTok0 = _dexBalChart.addLineSeries({ color: '#d9ad70', lineWidth: 2, title: sym0 });
+    const serTok1 = _dexBalChart.addLineSeries({ color: '#60a5fa', lineWidth: 2, title: sym1 });
+    const serUsd  = _dexBalChart.addLineSeries({ color: '#34d399', lineWidth: 2, title: 'USD' });
+    _dexBalSeries  = [serTok0, serTok1, serUsd];
+
+    const d0 = s.hist.map(h => ({ time: h.time, value: h.tok0 }));
+    const d1 = s.hist.map(h => ({ time: h.time, value: h.tok1 }));
+    const dU = s.hist.map(h => ({ time: h.time, value: h.tok0 * price + h.tok1 }));
+    serTok0.setData(d0); serTok1.setData(d1); serUsd.setData(dU);
+
+    const legend = document.getElementById('dex-balhist-legend');
+    if (legend) legend.innerHTML = [
+        { color:'#d9ad70', sym: sym0 },
+        { color:'#60a5fa', sym: sym1 },
+        { color:'#34d399', sym: 'USD total' },
+    ].map(l => `<div class="dex-balhist-leg"><i style="background:${l.color}"></i>${l.sym}</div>`).join('');
+}
+
+function _dexUpdateBalChart() {
+    const pr   = projectsList.find(x => x.id === currentProjectId);
+    const pool = (pr?.dexPools || []).find(p => p.id === _dexActivePoolId);
+    if (!pool || !_dexBalChart || !_dexBalSeries.length) return;
+    const sim   = _dexGetSim();
+    const s     = sim[pool.id];
+    if (!s?.hist?.length) return;
+    const price = parseFloat(pool.lastPrice) || 1;
+    const last  = s.hist[s.hist.length - 1];
+    _dexBalSeries[0].update({ time: last.time, value: last.tok0 });
+    _dexBalSeries[1].update({ time: last.time, value: last.tok1 });
+    _dexBalSeries[2].update({ time: last.time, value: last.tok0 * price + last.tok1 });
+}
+
+// ─── End DEX PAGE ─────────────────────────────────────
 
 function setAnTF(tf, btn) {
     anTF = tf;
