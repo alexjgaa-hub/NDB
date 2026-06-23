@@ -981,8 +981,8 @@
 
         /* Workspace layout */
         .dex-workspace { display:flex; flex:1; overflow:hidden; min-height:0; }
-        .dex-left { flex:1; display:flex; flex-direction:column; overflow-y:auto; min-width:0; }
-        .dex-right { width:300px; flex-shrink:0; border-left:1px solid var(--border); display:flex; flex-direction:column; overflow-y:auto; background:var(--surface); }
+        .dex-left { flex:0 0 65%; display:flex; flex-direction:column; overflow-y:auto; min-width:0; border-right:1px solid var(--border); }
+        .dex-right { flex:1; min-width:0; border-left:none; display:flex; flex-direction:row; overflow:hidden; background:var(--surface); }
 
         /* Chart */
         .dex-chart-wrap { height:450px; flex-shrink:0; background:#000; position:relative; }
@@ -1009,7 +1009,7 @@
         #dex-balhist-chart { height:160px; }
 
         /* Wallets */
-        .dex-wallets-section { flex-shrink:0; }
+        .dex-wallets-section { flex:1; min-width:0; overflow-y:auto; border-right:1px solid var(--border); }
         .dex-wtree { padding:10px 12px; display:flex; flex-direction:column; gap:3px; }
         .dex-wnode { display:flex; align-items:flex-start; gap:6px; padding:5px 6px; border-radius:5px; }
         .dex-wnode:hover { background:var(--surface2); }
@@ -1031,7 +1031,7 @@
         .dex-approvals { display:flex; gap:3px; flex-wrap:wrap; }
 
         /* Swap panel */
-        .dex-swap-section { flex:1; padding:14px 12px; display:flex; flex-direction:column; gap:10px; }
+        .dex-swap-section { width:280px; flex-shrink:0; padding:14px 12px; display:flex; flex-direction:column; gap:10px; overflow-y:auto; }
         .dex-swap-token-box { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
         .dex-swap-label { font-size:10px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:6px; }
         .dex-swap-row { display:flex; align-items:center; gap:8px; }
